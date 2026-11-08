@@ -6,11 +6,20 @@ report.md, cleaned.csv, replay.py and trace.jsonl. The loader only reads; it nev
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
 # Files offered for download, in display order. recipe.json comes from the recipes work (item 7).
 RUN_FILES = ("cleaned.csv", "replay.py", "trace.jsonl", "recipe.json")
+
+# Headers of the Changes table as markdown_report() in datasage/report.py writes them, mapped to our keys.
+CHANGE_KEYS = {"version": "version", "fix": "fix", "risk": "risk", "approval": "approval",
+               "what changed": "what_changed", "reason": "reason"}
+
+_HEADING = re.compile(r"^#{1,6}\s+(.*?)\s*#*\s*$")
+_SEPARATOR = re.compile(r"^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?$")
+_CELL_SPLIT = re.compile(r"(?<!\\)\|")  # a pipe that is not escaped as \|
 
 
 @dataclass
@@ -28,9 +37,60 @@ def _read_text(path: Path) -> str | None:
         return None
 
 
+def _cells(line: str) -> list[str]:
+    inner = line.strip()
+    if inner.startswith("|"):
+        inner = inner[1:]
+    if inner.endswith("|") and not inner.endswith("\\|"):
+        inner = inner[:-1]
+    return [cell.strip().replace("\\|", "|") for cell in _CELL_SPLIT.split(inner)]
+
+
+def parse_change_log(report_md: str) -> list[dict]:
+    """Read the table under the "Changes" heading into one dict per row.
+
+    Rejected fixes are kept: report.py writes them with Version "-" and Approval "rejected". report.py
+    does not escape "|" inside a reason, so extra cells in a row are joined back into the last column.
+    Returns [] when there is no Changes section or its table has no rows.
+    """
+    lines = (report_md or "").splitlines()
+    start = None
+    for i, line in enumerate(lines):
+        heading = _HEADING.match(line.strip())
+        if heading and heading.group(1).strip().lower() == "changes":
+            start = i + 1
+            break
+    if start is None:
+        return []
+
+    headers: list[str] | None = None
+    rows: list[dict] = []
+    for line in lines[start:]:
+        text = line.strip()
+        if _HEADING.match(text):
+            break  # the next section starts
+        if not text.startswith("|"):
+            if headers is not None and text:
+                break  # text after the table
+            continue  # blank lines before the table
+        if headers is None:
+            headers = [CHANGE_KEYS.get(cell.lower(), cell.lower()) for cell in _cells(text)]
+            continue
+        if _SEPARATOR.match(text):
+            continue
+        cells = _cells(text)
+        if len(cells) > len(headers):
+            cells = cells[:len(headers) - 1] + [" | ".join(cells[len(headers) - 1:])]
+        cells += [""] * (len(headers) - len(cells))
+        found = dict(zip(headers, cells))
+        rows.append({key: found.get(key, "") for key in CHANGE_KEYS.values()})
+    return rows
+
+
 def load_run(run_dir: Path) -> RunView:
     """Load a run folder. Missing pieces give None or are left out; this never raises for a bad folder."""
     run_dir = Path(run_dir)
     report_md = _read_text(run_dir / "report.md")
+    changes = parse_change_log(report_md) if report_md else []
     files = {name: run_dir / name for name in RUN_FILES if (run_dir / name).is_file()}
-    return RunView(run_dir=run_dir, report_md=report_md, changes=[], files=files)
+    return RunView(run_dir=run_dir, report_md=report_md, changes=changes, files=files)
