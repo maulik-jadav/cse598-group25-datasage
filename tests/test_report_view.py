@@ -124,3 +124,10 @@ def test_render_report_on_empty_folder_warns(monkeypatch, tmp_path):
     names = [name for name, _, _ in fake.calls]
     assert "warning" in names and "markdown" not in names and "download_button" not in names
     assert list(tmp_path.iterdir()) == []  # nothing written to the run folder
+
+
+def test_preview_page_arguments():
+    from app.preview_report import DEFAULT_RUN, parse_args
+
+    assert parse_args([]).run == DEFAULT_RUN == REPO_ROOT / "docs" / "milestone2" / "demo"
+    assert parse_args(["--run", "outputs/run", "--server.port", "8502"]).run == Path("outputs/run")

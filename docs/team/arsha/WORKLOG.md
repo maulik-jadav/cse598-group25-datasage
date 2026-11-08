@@ -33,3 +33,33 @@ he owns the recipes module and the main Streamlit page.
 key and no streamlit. Run them from the repo root with `python -m pytest -q tests`, as the README
 says. Plain `pytest` doesn't put the repo root on the path, so it can't import `app` (or `datasage`, for
 the existing tests).
+
+### 2026-11-07: Change-log parser, Streamlit view and preview page
+
+**Report view** (branch `arsha/report-view`)
+- `app/report_view.py` now also has:
+  - `parse_change_log(report_md: str) -> list[dict]` reads the table under the "Changes" heading of
+    `report.md` into dicts with keys `version`, `fix`, `risk`, `approval`, `what_changed`, `reason`. It
+    maps the headers `markdown_report()` writes in `datasage/report.py`. Rejected fixes are kept as
+    written there (`version` "-", `approval` "rejected", "(not applied)" at the end of `what_changed`).
+    No Changes section gives `[]`. A `|` inside a reason is kept, because report.py doesn't escape it.
+    `load_run` fills `RunView.changes` with it.
+  - `render_report(run_dir: Path) -> None` shows `report.md` with `st.markdown`, the change log with
+    `st.dataframe` and one `st.download_button` per file in `RunView.files`. It is the only function
+    that imports streamlit, and only inside the function. It doesn't call `st.set_page_config`; the
+    page that calls it does. **Ritik:** this is the function your Streamlit page calls.
+- New `app/preview_report.py`: a small page that opens any existing run folder, read only:
+
+  ```bash
+  pip install streamlit        # or: pip install -r requirements-ui.txt once Ritik's scaffold is merged
+  streamlit run app/preview_report.py                         # the Milestone 2 demo run
+  streamlit run app/preview_report.py -- --run outputs/run    # any other run folder
+  ```
+
+  It adds the repo root to `sys.path` at the top, because `streamlit run` only adds `app/`.
+- Tests (`tests/test_report_view.py`, 12 tests) cover the loader, the parser on the fixture and on a report
+  built by the real `markdown_report()`, a fake `streamlit` module that records the calls `render_report`
+  makes, a check in a fresh interpreter that importing `app.report_view` doesn't import streamlit, and
+  the preview page's arguments.
+
+**Before pulling:** still no change to any existing file. The test suite doesn't need streamlit.
