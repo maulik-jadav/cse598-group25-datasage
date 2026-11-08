@@ -51,7 +51,7 @@ def render_report(run_dir: Path) -> None: ...   # imports streamlit inside the f
 
 ## Recipe file
 
-**Status:** implemented in R5 (`5d17062`) on `ritik/recipes`, not merged yet.
+**Status:** implemented in R5 (PR #5) on `ritik/recipes`, not merged yet.
 
 A JSON file with `recipe_version` 1; `created_at` (UTC); `source`: `name`, `sha256` and `rows` of the
 raw input, read with `load_table` (never `cleaned.csv`); `schema`: `columns`, `dtypes` (`number` or
