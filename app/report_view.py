@@ -16,6 +16,9 @@ RUN_FILES = ("cleaned.csv", "replay.py", "trace.jsonl", "recipe.json")
 # Headers of the Changes table as markdown_report() in datasage/report.py writes them, mapped to our keys.
 CHANGE_KEYS = {"version": "version", "fix": "fix", "risk": "risk", "approval": "approval",
                "what changed": "what_changed", "reason": "reason"}
+# Column labels for the change-log table on the page (the report's own header names).
+CHANGE_LABELS = {key: header.capitalize() for header, key in CHANGE_KEYS.items()}
+_MIME = {".csv": "text/csv", ".py": "text/x-python", ".jsonl": "application/jsonl", ".json": "application/json"}
 
 _HEADING = re.compile(r"^#{1,6}\s+(.*?)\s*#*\s*$")
 _SEPARATOR = re.compile(r"^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)*\|?$")
@@ -94,3 +97,40 @@ def load_run(run_dir: Path) -> RunView:
     changes = parse_change_log(report_md) if report_md else []
     files = {name: run_dir / name for name in RUN_FILES if (run_dir / name).is_file()}
     return RunView(run_dir=run_dir, report_md=report_md, changes=changes, files=files)
+
+
+def render_report(run_dir: Path) -> None:
+    """Show a run folder in Streamlit: report.md, the change log as a table, and one download per file.
+
+    Streamlit is imported here and nowhere else, so load_run and parse_change_log (and their tests) work
+    without it. The page that calls this sets st.set_page_config. Nothing is written to the run folder.
+    """
+    import pandas as pd
+    import streamlit as st
+
+    view = load_run(run_dir)
+    st.caption(f"Run folder: {view.run_dir}")
+
+    if view.report_md is None:
+        st.warning(f"No report.md in {view.run_dir}.")
+    else:
+        st.markdown(view.report_md)  # HTML in the report stays escaped (unsafe_allow_html is off)
+
+    st.subheader("Change log")
+    if view.changes:
+        table = pd.DataFrame(view.changes, columns=list(CHANGE_LABELS)).rename(columns=CHANGE_LABELS)
+        st.dataframe(table, hide_index=True)
+    else:
+        st.info("No changes were recorded for this run.")
+
+    st.subheader("Files")
+    if not view.files:
+        st.info("No output files in this folder.")
+    for name, path in view.files.items():
+        try:
+            data = path.read_bytes()
+        except OSError as err:
+            st.warning(f"Could not read {name}: {err}")
+            continue
+        st.download_button(f"Download {name}", data=data, file_name=name,
+                           mime=_MIME.get(path.suffix, "text/plain"), key=f"download:{view.run_dir}:{name}")

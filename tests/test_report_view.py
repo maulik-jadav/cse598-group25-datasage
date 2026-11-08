@@ -1,15 +1,19 @@
 """Tests for app/report_view.py (no model calls, no streamlit needed)."""
 
 import shutil
+import subprocess
+import sys
+import types
 from pathlib import Path
 
 import pandas as pd
 
-from app.report_view import CHANGE_KEYS, RunView, load_run, parse_change_log
+from app.report_view import CHANGE_KEYS, RunView, load_run, parse_change_log, render_report
 from datasage.agent import RunResult
 from datasage.report import markdown_report
 from datasage.session import Change, Session
 
+REPO_ROOT = Path(__file__).resolve().parent.parent
 RUN_OK = Path(__file__).parent / "fixtures" / "report_view" / "run_ok"
 KEYS = ["version", "fix", "risk", "approval", "what_changed", "reason"]
 
@@ -76,3 +80,47 @@ def test_parser_matches_datasage_report_writer():
         ("v1", "normalize_labels", "auto"), ("-", "exclude_rows", "rejected")]
     assert rows[1]["reason"] == "Units < 0 | breaks the rule"  # a pipe in the reason is not split off
     assert set(CHANGE_KEYS.values()) == set(KEYS)
+
+
+def test_importing_report_view_does_not_import_streamlit():
+    # A fresh interpreter, so streamlit imported by another test cannot hide the problem.
+    code = "import sys, app.report_view; print('streamlit' in sys.modules)"
+    out = subprocess.run([sys.executable, "-c", code], cwd=REPO_ROOT, capture_output=True, text=True, check=True)
+    assert out.stdout.strip() == "False"
+
+
+class FakeStreamlit(types.ModuleType):
+    """Records every st.<name>(...) call so render_report can be tested without streamlit."""
+
+    def __init__(self):
+        super().__init__("streamlit")
+        self.calls = []
+
+    def __getattr__(self, name):
+        if name.startswith("__"):
+            raise AttributeError(name)
+        return lambda *args, **kwargs: self.calls.append((name, args, kwargs))
+
+
+def test_render_report_shows_report_changes_and_downloads(monkeypatch):
+    fake = FakeStreamlit()
+    monkeypatch.setitem(sys.modules, "streamlit", fake)
+    render_report(RUN_OK)
+    names = [name for name, _, _ in fake.calls]
+    markdown = [args[0] for name, args, _ in fake.calls if name == "markdown"]
+    assert markdown == [(RUN_OK / "report.md").read_text()]
+    (table,) = [args[0] for name, args, _ in fake.calls if name == "dataframe"]
+    assert list(table.columns) == ["Version", "Fix", "Risk", "Approval", "What changed", "Reason"]
+    assert len(table) == 3
+    downloads = [kwargs["file_name"] for name, _, kwargs in fake.calls if name == "download_button"]
+    assert downloads == ["cleaned.csv", "replay.py"]
+    assert "warning" not in names
+
+
+def test_render_report_on_empty_folder_warns(monkeypatch, tmp_path):
+    fake = FakeStreamlit()
+    monkeypatch.setitem(sys.modules, "streamlit", fake)
+    render_report(tmp_path)
+    names = [name for name, _, _ in fake.calls]
+    assert "warning" in names and "markdown" not in names and "download_button" not in names
+    assert list(tmp_path.iterdir()) == []  # nothing written to the run folder
