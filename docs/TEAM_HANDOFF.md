@@ -1,37 +1,85 @@
-# Team handoff: Milestone 2 and after
+# Team handoff: final stretch
 
-For: Arsha, Ritik, Maulik and Vatsal. Last updated October 30, 2026.
+For: Arsha, Ritik, Maulik and Vatsal. Last updated November 16, 2026.
 
-DataSage works end to end, the Milestone 2 evaluation is done, and the report draft is in the repo. Every
-commit so far is Shrey's, and individual grades draw on commit and PR authorship. So each of us needs to
-open at least one pull request with real work for Milestone 2. **Please open your PR by November 5** so
-Shrey can merge it and rebuild the report before the November 8 deadline.
+Milestone 2 is submitted and items 1 and 2 of Section 6 are merged (PR #7). Shrey is building the
+browser app for the demo (item 7's page). The rest of the work is split below. Individual grades draw on commit and PR
+authorship, so **each task should end in its own merged PR** under your own GitHub account.
+
+## Dates
+
+| Date | What |
+|---|---|
+| Nov 16 to 20 | Vyshanth rates 10 DataSage reports (ratings week) |
+| **Nov 20, 2:00 PM MST, Zoom** | Review with Vyshanth |
+| **Nov 23, 2:00 PM (hard)** | Poster PDF due on Canvas (24 × 36 in portrait, `Group25_Poster.pdf`). No printing if late |
+| Nov 27 | All code PRs open, so there is time to merge and re-run before the final report |
+| **Dec 2, class time** | Poster session in person. Everyone attends |
+| TBD (check Canvas) | Final report |
 
 ## Where things stand
 
 | What | Where |
 |---|---|
-| Milestone 2 report (10 pages) | `docs/milestone2/Group25_DataSage_Milestone2.docx` and `.pdf` |
-| Demo run on Vyshanth's sales file | `docs/milestone2/demo/` (console log, report, cleaned file, replay script, trace) |
-| Architecture diagram | `docs/milestone2/architecture.png` |
-| All evaluation results | `eval/results/summary.md` (tables), `eval/results/<system>/<dataset>/` (one JSON per task, plus traces) |
-| The agent | `datasage/` (`agent.py` is the loop, `tools.py` the tool calls, `fixes.py` and `checks.py` the work) |
+| The agent (30B model is now the default) | `datasage/` (`agent.py` loop, `tools.py` dispatcher and coverage check, `checks.py`, `fixes.py`) |
 | Baselines B0, B1, B2 | `baselines/systems.py` |
-| Benchmark and scoring | `eval/generate.py`, `eval/scoring.py`, `eval/oracle.py`, `eval/run_eval.py` |
+| Benchmark, scoring, runner | `eval/generate.py`, `eval/scoring.py`, `eval/oracle.py`, `eval/run_eval.py` |
+| All results | `eval/results/summary.md`; final system is `datasage-m3` |
+| Report view (Arsha) and recipe format (Ritik) | `app/report_view.py`, `app/preview_report.py`, `datasage/recipes.py` |
+| Item 7 design note | `docs/design/item7_recipes_ui.md` |
+| Poster draft (print-ready PDF, source and figures) | `docs/final/poster/` (see its README) |
+| Demo run with the 30B default | `docs/final/demo/` (13 s, same answer as the Milestone 2 demo) |
+| Browser app (item 7 page) | being built by Shrey; see the README once it lands |
 
-Headline results (share of questions answered correctly):
+Final system (`datasage-m3`, Qwen3-30B), share of questions answered correctly:
 
-| System | Sales dev | Penguins dev | Sales held-out | Penguins held-out |
+| System | Held-out (40) | Test (40) | Damaged cells | Seconds per question |
 |---|---|---|---|---|
-| B1 fixed script | 70% | 45% | 40% | 30% |
-| B2 single model call | 30% | 45% | 85% | 35% |
-| DataSage, large model | 85% | 85% | 80% | 45% |
-| DataSage, large model + exclusion rule | 100% | 100% | 80% | 95% |
+| B1 fixed script | 35.0% | 45.0% | 0 | < 1 |
+| B2 single model call | 60.0% | 47.5% | 35 | about 32 |
+| DataSage 30B (final) | 92.5% | 92.5% | 0 | about 17 |
 
-Vyshanth reviewed the system in writing on October 28 and agreed the final scope: small model as the
-default, automatic handling of clear date formats, a rules key for refunds, and no near-duplicates or code
-sandbox. He rates 10 reports in the week of November 16 to 20, and the next review is November 20, 2026,
-2:00 PM MST on Zoom.
+All 6 remaining misses are rows that break a rule in a column the question doesn't use. Vyshanth chose
+to check only the question's columns, so we raise this at the Nov 20 review rather than change it.
+
+## Your tasks
+
+Every task ends in a PR into `main`. Put a short note of what you did in `docs/team/<you>/WORKLOG.md`.
+
+### Arsha
+
+| # | Task | Done when | Due |
+|---|---|---|---|
+| A1 | **Ratings packet (item 6).** Run DataSage on 10 questions: Vyshanth's two files plus questions from the held-out tables. Send him the 10 `report.md` files and a short form (correct? clear? would you trust it? each 1 to 5, plus a comment). Collect his answers. | His ratings are summarised in `docs/final/ratings.md` (scores and quotes, no copy of his files). | Send Nov 17, collect Nov 20 |
+| A2 | **Acceptance test (item 6).** 3 files (Vyshanth's two plus one test-split table), each with questions and expected answers. Pass = at least 90% correct and no valid cell changed. | `docs/final/acceptance_test.md` with the command, each question, expected and actual answer, pass or fail. | Nov 25 |
+| A3 | **Poster.** Check every number on the draft against `eval/results/summary.md`, collect team edits, export the PDF at 24 × 36 in and submit it on Canvas. | `Group25_Poster.pdf` submitted and copied to `docs/final/`. | Submit by Nov 22 |
+
+### Ritik
+
+| # | Task | Done when | Due |
+|---|---|---|---|
+| R1 | **Recipe replay (item 7).** Build a recipe from a run's approved fixes and replay it on a new file without the model, as planned in the design note. | Tests in `tests/test_recipes.py` show a recipe from one table replayed on another table with the same columns. | Nov 25 |
+| R2 | **Nov 20 review.** Send Vyshanth an agenda by Nov 19: results, the out-of-question-column misses, ratings, demo plan. Take notes. | `docs/meetings/2026-11-20-review.md`, same format as the Oct 28 notes. | Nov 20 |
+
+### Maulik
+
+| # | Task | Done when | Due |
+|---|---|---|---|
+| M1 | **Dates (item 3).** Blank unreadable dates and convert clear formats automatically as low risk, logged. Ask only for ambiguous dates such as 03/04/2026. | Tests cover all three cases; the change log shows each conversion. | Nov 24 |
+| M2 | **Refund rule (item 3).** Add an `allow_negative_quantities` rules key. When it is set, negative quantities are kept as refunds without asking. | Tests for both settings; the README's rules section mentions the key. | Nov 24 |
+| M3 | **No-regression run.** After M1 and M2 merge, re-run `datasage-m3` on held-out and test into a new results folder and compare with the current numbers. | A short write-up in `docs/final/regression_check.md`; any drop explained from the traces. | Nov 27 |
+
+### Vatsal
+
+| # | Task | Done when | Due |
+|---|---|---|---|
+| V1 | **Repeated runs (item 5).** Run `datasage-m3` 3 times on held-out and test (separate `--results` folders), and report the mean and range of accuracy and seconds per question. | `docs/final/repeated_runs.md` with a table and the commands used. | Nov 24 |
+| V2 | **Real messy files (item 4).** Pick 2 public messy CSV files with a license that allows reuse. Write 3 questions, a rules file and the correct answers by hand for each, then run DataSage. | Data, rules and questions in `eval/real/`; results and what went wrong in `docs/final/real_files.md`. | Nov 27 |
+| V3 | **Demo Day plan.** A 3-minute walk-through for the poster session: which file, which question, which approvals to click, what to point at. Record one backup screen video in case the model service is slow. | `docs/final/demo_script.md` plus a link to the recording. | Nov 30 |
+
+### Shrey
+
+Builds the browser app (item 7's page), reviews and merges every PR, and assembles the final report. Each of you writes the final-report paragraph for your own tasks.
 
 ## Setup (about 5 minutes)
 
@@ -43,14 +91,12 @@ cd cse598-group25-datasage
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m pytest -q tests                          # 13 tests, no API key needed
-python -m eval.run_eval --system b1 --dataset sales --results /tmp/b1_check   # no API key needed
+python -m pytest -q tests                          # 36 tests, no API key needed
 python -m eval.summarize                           # prints the results tables
 ```
 
-Running DataSage itself needs an ASU RC model key in a `.env` file (copy `.env.example`). Use your own key,
-or ask Shrey for his privately. The Milestone 2 tasks below do not need one, except the demo command in
-Vatsal's setup test.
+Running DataSage needs an ASU RC model key in a `.env` file (copy `.env.example`). Use your own key. A1,
+A2, M3, V1 and V2 need one; check your quota before starting V1, which makes the most calls.
 
 ## How to commit and open a PR
 
@@ -62,7 +108,7 @@ git config user.name "Your Name"
 git config user.email "the-email-on-your-github-account"
 ```
 
-For each piece of work:
+For each task:
 
 ```bash
 git checkout main
@@ -74,42 +120,14 @@ git commit -m "Say what you did, in a full sentence"
 git push -u origin yourname/short-topic
 ```
 
-Then open a pull request into `main` on GitHub and ask Shrey to review it. Commits that only sit on a
-side branch do not show in the main history or on the contribution graph, so the PR needs to be merged.
+Then open a pull request into `main` and ask Shrey to review it.
 
 Rules:
 
 - Never commit `.env` or any API key. The repo is public.
-- Do not add Vyshanth's two sample files to the repo unless he says yes. He allowed sending them to the
-  ASU model service, not publishing them.
-- Do not edit files in `eval/results/` by hand. They are produced by `eval/run_eval.py` and the report
-  numbers come from them.
+- Never commit Vyshanth's two sample files or their outputs. He allowed sending them to the ASU model
+  service, not publishing them. Summaries and scores are fine.
+- Do not edit files in `eval/results/` by hand. They come from `eval/run_eval.py`.
 - Small, clear commits are better than one large one.
-
-## Milestone 2 tasks (PR by November 5)
-
-| Who | Branch | Task | Done when |
-|---|---|---|---|
-| Arsha | `arsha/m2-report-edit` | Final edit of the report: proofread `docs/milestone2/Group25_DataSage_Milestone2.docx`, check every figure and table is referred to in the text and that it stays at 10 pages, then export the PDF again. Add `docs/milestone2/README.md`, a one-page index of the Milestone 2 deliverables (report, demo folder, results summary, and the command behind each table in Section 3). | Edited docx and pdf plus the README are in the PR. |
-| Ritik | `ritik/m2-meeting-notes` | Meeting records: `docs/meetings/2026-10-19.md` (date, 2:00 to 2:45 PM MST on Zoom, all six attendees, the plan and design we walked through, Vyshanth's feedback) and `docs/meetings/2026-10-28-review.md` (his written review and each decision: default model, dates, refunds, scope, targets, ratings week, next review). | Both files are in the PR and match Section 1 of the report. |
-| Maulik | `maulik/m2-results-check` | Independent check of the results: run `python -m eval.summarize` and confirm Tables 6 to 8 in the report match `eval/results/summary.md`; re-run B1 into a separate folder (command in Setup) and confirm the scores match; read 3 or 4 traces in `eval/results/datasage-fix/sales-heldout/traces/` and confirm the failure causes in the report (for example, misspellings found but not merged). Write it up in `docs/milestone2/results_check.md`. | The write-up lists what matched and anything that did not. |
-| Vatsal | `vatsal/m2-setup-check` | Fresh-setup test: clone the repo on your own machine, follow only the README (setup, tests, demo command) and fix anything unclear or wrong in it. Add `docs/milestone2/checklist.md`, mapping every item in the Milestone 2 template to the report section, table or file that covers it. | README fixes and the checklist are in the PR. |
-
-When your PR is merged, Shrey updates the submission commit and adds your PR link to Section 7 of the report.
-
-## After Milestone 2 (final report)
-
-These are the owners from Section 6 of the report.
-
-| # | Work | Owner |
-|---|---|---|
-| 1 | Small model as the default, under 60 s per question | Shrey |
-| 2 | Coverage check before `analyze`, and proposing merges for misspelled labels | Shrey |
-| 3 | Automatic date-format conversion (ask only on ambiguous dates) and an `allow_negative_quantities` rules key | Maulik |
-| 4 | Evaluation on real messy files, including Vyshanth's two once he agrees | Maulik, Vatsal |
-| 5 | Repeated runs (3 runs on the held-out tasks, report mean and range) | Vatsal |
-| 6 | Vyshanth's ratings of 10 reports and the acceptance test (3 files, at least 90% accuracy, no corrupted data) | Arsha, Ritik |
-| 7 | Streamlit demo page and reusable cleaning recipes | Ritik, Arsha |
-| 8 | November 20 review, final report, presentation and Demo Day | All |
 
 Questions about the code: ask Shrey, or open a GitHub issue so the answer stays with the repo.
