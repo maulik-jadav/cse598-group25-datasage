@@ -75,11 +75,10 @@ Every task ends in a PR into `main`. Put a short note of what you did in `docs/t
 |---|---|---|---|
 | V1 | **Repeated runs (item 5).** Run `datasage-m3` 3 times on held-out and test (separate `--results` folders), and report the mean and range of accuracy and seconds per question. | `docs/final/repeated_runs.md` with a table and the commands used. | Nov 24 |
 | V2 | **Real messy files (item 4).** Pick 2 public messy CSV files with a license that allows reuse. Write 3 questions, a rules file and the correct answers by hand for each, then run DataSage. | Data, rules and questions in `eval/real/`; results and what went wrong in `docs/final/real_files.md`. | Nov 27 |
-| V3 | **Demo Day plan.** A 3-minute walk-through for the poster session: which file, which question, which approvals to click, what to point at. Record one backup screen video in case the model service is slow. | `docs/final/demo_script.md` plus a link to the recording. | Nov 30 |
 
 ### Shrey
 
-Builds the browser app (item 7's page), reviews and merges every PR, and assembles the final report. Each of you writes the final-report paragraph for your own tasks.
+Builds the browser app (item 7's page) and the Demo Day plan (a 3-minute walk-through for the poster session plus a backup screen recording, in `docs/final/demo_script.md`, by Nov 30). Also reviews and merges every PR and assembles the final report. Each of you writes the final-report paragraph for your own tasks.
 
 ## Setup (about 5 minutes)
 
