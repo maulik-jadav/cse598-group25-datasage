@@ -1,0 +1,199 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 63.17,
+  "tokens": 59636,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "final_summary": "Fixed Region label variants (case/space) and trimmed whitespace; excluded 3 rows with negative Quantity (rows 5, 14, 65); recomputed Revenue = Quantity * Price for 3 mismatched rows (10, 19, 61); set 3 missing Region values to missing (rows 36, 40, 49). Total revenue by region for Electronics (after fixes, 12 rows): East $7,580, North $3,750, South $10,540, West $1,800. Caveat: 3 Electronics rows with missing Region were excluded from region totals; 3 cross-column Revenue errors were corrected rather than excluded (user rejected exclusion).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " South": "South",
+            "North ": "North",
+            "east": "East",
+            "north": "North",
+            "west": "West"
+          },
+          "reason": "Fix case/space variants to allowed Region labels"
+        },
+        "reason": "Fix case/space variants to allowed Region labels",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Region: merged 5 label variant(s), 6 cells",
+        "code": "df['Region'] = df['Region'].replace({' South': 'South', 'North ': 'North', 'east': 'East', 'north': 'North', 'west': 'West'})"
+      },
+      {
+        "version": 2,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "Trim whitespace from Region values"
+        },
+        "reason": "Trim whitespace from Region values",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: trimmed 0 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            5,
+            14,
+            65
+          ],
+          "reason": "Quantity negative (violates min=1 rule)"
+        },
+        "reason": "Quantity negative (violates min=1 rule)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          5,
+          14,
+          65
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [5, 14, 65]",
+        "code": "df = df.drop(index=[5, 14, 65])"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            10,
+            19,
+            61
+          ],
+          "reason": "Correct Revenue to match Quantity * Price per rules"
+        },
+        "reason": "Correct Revenue to match Quantity * Price per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[10, 19, 61], 'Revenue'] = [240.0, 24.0, 48.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 5,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            36,
+            40,
+            49
+          ],
+          "reason": "Region missing (unreadable/blank)"
+        },
+        "reason": "Region missing (unreadable/blank)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 3 value(s) to missing",
+        "code": "df.loc[[36, 40, 49], 'Region'] = pd.NA"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "summary": "excluded 3 row(s): [10, 19, 61]"
+      }
+    ],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": false,
+        "why": "removes row 10 (id 2011) that should be kept"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 14
+  },
+  "corrections": 15,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-inkling-small",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

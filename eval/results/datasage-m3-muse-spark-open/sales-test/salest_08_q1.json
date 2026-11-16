@@ -1,0 +1,110 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 86.66,
+  "tokens": 33970,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "extra": {
+    "final_summary": "**Question:** Total revenue by category (sum of Revenue grouped by Category)\n\n**Data problems found:**\n- Category had 5 label variants outside allowed list: \"electronics\" \u2192 Electronics, \"office supplies\" \u2192 Office Supplies, plus misspellings \"Accesories\" \u2192 Accessories, \"Electornics\" \u2192 Electronics, \"Office Suplies\" \u2192 Office Supplies (rows 7, 23, 25, 34, 37)\n- Revenue violated rules formula Revenue = Quantity * Price on 2 rows: row 13 (actual 450, expected 45) and row 29 (actual 1500, expected 15)\n- Region has whitespace variants (3 rows) and Date has 1 non-ISO date, but these columns are not used for this question and were left as-is\n- No missing values in Category/Revenue, no duplicate rows, no numeric parsing issues\n\n**Fixes applied:**\n1. normalize_labels on Category with mapping {electronics: Electronics, office supplies: Office Supplies, Accesories: Accessories, Electornics: Electronics, Office Suplies: Office Supplies} \u2013 approved, 5 cells merged\n2. recompute_column Revenue = Quantity * Price on rows [13, 29] \u2013 approved, 2 rows corrected\n\n**Result (after fixes, 41 rows used):**\n- Accessories: $2,140.00\n- Electronics: $15,730.00\n- Furniture: $6,085.00\n- Office Supplies: $552.00\n\n**Caveats:** Region whitespace and Date format issues remain but do not affect this aggregation. No other caveats.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "electronics": "Electronics",
+            "office supplies": "Office Supplies",
+            "Accesories": "Accessories",
+            "Electornics": "Electronics",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Merge misspellings and case variants into allowed Category labels per rules file"
+        },
+        "reason": "Merge misspellings and case variants into allowed Category labels per rules file",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Category: merged 5 label variant(s), 5 cells",
+        "code": "df['Category'] = df['Category'].replace({'electronics': 'Electronics', 'office supplies': 'Office Supplies', 'Accesories': 'Accessories', 'Electornics': 'Electronics', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            13,
+            29
+          ],
+          "reason": "Fix Revenue to match Quantity*Price per rules file; rows 13 and 29 violate formula"
+        },
+        "reason": "Fix Revenue to match Quantity*Price per rules file; rows 13 and 29 violate formula",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[13, 29], 'Revenue'] = [45.0, 15.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 7,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-muse-spark-open",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 144.92,
+  "tokens": 2710,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "code": "ALLOWED_REGIONS = ['North', 'South', 'East', 'West']\nALLOWED_CATEGORIES = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n\ndef clean(df):\n    d = df.copy()\n    # normalize Region label variants (case / whitespace)\n    d['Region'] = d['Region'].astype('string').str.strip().str.title()\n    d.loc[~d['Region'].isin(ALLOWED_REGIONS), 'Region'] = pd.NA\n    # normalize Category labels too\n    d['Category'] = d['Category'].astype('string').str.strip().str.title().replace({'Office Supplies': 'Office Supplies'})\n    d.loc[~d['Category'].isin(ALLOWED_CATEGORIES), 'Category'] = pd.NA\n    # numeric coercion\n    for c in ['Quantity', 'Price', 'Revenue']:\n        d[c] = pd.to_numeric(d[c], errors='coerce')\n    # drop invalid rows: negative/non-positive quantity, missing price\n    d = d[(d['Quantity'].notna()) & (d['Quantity'] >= 1) & (d['Quantity'] == d['Quantity'].round())]\n    d = d[d['Price'].notna() & (d['Price'] >= 0)]\n    # enforce Revenue = Quantity * Price\n    d['Revenue'] = d['Quantity'] * d['Price']\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['Category'] == 'Electronics']\n    d = d.dropna(subset=['Region'])\n    g = d.groupby('Region')['Revenue'].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 15,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,162 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 98.63,
+  "tokens": 42070,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed 4 data quality issues:\n1. Region label \"Nort\" normalized to \"North\" (1 cell)\n2. Removed 1 exact duplicate row (row 46)\n3. Excluded row 43 with invalid Quantity=-2 (must be \u22651 per rules)\n4. Recomputed Revenue for 3 rows (20, 27, 49) where Revenue \u2260 Quantity * Price\n\nUnits sold by region (sum of Quantity):\n- East: 46\n- North: 90\n- South: 42\n- West: 62\n\nTotal: 240 units across 55 valid rows.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Nort": "North"
+          },
+          "reason": "Fix misspelling 'Nort' to 'North' per allowed labels"
+        },
+        "reason": "Fix misspelling 'Nort' to 'North' per allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: merged 1 label variant(s), 1 cells",
+        "code": "df['Region'] = df['Region'].replace({'Nort': 'North'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate row 46"
+        },
+        "reason": "Remove exact duplicate row 46",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          46
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            43
+          ],
+          "reason": "Row 43 has Quantity=-2 which violates rule that Quantity must be \u22651 (units sold must be positive)"
+        },
+        "reason": "Row 43 has Quantity=-2 which violates rule that Quantity must be \u22651 (units sold must be positive)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          43
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [43]",
+        "code": "df = df.drop(index=[43])"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            20,
+            27,
+            49
+          ],
+          "reason": "Fix Revenue values that don't match Quantity * Price formula"
+        },
+        "reason": "Fix Revenue values that don't match Quantity * Price formula",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[20, 27, 49], 'Revenue'] = [24.0, 50.0, 180.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 8
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen35-397b",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

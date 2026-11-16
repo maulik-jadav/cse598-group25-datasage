@@ -1,0 +1,101 @@
+{
+  "task_id": "salesh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 88.66,
+  "tokens": 28832,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "extra": {
+    "final_summary": "**Question:** How many orders are there in each category?\n\n**Data problems found & fixes applied:**\n1. **Category label variant** \u2014 Row 58 had \"office supplies\" (lowercase) instead of the allowed \"Office Supplies\". Merged it into the canonical label via normalize_labels (low risk, auto-approved).\n2. **Exact duplicate rows** \u2014 Rows 12 and 51 were exact duplicate copies of earlier rows. Since the question counts orders and Order_ID is unique per order (62 distinct Order_IDs across 64 rows), these duplicates would double-count orders. Removed the 2 later copies, keeping the first (approved).\n\n**Result \u2014 order count by category (62 orders total):**\n- Office Supplies: 23\n- Accessories: 16\n- Electronics: 13\n- Furniture: 10\n\n**Caveats:** Region had misspellings (\"Suoth\", \"Eats\") but Region is not used by the question, so it was left unchanged. Revenue = Quantity \u00d7 Price is a rule in the file but is not needed for this count-based question, so it was not verified.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "office supplies": "Office Supplies"
+          },
+          "reason": "Case variant of an allowed category label; merge into canonical \"Office Supplies\" per rules file."
+        },
+        "reason": "Case variant of an allowed category label; merge into canonical \"Office Supplies\" per rules file.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({'office supplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Question counts orders; Order_ID is unique per order. Rows 12 and 51 are exact duplicate copies of earlier rows, which would double-count orders. Remove the later copies, keeping the first."
+        },
+        "reason": "Question counts orders; Order_ID is unique per order. Rows 12 and 51 are exact duplicate copies of earlier rows, which would double-count orders. Remove the later copies, keeping the first.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          12,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 5,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-ornith-1-5-35b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

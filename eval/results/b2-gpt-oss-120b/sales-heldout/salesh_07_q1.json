@@ -1,0 +1,63 @@
+{
+  "task_id": "salesh_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 20.95,
+  "tokens": 2996,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # 1. Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n\n    # 2. Standardize Region values: strip whitespace and title\u2011case\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].astype(str).str.strip().str.title()\n        # After stripping, treat empty strings as NaN\n        df['Region'].replace('', pd.NA, inplace=True)\n        # Keep only allowed region names\n        allowed_regions = {'North', 'South', 'East', 'West'}\n        df = df[df['Region'].isin(allowed_regions)]\n        # Drop rows where Region is still missing\n        df = df.dropna(subset=['Region'])\n\n    # 3. Ensure numeric columns are proper dtypes\n    for col in ['Quantity', 'Price', 'Revenue']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n\n    # 4. Remove rows with non\u2011positive Quantity (should be >=1)\n    df = df[df['Quantity'] > 0]\n\n    # 5. Re\u2011calculate Revenue = Quantity * Price (overwrites existing values)\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    # 6. Optional: drop any rows where Revenue is still negative (should not happen after step 4)\n    df = df[df['Revenue'] >= 0]\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Clean the dataframe first\n    clean_df = clean(df)\n    # Filter to Electronics category only\n    electronics = clean_df[clean_df['Category'] == 'Electronics']\n    # Group by Region and sum Revenue\n    result_series = electronics.groupby('Region')['Revenue'].sum()\n    # Convert to plain dict (convert numpy types to Python scalars)\n    result = {region: float(value) if not pd.isna(value) else 0 for region, value in result_series.items()}\n    return result"
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

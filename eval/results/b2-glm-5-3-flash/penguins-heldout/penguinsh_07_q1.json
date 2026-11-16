@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_07_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 69.65,
+  "tokens": 2570,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3667250.0,
+    "Chinstrap": 59400.0,
+    "Gentoo": 80325.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # normalize island labels (strip spaces, fix case variants)\n    df['island'] = df['island'].astype(str).str.strip().str.title()\n    # body_mass_g stored as text, some with thousands separators\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    # flipper_length_mm may be text and contains erroneous negatives (sign errors)\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce').abs()\n    # drop rows with missing/invalid body mass or species (needed for the question)\n    df = df.dropna(subset=['body_mass_g', 'species'])\n    return df\n\ndef answer(df):\n    d = clean(df)\n    grouped = d.groupby('species')['body_mass_g'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 9,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 117250.0,
+    "Chinstrap": 55625.0,
+    "Gentoo": 70175.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

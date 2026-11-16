@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 21.63,
+  "tokens": 2911,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    \"\"\"Clean the raw dataframe for the question.\n    - Remove exact duplicate rows.\n    - Strip whitespace and normalise case for Category values.\n    - Drop rows with non\u2011positive Quantity (invalid for orders).\n    - Re\u2011calculate Revenue as Quantity * Price.\n    \"\"\"\n    df = df.copy()\n    # 1. Drop exact duplicate rows\n    df = df.drop_duplicates()\n    # 2. Normalise Category labels (strip spaces, title case)\n    df['Category'] = df['Category'].astype(str).str.strip().str.title()\n    # 3. Keep only rows with positive Quantity\n    df = df[df['Quantity'] > 0]\n    # 4. Re\u2011compute Revenue to ensure formula consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    \"\"\"Return a mapping of each Category to the number of orders.\n    The key is the cleaned Category name; the value is the count of rows (orders).\n    \"\"\"\n    clean_df = clean(df)\n    counts = clean_df.groupby('Category').size().to_dict()\n    return counts"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

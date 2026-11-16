@@ -1,0 +1,69 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 50.43,
+  "tokens": 2557,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9821.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Make a copy of the dataframe to avoid modifying the original\n    cleaned_df = df.copy()\n    \n    # Convert Date to datetime and extract year-month\n    cleaned_df['Date'] = pd.to_datetime(cleaned_df['Date'], errors='coerce')\n    cleaned_df['Month'] = cleaned_df['Date'].dt.to_period('M').astype(str)\n    \n    # Convert Price to numeric, handling currency symbols\n    cleaned_df['Price'] = cleaned_df['Price'].replace('[$]', '', regex=True).astype(float)\n    \n    # Remove rows with negative Quantity or Revenue\n    cleaned_df = cleaned_df[(cleaned_df['Quantity'] >= 0) & (cleaned_df['Revenue'] >= 0)]\n    \n    # Clean Region labels\n    cleaned_df['Region'] = cleaned_df['Region'].str.strip().replace({'Wst': 'West', 'Eats': 'East', ' West': 'West'})\n    \n    # Drop rows with missing Region\n    cleaned_df = cleaned_df.dropna(subset=['Region'])\n    \n    return cleaned_df\n\ndef answer(df):\n    cleaned_df = clean(df)\n    # Group by Month and sum Revenue\n    result = cleaned_df.groupby('Month')['Revenue'].sum().to_dict()\n    return result\n"
+  },
+  "corrections": 11,
+  "planted": 12,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-devstral2-123b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

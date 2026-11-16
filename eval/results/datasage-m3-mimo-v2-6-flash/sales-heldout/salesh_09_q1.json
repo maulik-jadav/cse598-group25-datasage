@@ -1,0 +1,134 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 303.43,
+  "tokens": 20199,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed 3 data problems: (1) row 34 had Quantity = -7 / Revenue = -1260, violating the rules (Quantity must be \u2265 1) \u2014 row excluded; (2) 3 rows (47, 48, 56) had invalid dates ('TBD', 'not-a-date') \u2014 set to missing; (3) 2 prices were text ('$300.00', '$50.00') \u2014 cast to numbers. Revenue = Quantity * Price held for all rows. Total revenue per month (2026): Jan 2,665; Feb 6,096; Mar 4,160; Apr 5,575; May 3,045; Jun 9,941. Caveat: the 3 rows with missing dates are excluded from the monthly totals (54 of 57 rows counted).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            34
+          ],
+          "reason": "Quantity = -7 violates rules (Quantity min 1, always positive); Revenue -1260 is invalid"
+        },
+        "reason": "Quantity = -7 violates rules (Quantity min 1, always positive); Revenue -1260 is invalid",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [34]",
+        "code": "df = df.drop(index=[34])"
+      },
+      {
+        "version": 2,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            47,
+            48,
+            56
+          ],
+          "reason": "Invalid date values ('TBD', 'not-a-date') in otherwise valid rows; mark as missing per YYYY-MM-DD rule"
+        },
+        "reason": "Invalid date values ('TBD', 'not-a-date') in otherwise valid rows; mark as missing per YYYY-MM-DD rule",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: set 3 value(s) to missing",
+        "code": "df.loc[[47, 48, 56], 'Date'] = pd.NA"
+      },
+      {
+        "version": 3,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Two prices stored as text ('$300.00', '$50.00'); convert to numbers per rules (Price min 0)"
+        },
+        "reason": "Two prices stored as text ('$300.00', '$50.00'); convert to numbers per rules (Price min 0)",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (57 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 7,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mimo-v2-6-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

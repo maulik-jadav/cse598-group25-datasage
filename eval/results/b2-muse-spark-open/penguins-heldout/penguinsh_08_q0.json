@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 150.27,
+  "tokens": 5643,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 37.25,
+    "Dream": 37.46666666666667,
+    "Torgersen": 39.20909090909091
+  },
+  "extra": {
+    "code": "def clean(df):\n    import pandas as pd\n    df = df.copy()\n    # fix island typos / variants\n    island_map = {\"Dram\": \"Dream\", \"Torgerson\": \"Torgersen\"}\n    if \"island\" in df.columns:\n        df[\"island\"] = df[\"island\"].astype(str).str.strip().replace(island_map)\n        # also handle any extra spaces/case variants generically\n        # keep only allowed values, but mapping above covers observed variants\n    # fix sex case variant (FEMALE -> female)\n    if \"sex\" in df.columns:\n        # preserve NaN (missing means unknown)\n        mask = df[\"sex\"].notna()\n        df.loc[mask, \"sex\"] = df.loc[mask, \"sex\"].astype(str).str.strip().str.lower()\n    # fix numeric columns stored as text (commas, strings)\n    for col in [\"body_mass_g\", \"flipper_length_mm\", \"year\", \"bill_length_mm\", \"bill_depth_mm\"]:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col].astype(str).str.replace(\",\", \"\", regex=False), errors=\"coerce\")\n    # drop exact duplicate rows (keep first)\n    df = df.drop_duplicates()\n    return df\n\ndef answer(df):\n    import pandas as pd\n    d = clean(df)\n    # filter to Adelie only\n    if \"species\" in d.columns:\n        d = d[d[\"species\"] == \"Adelie\"]\n    # group by island and compute mean bill_length_mm\n    if d.empty or \"island\" not in d.columns or \"bill_length_mm\" not in d.columns:\n        return {}\n    grouped = d.groupby(\"island\", dropna=True)[\"bill_length_mm\"].mean()\n    grouped = grouped.dropna()\n    # convert to required dict format\n    result = {str(k): float(v) for k, v in grouped.items()}\n    return result\n"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "penguins-heldout",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 37.25,
+    "Dream": 37.4667,
+    "Torgersen": 39.2091
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

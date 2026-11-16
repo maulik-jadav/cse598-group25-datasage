@@ -1,0 +1,135 @@
+{
+  "task_id": "salest_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 33.55,
+  "tokens": 39282,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.8571,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "final_summary": "Fixed data issues before computing: normalized Region misspelling 'Nort'\u2192'North'; excluded row 43 (Quantity=-2, Revenue=-120, violates min=1); dropped 1 exact duplicate (row 46). Note: Revenue cross-check shows 3 rows (20,27,49) with Revenue \u2260 Quantity*Price, but since the question asks average unit price (Price) by Category, Revenue errors don't affect the result. Average Price by Category (55 rows): Accessories 32.5, Electronics 382.5, Furniture 177.86, Office Supplies 14.0.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Nort": "North"
+          },
+          "reason": "Fix misspelling 'Nort' to allowed label 'North' per rules"
+        },
+        "reason": "Fix misspelling 'Nort' to allowed label 'North' per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: merged 1 label variant(s), 1 cells",
+        "code": "df['Region'] = df['Region'].replace({'Nort': 'North'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            43
+          ],
+          "reason": "Row 43 has Quantity=-2 violating min=1 rule; Revenue=-120 also invalid"
+        },
+        "reason": "Row 43 has Quantity=-2 violating min=1 rule; Revenue=-120 also invalid",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          43
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [43]",
+        "code": "df = df.drop(index=[43])"
+      },
+      {
+        "version": 3,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate row (row 46)"
+        },
+        "reason": "Remove exact duplicate row (row 46)",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          46
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 10
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-inkling-small",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.8571,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

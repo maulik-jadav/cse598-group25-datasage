@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 21.85,
+  "tokens": 2926,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # Remove exact duplicate rows (keep the first occurrence)\n    df = df.drop_duplicates().reset_index(drop=True)\n\n    # Standardize Category values (strip spaces and fix typo)\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].astype(str).str.strip()\n        df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})\n\n    # Standardize Region values (strip spaces, keep NaN as is)\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].astype(str).str.strip()\n        # Convert empty strings back to NaN\n        df['Region'] = df['Region'].replace({'': pd.NA})\n\n    # Ensure Date is datetime and create a month column later\n    if 'Date' in df.columns:\n        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n\n    # Re\u2011calculate Revenue to satisfy the formula Quantity * Price\n    if {'Quantity', 'Price'}.issubset(df.columns):\n        df['Revenue'] = df['Quantity'] * df['Price']\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Assume df is already cleaned (or clean it here for safety)\n    df = clean(df)\n\n    # Create month string in YYYY-MM format\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n\n    # Group by month and sum Revenue\n    result_series = df.groupby('Month')['Revenue'].sum()\n\n    # Convert to plain dict (keys as strings, values as numbers)\n    result = result_series.to_dict()\n    return result"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 36.19,
+  "tokens": 3517,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 190.375,
+    "Chinstrap": 196.0,
+    "Gentoo": 215.3913043478261
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Drop exact duplicate rows (2 duplicates identified)\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    # Normalize label variants\n    df['island'] = df['island'].astype('string').str.strip().replace({'Dram': 'Dream', 'Torgerson': 'Torgersen'})\n    df['sex'] = df['sex'].astype('string').str.strip().str.lower()\n    # Coerce numeric columns that may be stored as text (e.g. '180', '3,600')\n    for col in ['flipper_length_mm', 'body_mass_g', 'bill_length_mm', 'bill_depth_mm', 'year']:\n        if df[col].dtype == object or df[col].dtype == 'string':\n            df[col] = pd.to_numeric(df[col].astype('string').str.replace(',', '', regex=False).str.strip(), errors='coerce')\n    # Range check on flipper length (min 170, max 235)\n    df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = np.nan\n    return df\n\ndef answer(df):\n    df = clean(df)\n    d = df.dropna(subset=['species', 'flipper_length_mm'])\n    g = d.groupby('species')['flipper_length_mm'].mean()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "penguins-heldout",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 190.375,
+    "Chinstrap": 196.0,
+    "Gentoo": 215.3913
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

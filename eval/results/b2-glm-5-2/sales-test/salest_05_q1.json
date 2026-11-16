@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.04,
+  "tokens": 2295,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix Category label variants (extra spaces)\n    df['Category'] = df['Category'].astype(str).str.strip()\n    # Fix Region label variants\n    region_map = {'Suoth': 'South', 'Nort': 'North'}\n    df['Region'] = df['Region'].map(lambda x: region_map.get(x, x) if pd.notna(x) else x)\n    # Ensure numeric columns\n    for c in ['Quantity', 'Price', 'Revenue']:\n        df[c] = pd.to_numeric(df[c], errors='coerce')\n    # Fix Revenue per formula Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    g = df.dropna(subset=['Category']).groupby('Category')['Revenue'].sum()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-2",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

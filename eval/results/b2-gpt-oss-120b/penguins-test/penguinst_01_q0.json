@@ -1,0 +1,53 @@
+{
+  "task_id": "penguinst_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 25.86,
+  "tokens": 3328,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3765.625,
+    "male": 4312.5
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Standardise categorical labels\n    if 'species' in df.columns:\n        df['species'] = df['species'].astype(str).str.strip().str.title()\n    if 'island' in df.columns:\n        df['island'] = df['island'].astype(str).str.strip().str.title()\n    # Convert body_mass_g from text (commas) to numeric\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = (\n            df['body_mass_g']\n            .astype(str)\n            .str.replace(',', '', regex=False)\n            .astype(float)\n        )\n    # Ensure flipper_length_mm is numeric (it may be stored as text)\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Compute average body mass per sex, ignoring unknown sex\n    grp = df.dropna(subset=['sex']).groupby('sex')['body_mass_g'].mean()\n    return {sex: float(val) for sex, val in grp.items()}\n"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3765.625,
+    "male": 4312.5
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

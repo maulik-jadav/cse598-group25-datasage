@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 76.45,
+  "tokens": 2566,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Fix region label variants\n    region_map = {\n        'north': 'North', 'Nort': 'North',\n        'east': 'East',\n        'Suoth': 'South',\n        'Wst': 'West',\n    }\n    df['Region'] = df['Region'].replace(region_map)\n    # Parse Price written as text (e.g. '$350.00', '$6.00')\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False),\n        errors='coerce'\n    )\n    # Fix invalid dates like '2026-14-01' (day/month swapped)\n    def fix_date(s):\n        s = str(s).strip()\n        try:\n            return pd.to_datetime(s, format='%Y-%m-%d').strftime('%Y-%m-%d')\n        except ValueError:\n            parts = s.split('-')\n            if len(parts) == 3:\n                y, a, b = parts\n                try:\n                    return pd.to_datetime(f'{y}-{b}-{a}', format='%Y-%m-%d').strftime('%Y-%m-%d')\n                except ValueError:\n                    return pd.NaT\n            return pd.NaT\n    df['Date'] = df['Date'].apply(fix_date)\n    # Recompute Revenue where possible\n    mask = df['Price'].notna() & df['Quantity'].notna()\n    df.loc[mask, 'Revenue'] = df.loc[mask, 'Quantity'] * df.loc[mask, 'Price']\n    return df\n\ndef answer(df):\n    d = df.dropna(subset=['Region', 'Quantity'])\n    units = d.groupby('Region')['Quantity'].sum()\n    return {str(k): int(v) for k, v in units.items()}"
+  },
+  "corrections": 11,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

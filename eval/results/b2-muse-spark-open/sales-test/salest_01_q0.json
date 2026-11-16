@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 308.52,
+  "tokens": 4756,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.333333333333336,
+    "Electronics": 396.42857142857144,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Clean Price: strip $ and convert text numbers to numeric\n    if 'Price' in df.columns:\n        df['Price'] = df['Price'].astype(str).str.replace(r'[\\$,]', '', regex=True).str.strip()\n        df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Ensure Quantity numeric\n    if 'Quantity' in df.columns:\n        df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # Normalize Region label variants (south/east -> South/East)\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    # Normalize Category whitespace\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].astype(str).str.strip()\n    # Filter invalid Quantity (min 1, positive whole number)\n    if 'Quantity' in df.columns:\n        df = df[df['Quantity'] >= 1]\n    # Filter invalid Price (min 0)\n    if 'Price' in df.columns:\n        df = df[df['Price'] >= 0]\n    # Keep only allowed Categories\n    allowed_cat = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    if 'Category' in df.columns:\n        df = df[df['Category'].isin(allowed_cat)]\n    # Drop rows missing keys needed for question\n    df = df.dropna(subset=['Category', 'Price'])\n    return df\n\ndef answer(df):\n    # average unit price per Category\n    if df.empty or 'Category' not in df.columns or 'Price' not in df.columns:\n        return {}\n    g = df.groupby('Category')['Price'].mean()\n    result = {}\n    for k, v in g.items():\n        if pd.isna(k):\n            continue\n        result[str(k)] = float(v)\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

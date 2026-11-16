@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 80.27,
+  "tokens": 3073,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 33.18181818181818,
+    "Electronics": 568.6666666666666,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix category label variants\n    df['Category'] = df['Category'].str.strip()\n    df['Category'] = df['Category'].replace({\n        'office supplies': 'Office Supplies',\n        'Furnture': 'Furniture',\n        'accessories': 'Accessories'\n    })\n    \n    # Ensure numeric columns are proper numbers\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Recalculate Revenue to fix cross-column issue\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Calculate average unit price by category\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    return result"
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-122b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.1818,
+    "Electronics": 568.6667,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

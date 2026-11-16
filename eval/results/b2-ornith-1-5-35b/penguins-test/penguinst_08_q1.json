@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinst_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 350.21,
+  "tokens": 6367,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3500.0,
+    "Chinstrap": 3907.8125,
+    "Gentoo": 5248.333333333333
+  },
+  "extra": {
+    "code": "import pandas as pd\n\n\ndef clean(df):\n    df = df.copy()\n    # Fix species label variants (typos)\n    species_map = {'Gentto': 'Gentoo', 'Adeile': 'Adelie'}\n    df['species'] = df['species'].replace(species_map)\n    # body_mass_g is stored as text (e.g. '3,800'); parse to numeric\n    df['body_mass_g'] = (df['body_mass_g'].astype(str)\n                         .str.replace(',', '', regex=False)\n                         .astype(float))\n    # Drop out-of-range body mass (e.g. 3650000 is a data error)\n    df = df[(df['body_mass_g'] >= 2500) & (df['body_mass_g'] <= 6500)]\n    return df\n\n\ndef answer(df):\n    result = {}\n    grouped = df.groupby('species')['body_mass_g'].mean()\n    for species, val in grouped.items():\n        if pd.isna(species):\n            continue\n        result[species] = float(val)\n    return result"
+  },
+  "corrections": 7,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-ornith-1-5-35b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3500.0,
+    "Chinstrap": 3907.8125,
+    "Gentoo": 5248.3333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 58.96,
+  "tokens": 23931,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed data problems affecting the monthly revenue question: (1) Date had 3 invalid values ('TBD', 'not-a-date', '13/45/2026') \u2014 marked as missing per YYYY-MM-DD rule, so those 3 rows are excluded from monthly totals; (2) Price had 3 values written as text ('$350.00', '$18.00', '$45.00') but parsed cleanly and Revenue = Quantity * Price verified for all 47 rows, so no change needed. Total revenue per month (44 of 47 rows used): 2026-01: $5,335; 2026-02: $6,462; 2026-03: $6,058; 2026-04: $1,694; 2026-05: $4,619; 2026-06: $879. Caveat: 3 orders with unreadable dates (totaling $1,000 in revenue) could not be assigned to a month.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Three values ('TBD', 'not-a-date', '13/45/2026') are not valid YYYY-MM-DD dates; rules require YYYY-MM-DD format. Rows are otherwise valid, so mark as missing rather than exclude."
+        },
+        "reason": "Three values ('TBD', 'not-a-date', '13/45/2026') are not valid YYYY-MM-DD dates; rules require YYYY-MM-DD format. Rows are otherwise valid, so mark as missing rather than exclude.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 6,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mimo-v2-6-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "penguinst_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 124.27,
+  "tokens": 8186,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3944.1666666666665,
+    "male": 4668.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # strip whitespace from text columns\n    for col in [\"penguin_id\", \"species\", \"island\", \"sex\"]:\n        if col in df.columns:\n            df[col] = df[col].astype(object).apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # standardise categorical labels\n    if \"species\" in df.columns:\n        df[\"species\"] = df[\"species\"].astype(str).str.strip().str.title()\n    if \"island\" in df.columns:\n        df[\"island\"] = df[\"island\"].astype(str).str.strip()\n    if \"sex\" in df.columns:\n        df[\"sex\"] = df[\"sex\"].astype(str).str.strip().str.lower()\n        df[\"sex\"] = df[\"sex\"].replace({\"nan\": pd.NA, \"None\": pd.NA, \"\": pd.NA})\n    # convert columns that are written as text to numeric\n    num_cols = [\"bill_length_mm\", \"bill_depth_mm\", \"flipper_length_mm\", \"body_mass_g\", \"year\"]\n    for c in num_cols:\n        if c in df.columns:\n            df[c] = pd.to_numeric(df[c], errors=\"coerce\")\n    # enforce body_mass_g range from rules\n    if \"body_mass_g\" in df.columns:\n        df = df[(df[\"body_mass_g\"] >= 2500) & (df[\"body_mass_g\"] <= 6500)]\n    return df\n\ndef answer(df):\n    sub = df.dropna(subset=[\"sex\", \"body_mass_g\"])\n    sub = sub[sub[\"sex\"].isin([\"male\", \"female\"])]\n    means = sub.groupby(\"sex\")[\"body_mass_g\"].mean()\n    return {sex: float(mean) for sex, mean in means.items()}\n"
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3944.1667,
+    "male": 4668.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

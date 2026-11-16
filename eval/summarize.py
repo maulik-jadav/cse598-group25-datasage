@@ -32,6 +32,16 @@ LABELS = {
 DATASETS = ["sales", "penguins", "sales-heldout", "penguins-heldout", "sales-test", "penguins-test",
             "sales-s303", "penguins-s303", "sales-s404", "penguins-s404", "sales-s505", "penguins-s505",
             "sales-hard", "penguins-hard", "sales-hard2", "penguins-hard2"]
+# Model comparison study: one agent row and one single-call row per model that passed the tool-calling probe.
+try:
+    from eval.run_eval import MODEL_SYSTEMS
+except ImportError:  # run_eval needs the openai package; the table still builds without the study rows
+    MODEL_SYSTEMS = {}
+for _short, _model in MODEL_SYSTEMS.items():
+    ORDER.append(f"datasage-m3-{_short}")
+    LABELS[f"datasage-m3-{_short}"] = f"Model study: DataSage M3 with {_model}"
+    ORDER.append(f"b2-{_short}")
+    LABELS[f"b2-{_short}"] = f"Model study: B2 single call with {_model}"
 
 
 def load(system: str, dataset: str) -> list[dict]:

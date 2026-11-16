@@ -1,0 +1,53 @@
+{
+  "task_id": "penguinst_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 127.97,
+  "tokens": 5515,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3765.625,
+    "male": 4312.5
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # species: strip extra spaces and normalize case (Adelie, Chinstrap, Gentoo)\n    if 'species' in df.columns:\n        df['species'] = df['species'].astype('object').where(df['species'].notna())\n        df['species'] = df['species'].astype(str).str.strip()\n        df['species'] = df['species'].str.title()\n        df.loc[df['species'].str.lower() == 'nan', 'species'] = np.nan\n        # keep only allowed values, others -> NaN\n        allowed_species = {'Adelie', 'Chinstrap', 'Gentoo'}\n        df.loc[~df['species'].isin(allowed_species), 'species'] = np.nan\n    # island: strip and title case (Biscoe, Dream, Torgersen)\n    if 'island' in df.columns:\n        df['island'] = df['island'].astype(str).str.strip().str.title()\n        df.loc[df['island'].str.lower() == 'nan', 'island'] = np.nan\n        allowed_island = {'Biscoe', 'Dream', 'Torgersen'}\n        df.loc[~df['island'].isin(allowed_island), 'island'] = np.nan\n    # body_mass_g: text with commas -> numeric\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip()\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n        # out of range 2500-6500 -> NaN (rule)\n        df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = np.nan\n    # flipper_length_mm: ensure numeric and out of range check (170-235)\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n        df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = np.nan\n    # bill_length_mm out of range 30-60\n    if 'bill_length_mm' in df.columns:\n        df['bill_length_mm'] = pd.to_numeric(df['bill_length_mm'], errors='coerce')\n        df.loc[(df['bill_length_mm'] < 30) | (df['bill_length_mm'] > 60), 'bill_length_mm'] = np.nan\n    # sex: missing means unknown; do not guess, just strip/normalize and keep NaN\n    if 'sex' in df.columns:\n        # preserve NaN\n        mask = df['sex'].notna()\n        df.loc[mask, 'sex'] = df.loc[mask, 'sex'].astype(str).str.strip().str.lower()\n        allowed_sex = {'male', 'female'}\n        df.loc[mask & ~df['sex'].isin(allowed_sex), 'sex'] = np.nan\n    return df\n\ndef answer(df):\n    # average body mass for each sex, drop missing sex\n    d = df.dropna(subset=['sex', 'body_mass_g'])\n    if d.empty:\n        return {}\n    g = d.groupby('sex', dropna=True)['body_mass_g'].mean()\n    # drop missing group keys and convert to plain dict\n    out = {}\n    for k, v in g.items():\n        if pd.isna(k):\n            continue\n        out[str(k)] = float(v)\n    return out\n"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3765.625,
+    "male": 4312.5
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

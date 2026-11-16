@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinsh_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.63,
+  "tokens": 2393,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 37.25,
+    "Dream": 37.46666666666667,
+    "Torgersen": 39.20909090909091
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates()\n    # Standardize island names to the allowed set\n    mapping = {\"Dram\": \"Dream\", \"Torgerson\": \"Torgersen\"}\n    df['island'] = df['island'].map(mapping).fillna(df['island'])\n    # Standardize sex values to lower case\n    df['sex'] = df['sex'].str.lower()\n    # Ensure numeric columns are numeric (they already are, but just in case)\n    for col in ['bill_length_mm', 'flipper_length_mm', 'body_mass_g']:\n        if col not in df.columns:\n            continue\n        if df[col].dtype == 'object':\n            df[col] = pd.to_numeric(df[col].str.replace(',', ''))\n    return df\n\ndef answer(df):\n    # Filter for Adelie penguins\n    df_adelie = df[df['species'] == 'Adelie']\n    # Group by island and compute mean bill length\n    result = (df_adelie.groupby('island')['bill_length_mm']\n                .mean()\n                .to_dict())\n    return result\n"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-granite41-30b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 37.25,
+    "Dream": 37.4667,
+    "Torgersen": 39.2091
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ]
+  ]
+}

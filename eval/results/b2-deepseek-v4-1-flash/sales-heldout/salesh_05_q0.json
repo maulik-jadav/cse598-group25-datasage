@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 69.78,
+  "tokens": 4673,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "West": 77.0,
+    "South": 78.0,
+    "North": 37.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.replace(r'[$,]', '', regex=True),\n        errors='coerce'\n    )\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df.loc[df['Quantity'] < 0, 'Quantity'] = df.loc[df['Quantity'] < 0, 'Quantity'].abs()\n\n    region_map = {\n        'north': 'North', 'south': 'South', 'east': 'East', 'west': 'West',\n        'wst': 'West', 'suoth': 'South'\n    }\n\n    def norm_region(v):\n        if pd.isna(v):\n            return v\n        s = str(v).strip()\n        return region_map.get(s.lower(), s.title())\n\n    df['Region'] = df['Region'].map(norm_region)\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Region'])\n    sums = d.groupby('Region', sort=False)['Quantity'].sum()\n    return {str(k): int(v) for k, v in sums.items()}"
+  },
+  "corrections": 9,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 101.89,
+  "tokens": 5339,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Standardize dates; invalid dates become NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # Clean Region: remove surrounding whitespace and normalize case\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    # Clean Category: remove surrounding whitespace, normalize case, fix known typos\n    cat_map = {\n        'Accesories': 'Accessories',\n        'Electornics': 'Electronics',\n        'Office Suplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].astype(str).str.strip().str.title().replace(cat_map)\n    # Enforce the Revenue formula\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Drop rows where the month cannot be determined\n    df = df.dropna(subset=['Date'])\n    df['Month'] = df['Date'].dt.to_period('M').astype(str)\n    result = df.groupby('Month')['Revenue'].sum().to_dict()\n    return {k: int(v) for k, v in result.items()}\n"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

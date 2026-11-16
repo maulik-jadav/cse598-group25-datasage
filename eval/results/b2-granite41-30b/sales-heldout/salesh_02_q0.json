@@ -1,0 +1,56 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 2,
+  "detect_fp": 3,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.88,
+  "tokens": 2136,
+  "stop_reason": "code_error",
+  "note": "AttributeError: 'dict_values' object has no attribute 'sum'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Ensure numeric columns are truly numeric\n    for col in ['Quantity', 'Price', 'Revenue']:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    # Fix negative quantities and revenues (set to 0)\n    df.loc[df['Quantity'] < 0, 'Quantity'] = 0\n    df.loc[df['Revenue'] < 0, 'Revenue'] = 0\n    # Correct Revenue to match Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # Clean Region label variants: strip spaces and standardize case\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    # Ensure Date is in proper ISO format (YYYY-MM-DD)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d')\n    return df\n\ndef answer(df):\n    # Group by Category and sum Revenue\n    result = df.groupby('Category')['Revenue'].sum().to_dict()\n    # Add overall total under key 'all'\n    result['all'] = result.values().sum()\n    return result"
+  },
+  "corrections": 0,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-granite41-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

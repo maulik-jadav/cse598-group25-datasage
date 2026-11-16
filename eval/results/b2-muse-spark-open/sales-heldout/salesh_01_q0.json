@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 265.79,
+  "tokens": 4230,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # remove exact duplicate rows (Order_ID uniqueness)\n    df = df.drop_duplicates()\n    # Region is grouping key for the question - drop missing group keys\n    df = df.dropna(subset=['Region'])\n    # ensure Region is stripped (defensive)\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df = df[df['Region'].str.lower() != 'nan']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # ensure Quantity is numeric for aggregation\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    grouped = df.groupby('Region', dropna=True)['Quantity'].sum()\n    # drop missing group keys and format result\n    result = {}\n    for k, v in grouped.items():\n        if pd.isna(k) or str(k).strip() == '':\n            continue\n        # Quantity is whole numbers\n        if pd.notna(v):\n            result[str(k)] = int(v) if float(v).is_integer() else float(v)\n    return result\n"
+  },
+  "corrections": 2,
+  "planted": 9,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

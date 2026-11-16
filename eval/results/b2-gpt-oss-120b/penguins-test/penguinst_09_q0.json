@@ -1,0 +1,47 @@
+{
+  "task_id": "penguinst_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 1,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 14.94,
+  "tokens": 2982,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 193.17,
+    "Chinstrap": 196.92,
+    "Gentoo": 216.68
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # Standardize species names (case/typo variants)\n    species_map = {\n        \"adelie\": \"Adelie\",\n        \"adeli\": \"Adelie\",  # just in case\n        \"chinstrap\": \"Chinstrap\",\n        \"gentoo\": \"Gentoo\",\n        \"gentto\": \"Gentoo\"\n    }\n    # lower\u2011case, strip spaces and map\n    df[\"species\"] = df[\"species\"].astype(str).str.strip().str.lower().map(species_map).fillna(df[\"species\"])\n\n    # Ensure flipper_length_mm is numeric\n    df[\"flipper_length_mm\"] = pd.to_numeric(df[\"flipper_length_mm\"], errors=\"coerce\")\n    # Apply valid range (170\u2011235) \u2013 values outside become NaN\n    df.loc[~df[\"flipper_length_mm\"].between(170, 235), \"flipper_length_mm\"] = pd.NA\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Compute average flipper length per species, ignoring NaN values\n    result = (\n        df.groupby(\"species\", dropna=True)[\"flipper_length_mm\"]\n        .mean()\n        .round(2)\n        .to_dict()\n    )\n    return result"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "penguins-test",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 193.1667,
+    "Chinstrap": 197.0909,
+    "Gentoo": 216.6842
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ]
+  ]
+}

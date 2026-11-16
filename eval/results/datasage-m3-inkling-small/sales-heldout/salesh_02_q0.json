@@ -1,0 +1,194 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 15,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 70.99,
+  "tokens": 63732,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed data quality issues affecting Revenue by Category: (1) 3 rows with negative Quantity (rows 5,14,65) excluded per rules (Quantity >= 1); (2) Region label variants normalized; (3) 3 invalid dates set to missing; (4) 3 Revenue errors (rows 10,19,61) recomputed to Quantity*Price (user rejected excluding them). Total revenue by category (64 rows used): Accessories 2450, Electronics 29070, Furniture 16505, Office Supplies 972. Caveat: 3 rows with missing Region remain; 3 invalid dates remain missing; excluded negative-quantity rows not included.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " South": "South",
+            "North ": "North",
+            "east": "East",
+            "north": "North",
+            "west": "West"
+          },
+          "reason": "Fix case/space variants in Region to allowed labels"
+        },
+        "reason": "Fix case/space variants in Region to allowed labels",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Region: merged 5 label variant(s), 6 cells",
+        "code": "df['Region'] = df['Region'].replace({' South': 'South', 'North ': 'North', 'east': 'East', 'north': 'North', 'west': 'West'})"
+      },
+      {
+        "version": 2,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "Trim whitespace from Region values"
+        },
+        "reason": "Trim whitespace from Region values",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: trimmed 0 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            5,
+            14,
+            65
+          ],
+          "reason": "Quantity negative (violates min=1 rule); Revenue also negative"
+        },
+        "reason": "Quantity negative (violates min=1 rule); Revenue also negative",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          5,
+          14,
+          65
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [5, 14, 65]",
+        "code": "df = df.drop(index=[5, 14, 65])"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            10,
+            19,
+            61
+          ],
+          "reason": "Correct Revenue to match Quantity * Price per rules"
+        },
+        "reason": "Correct Revenue to match Quantity * Price per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[10, 19, 61], 'Revenue'] = [240.0, 24.0, 48.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 5,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Set invalid dates (TBD, 2026-14-01, not-a-date) to missing"
+        },
+        "reason": "Set invalid dates (TBD, 2026-14-01, not-a-date) to missing",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "summary": "excluded 3 row(s): [10, 19, 61]"
+      }
+    ],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": false,
+        "why": "removes row 10 (id 2011) that should be kept"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 15
+  },
+  "corrections": 18,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-inkling-small",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

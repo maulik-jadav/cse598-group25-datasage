@@ -1,0 +1,114 @@
+{
+  "task_id": "salest_04_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 30,
+  "tool_errors": 15,
+  "recovered_errors": 5,
+  "approvals_asked": 1,
+  "seconds": 24.82,
+  "tokens": 174398,
+  "stop_reason": "tool_budget_exhausted",
+  "note": "",
+  "answer": null,
+  "extra": {
+    "final_summary": "",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Some dates are not valid ISO format; will set invalid to missing"
+        },
+        "reason": "Some dates are not valid ISO format; will set invalid to missing",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Date: 2 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Some unit prices are stored as text; casting to number to enable calculations"
+        },
+        "reason": "Some unit prices are stored as text; casting to number to enable calculations",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (70 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 3,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Category",
+          "reason": "Ensuring the category labels are clean for grouping"
+        },
+        "reason": "Ensuring the category labels are clean for grouping",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Category: trimmed 0 values",
+        "code": "df['Category'] = df['Category'].str.strip()"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 31
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-olmo3-7b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 31.7857,
+    "Electronics": 351.4286,
+    "Furniture": 153.25,
+    "Office Supplies": 9.6923
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

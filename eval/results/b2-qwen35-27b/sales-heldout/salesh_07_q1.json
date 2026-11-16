@@ -1,0 +1,59 @@
+{
+  "task_id": "salesh_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 84.61,
+  "tokens": 3402,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix Region label variants - trim spaces and standardize case\n    df['Region'] = df['Region'].str.strip().str.title()\n    \n    # Drop rows with missing Region (needed for grouping by region)\n    df = df.dropna(subset=['Region'])\n    \n    # Drop rows with negative quantities (invalid per rules)\n    df = df[df['Quantity'] > 0]\n    \n    # Recalculate Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Filter for Electronics category\n    electronics_df = df[df['Category'] == 'Electronics']\n    \n    # Group by Region and sum Revenue\n    result = electronics_df.groupby('Region')['Revenue'].sum().to_dict()\n    \n    return result"
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-27b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

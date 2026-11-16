@@ -1,0 +1,78 @@
+{
+  "task_id": "salest_03_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 14.43,
+  "tokens": 2435,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01 | Accessories": 135.0,
+    "2026-01 | Electronics": 7740.0,
+    "2026-01 | Furniture": 1935.0,
+    "2026-01 | Office Supplies": 1140.0,
+    "2026-02 | Accessories": 435.0,
+    "2026-02 | Electronics": 23070.0,
+    "2026-02 | Office Supplies": 108.0,
+    "2026-03 | Accessories": 1050.0,
+    "2026-03 | Electronics": 272700.0,
+    "2026-03 | Furniture": 2100.0,
+    "2026-03 | Office Supplies": 96.0,
+    "2026-04 | Accessories": 275.0,
+    "2026-04 | Furniture": 1080.0,
+    "2026-04 | Office Supplies": 36.0,
+    "2026-05 | Accessories": 435.0,
+    "2026-05 | Electronics": 840.0,
+    "2026-05 | Furniture": 1035.0,
+    "2026-05 | Office Supplies": 36.0,
+    "2026-06 | Accessories": 320.0,
+    "2026-06 | Electronics": 1040.0,
+    "2026-06 | Furniture": 3150.0,
+    "2026-06 | Office Supplies": 180.0,
+    "all": 318936.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix label variant in Category (merge ' Furniture' with 'Furniture')\n    df['Category'] = df['Category'].replace({' Furniture': 'Furniture'}, regex=False)\n    # Convert Price to numeric (handles strings like '$180.00' and '180')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Fill missing Region with 'Unknown' (or could drop, but keep for grouping)\n    df['Region'] = df['Region'].fillna('Unknown')\n    # Ensure Revenue is computed correctly where missing (though spec says missing=0)\n    # But if any, set Revenue = Quantity * Price where Revenue is NaN\n    mask = df['Revenue'].isna()\n    df.loc[mask, 'Revenue'] = df.loc[mask, 'Quantity'] * df.loc[mask, 'Price']\n    # Keep id column (Order_ID)\n    return df\n\ndef answer(df):\n    # Group by month and Category (group label: 'YYYY-MM | Category')\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df['Month'] = df['Date'].dt.to_period('M').dt.to_timestamp().dt.strftime('%Y-%m')\n    # Drop rows where Date is invalid\n    df = df.dropna(subset=['Date'])\n    # Group by Month and Category\n    grouped = df.groupby(['Month', 'Category'])['Revenue'].sum().reset_index()\n    result = {}\n    # Also compute overall total\n    overall_sum = grouped['Revenue'].sum()\n    # Build result dict\n    for _, row in grouped.iterrows():\n        key = f\"{row['Month']} | {row['Category']}\"\n        result[key] = row['Revenue']\n    if overall_sum is not None and not pd.isna(overall_sum):\n        result['all'] = overall_sum\n    # Drop keys with NaN revenue\n    result = {k: v for k, v in result.items() if not pd.isna(v)}\n    return result"
+  },
+  "corrections": 4,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 9858.0,
+    "2026-02": 23613.0,
+    "2026-03": 8246.0,
+    "2026-04": 1391.0,
+    "2026-05": 2346.0,
+    "2026-06": 4690.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

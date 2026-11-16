@@ -1,0 +1,49 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 4,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 251.22,
+  "tokens": 3587,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.0,
+    "Electronics": 277.3333333333333,
+    "Furniture": 191.05263157894737,
+    "Office Supplies": 11.1
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix label variants (typos) in Category\n    df['Category'] = df['Category'].replace({\n        'Office Suplies': 'Office Supplies',\n        'Furnture': 'Furniture'\n    })\n    # Remove exact duplicate rows (e.g., duplicate Order_ID 2005)\n    df = df.drop_duplicates()\n    return df\n\ndef answer(df):\n    df = clean(df)\n    result = {}\n    grouped = df.groupby('Category')['Price'].mean()\n    for category, value in grouped.items():\n        if pd.notna(category):\n            result[category] = value\n    return result\n"
+  },
+  "corrections": 5,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-ornith-1-5-35b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 58.62,
+  "tokens": 3644,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "adelie": 3666.67,
+    "chinstrap": 3801.79,
+    "gentoo": 5173.33
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # normalize whitespace/case variants in text columns\n    for col in ['species', 'island', 'sex']:\n        if col in df.columns:\n            df[col] = df[col].astype('object')\n            mask = df[col].notna()\n            df.loc[mask, col] = df.loc[mask, col].astype(str).str.strip().str.lower()\n    # fix sign errors in flipper_length_mm (negative values within valid magnitude)\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    # drop rows with body_mass_g outside the valid range [2500, 6500]\n    df = df[(df['body_mass_g'] >= 2500) & (df['body_mass_g'] <= 6500)]\n    return df\n\ndef answer(df):\n    d = clean(df)\n    g = d.groupby('species')['body_mass_g'].mean()\n    return {k: round(float(v), 2) for k, v in g.items()}"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 94,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3694.4444,
+    "Chinstrap": 3801.7857,
+    "Gentoo": 5173.3333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

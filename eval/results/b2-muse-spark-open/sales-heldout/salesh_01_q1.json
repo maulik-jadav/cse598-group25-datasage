@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 108.56,
+  "tokens": 4312,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # clean Category: strip whitespace and fix typos\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].apply(lambda x: x.strip() if isinstance(x, str) else x)\n        df['Category'] = df['Category'].replace({'Furnture': 'Furniture', 'Accesories': 'Accessories'})\n    # remove exact duplicate rows\n    df = df.drop_duplicates()\n    # ensure Order_ID uniqueness (keep first)\n    if 'Order_ID' in df.columns:\n        df = df.drop_duplicates(subset=['Order_ID'], keep='first')\n    return df\n\ndef answer(df):\n    # count orders per Category, drop missing group keys\n    if 'Category' not in df.columns:\n        return {}\n    d = df.dropna(subset=['Category'])\n    # exclude empty strings if any\n    d = d[d['Category'].astype(str).str.strip() != '']\n    counts = d.groupby('Category').size()\n    return {str(k): int(v) for k, v in counts.items()}\n"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

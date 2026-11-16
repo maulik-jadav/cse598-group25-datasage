@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 175.79,
+  "tokens": 7569,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 77000.0,
+    "Chinstrap": 57275.0,
+    "Gentoo": 87700.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # strip whitespace / fix label variants for text columns\n    for col in ['species', 'island', 'sex']:\n        if col in df.columns:\n            df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n            df[col] = df[col].replace('', pd.NA)\n    # ensure numeric columns are numeric (handles text_number)\n    for col in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g', 'year']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n    # fix negative flipper_length_mm (abs value is within 170-235)\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n        # any remaining out of range set to NA (not needed for question but cleans)\n        df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = pd.NA\n    # fix body_mass_g out_of_range: 5050000 is 1000x too large\n    if 'body_mass_g' in df.columns:\n        # correct obvious factor-1000 error\n        mask = df['body_mass_g'] > 6500\n        df.loc[mask, 'body_mass_g'] = df.loc[mask, 'body_mass_g'] / 1000\n        # any still out of range -> invalid -> NA\n        df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # also clean bill_length_mm out of range if any\n    if 'bill_length_mm' in df.columns:\n        df.loc[(df['bill_length_mm'] < 30) | (df['bill_length_mm'] > 60), 'bill_length_mm'] = pd.NA\n    return df\n\ndef answer(df):\n    # total body mass per species\n    d = df.copy()\n    # ensure numeric\n    if 'body_mass_g' in d.columns:\n        d['body_mass_g'] = pd.to_numeric(d['body_mass_g'], errors='coerce')\n    d = d.dropna(subset=['species', 'body_mass_g'])\n    # drop missing group keys (empty strings)\n    d = d[d['species'].astype(str).str.strip() != '']\n    grouped = d.groupby('species')['body_mass_g'].sum()\n    result = {}\n    for k, v in grouped.items():\n        if pd.isna(k) or str(k).strip() == '':\n            continue\n        # convert to int if whole number for clean output\n        fv = float(v)\n        result[str(k)] = int(round(fv)) if fv.is_integer() else float(fv)\n    return result\n"
+  },
+  "corrections": 4,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 66500.0,
+    "Chinstrap": 53225.0,
+    "Gentoo": 77600.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

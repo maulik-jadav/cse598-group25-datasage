@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 163.64,
+  "tokens": 2680,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # Normalize Region labels: strip spaces, fix case, empty -> NaN\n    region = d['Region'].astype('string').str.strip().str.title()\n    region = region.replace({'': pd.NA, 'Nan': pd.NA, 'None': pd.NA})\n    d['Region'] = region\n    # Parse dates, invalid formats become NaT\n    d['Date'] = pd.to_datetime(d['Date'], errors='coerce')\n    # Quantity must be a positive whole number; drop invalid rows\n    d = d[pd.to_numeric(d['Quantity'], errors='coerce') >= 1]\n    # Recompute Revenue = Quantity * Price to fix inconsistencies\n    d['Quantity'] = pd.to_numeric(d['Quantity'], errors='coerce')\n    d['Price'] = pd.to_numeric(d['Price'], errors='coerce')\n    d['Revenue'] = d['Quantity'] * d['Price']\n    return d\n\ndef answer(df):\n    d = clean(df)\n    e = d[(d['Category'] == 'Electronics') & d['Region'].notna()]\n    totals = e.groupby('Region')['Revenue'].sum()\n    return {str(k): float(v) for k, v in totals.items()}"
+  },
+  "corrections": 18,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

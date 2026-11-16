@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 2,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 82.45,
+  "tokens": 5703,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 190.18,
+    "Chinstrap": 199.53,
+    "Gentoo": 215.94
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Standardize island labels (case/space variants)\n    df['island'] = df['island'].str.strip().str.title()\n    \n    # Convert flipper length to numeric\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    \n    # Fix sign errors: negative values whose absolute value is in range\n    neg_mask = df['flipper_length_mm'] < 0\n    abs_vals = df.loc[neg_mask, 'flipper_length_mm'].abs()\n    valid_abs = abs_vals.between(170, 235)\n    df.loc[valid_abs.index, 'flipper_length_mm'] = abs_vals[valid_abs]\n    \n    # Mark any remaining out-of-range values as missing\n    df.loc[~df['flipper_length_mm'].between(170, 235), 'flipper_length_mm'] = np.nan\n    \n    return df\n\ndef answer(df):\n    cleaned = clean(df)\n    valid = cleaned.dropna(subset=['species', 'flipper_length_mm'])\n    means = valid.groupby('species')['flipper_length_mm'].mean().round(2)\n    return means.to_dict()\n"
+  },
+  "corrections": 9,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "penguins-heldout",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 190.2812,
+    "Chinstrap": 199.6429,
+    "Gentoo": 215.1429
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

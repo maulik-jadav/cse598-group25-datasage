@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 111.43,
+  "tokens": 4235,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.65217391304348,
+    "Electronics": 259.2307692307692,
+    "Furniture": 251.94444444444446,
+    "Office Supplies": 9.23076923076923
+  },
+  "extra": {
+    "code": "import pandas as pd\ndef clean(df):\n    df = df.copy()\n    # strip whitespace from text columns (fixes ' East' -> 'East')\n    for col in ['Category', 'Region', 'Date']:\n        if col in df.columns:\n            df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # fix Category misspellings\n    cat_map = {'Office Suplies': 'Office Supplies', 'Accesories': 'Accessories'}\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].replace(cat_map)\n    # ensure numeric types for Price/Quantity\n    if 'Price' in df.columns:\n        df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    if 'Quantity' in df.columns:\n        df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # drop exact duplicate rows (Order_ID 2004 duplicate)\n    df = df.drop_duplicates()\n    # enforce Order_ID uniqueness\n    if 'Order_ID' in df.columns:\n        df = df.drop_duplicates(subset=['Order_ID'], keep='first')\n    # Date invalid dates not needed for this question, but coerce for completeness\n    # df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    return df\n\ndef answer(df):\n    # work on cleaned data (idempotent if already cleaned)\n    # do not drop rows with missing Region - not needed for this question\n    df = df.dropna(subset=['Category'])\n    # drop rows where Price is missing after coercion\n    df = df.dropna(subset=['Price'])\n    grouped = df.groupby('Category')['Price'].mean()\n    return {str(k): float(v) for k, v in grouped.items()}\n"
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.6522,
+    "Electronics": 259.2308,
+    "Furniture": 251.9444,
+    "Office Supplies": 9.2308
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

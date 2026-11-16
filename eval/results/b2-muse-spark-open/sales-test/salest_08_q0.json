@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 107.56,
+  "tokens": 4204,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "code": "import pandas as pd\ndef clean(df):\n    df = df.copy()\n    # strip whitespace for text columns\n    for col in ['Category', 'Region', 'Date']:\n        if col in df.columns:\n            df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # normalize Category variants to allowed list\n    cat_map = {\n        'Accesories': 'Accessories',\n        'electronics': 'Electronics',\n        'Electornics': 'Electronics',\n        'office supplies': 'Office Supplies',\n        'Office Suplies': 'Office Supplies'\n    }\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].replace(cat_map)\n        allowed_lower = {'accessories': 'Accessories', 'electronics': 'Electronics', 'furniture': 'Furniture', 'office supplies': 'Office Supplies'}\n        df['Category'] = df['Category'].apply(lambda x: allowed_lower.get(x.lower(), x) if isinstance(x, str) else x)\n    # normalize Region (strip already done)\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # parse Date, invalid becomes NaT\n    if 'Date' in df.columns:\n        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # ensure numeric types\n    for col in ['Quantity', 'Price']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n    # fix Revenue formula\n    if 'Revenue' in df.columns and 'Quantity' in df.columns and 'Price' in df.columns:\n        df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # create month key YYYY-MM\n    df['month'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m')\n    df = df.dropna(subset=['month'])\n    grouped = df.groupby('month')['Revenue'].sum().sort_index()\n    return {str(k): float(v) for k, v in grouped.items()}\n"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

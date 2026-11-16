@@ -1,0 +1,107 @@
+{
+  "task_id": "salesh_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 76.31,
+  "tokens": 36857,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed label variants in the 'Category' column (e.g., 'Furnture' \u2192 'Furniture', 'Accesories' \u2192 'Accessories', and whitespace variants). Removed 2 exact duplicate rows. Verified that Revenue = Quantity * Price holds for all rows. Answer: There are 21 orders in Accessories, 18 in Electronics, 14 in Furniture, and 17 in Office Supplies.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            " Office Supplies": "Office Supplies",
+            "Furniture ": "Furniture",
+            "Accesories": "Accessories",
+            "Furnture": "Furniture"
+          },
+          "reason": "Merge misspelled or whitespace-variant category labels into the allowed values per rules file."
+        },
+        "reason": "Merge misspelled or whitespace-variant category labels into the allowed values per rules file.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Category: merged 5 label variant(s), 6 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', ' Office Supplies': 'Office Supplies', 'Furniture ': 'Furniture', 'Accesories': 'Accessories', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate rows; keeping the first occurrence per duplicate group."
+        },
+        "reason": "Remove exact duplicate rows; keeping the first occurrence per duplicate group.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          60
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 8
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen3-vl-32b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

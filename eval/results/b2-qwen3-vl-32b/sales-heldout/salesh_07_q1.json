@@ -1,0 +1,59 @@
+{
+  "task_id": "salesh_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 64.39,
+  "tokens": 2290,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix duplicates\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Standardize Region labels\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    \n    # Fix negative Quantity and Revenue (only for Electronics category)\n    df.loc[df['Category'] == 'Electronics', 'Quantity'] = df.loc[df['Category'] == 'Electronics', 'Quantity'].abs()\n    df.loc[df['Category'] == 'Electronics', 'Revenue'] = df.loc[df['Category'] == 'Electronics', 'Revenue'].abs()\n    \n    # Drop rows with missing Region\n    df = df.dropna(subset=['Region'])\n    \n    # Ensure Revenue matches Quantity * Price for Electronics (sanity check)\n    df.loc[df['Category'] == 'Electronics', 'Revenue'] = df.loc[df['Category'] == 'Electronics', 'Quantity'] * df.loc[df['Category'] == 'Electronics', 'Price']\n    \n    return df\n\n\ndef answer(df):\n    # Filter to Electronics category\n    electronics_df = df[df['Category'] == 'Electronics']\n    \n    # Group by Region and sum Revenue\n    result = electronics_df.groupby('Region')['Revenue'].sum().to_dict()\n    \n    # Return as dict with region as key\n    return result"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

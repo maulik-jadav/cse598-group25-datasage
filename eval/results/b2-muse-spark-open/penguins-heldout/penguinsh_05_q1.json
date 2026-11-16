@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_05_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 152.22,
+  "tokens": 5818,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3667.8571428571427,
+    "Chinstrap": 3726.6666666666665,
+    "Gentoo": 5210.294117647059
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # normalize sex label variants (FEMALE -> female)\n    if 'sex' in df.columns:\n        df['sex'] = df['sex'].apply(lambda x: x.strip().lower() if isinstance(x, str) else x)\n    # fix flipper_length_mm negative sign errors\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n        df.loc[df['flipper_length_mm'] < 0, 'flipper_length_mm'] *= -1\n    # fix body_mass_g out-of-range (e.g., 5700000 grams -> 5700 grams)\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n        mask = df['body_mass_g'] > 6500\n        df.loc[mask, 'body_mass_g'] = df.loc[mask, 'body_mass_g'] / 1000\n        # iterative safety for extreme values\n        mask = df['body_mass_g'] > 6500\n        while mask.any():\n            df.loc[mask, 'body_mass_g'] /= 1000\n            mask = df['body_mass_g'] > 6500\n        mask_low = df['body_mass_g'] < 2500\n        # low values are not present in this sample; keep as NaN if needed\n        # df.loc[mask_low, 'body_mass_g'] = pd.NA\n    return df\n\ndef answer(df):\n    d = df.dropna(subset=['species'])\n    d['body_mass_g'] = pd.to_numeric(d['body_mass_g'], errors='coerce')\n    grouped = d.groupby('species')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in grouped.items() if pd.notna(k)}\n"
+  },
+  "corrections": 6,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3687.5,
+    "Chinstrap": 3726.6667,
+    "Gentoo": 5253.5714
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

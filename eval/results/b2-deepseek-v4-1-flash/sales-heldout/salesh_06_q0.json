@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 27.49,
+  "tokens": 3318,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    d = df.copy()\n\n    # Normalize Region label variants to the allowed values.\n    region_map = {\n        'north': 'North', 'Nort': 'North',\n        'east': 'East',\n        'Suoth': 'South',\n        'Wst': 'West'\n    }\n    d['Region'] = d['Region'].astype(str).str.strip().replace(region_map)\n\n    # Convert Price from text (possibly with $ and commas) to numeric.\n    d['Price'] = pd.to_numeric(\n        d['Price'].astype(str).str.replace(r'[$,]', '', regex=True),\n        errors='coerce'\n    )\n\n    # Parse dates; invalid dates become NaT.\n    d['Date'] = pd.to_datetime(d['Date'], errors='coerce')\n\n    # Ensure Quantity is numeric.\n    d['Quantity'] = pd.to_numeric(d['Quantity'], errors='coerce')\n\n    return d\n\ndef answer(df):\n    d = clean(df)\n    result = (\n        d.dropna(subset=['Region', 'Quantity'])\n         .groupby('Region', as_index=False)['Quantity']\n         .sum()\n    )\n    return {row['Region']: row['Quantity'] for _, row in result.iterrows()}"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

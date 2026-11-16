@@ -1,0 +1,127 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 3,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 86.84,
+  "tokens": 24767,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "final_summary": "**Order counts by Category (after cleaning):**\n\n| Category | Orders |\n|---|---|\n| Electronics | 24 |\n| Furniture | 20 |\n| Office Supplies | 13 |\n| Accessories | 10 |\n\n**Data issues found & fixed:**\n1. **Category label variants** \u2013 \" Electronics\" (row 16) and \"Office Supplies \" (row 12) had extra spaces. Merged into the canonical labels via `normalize_labels`.\n2. **Invalid row** \u2013 Row 41 had Quantity = \u22124 (rules require \u2265 1) and Revenue = \u2212100. Excluded the row.\n3. **Exact duplicate rows** \u2013 Rows 6 and 49 were exact copies of earlier rows. Removed both duplicates.\n\nAfter these fixes, 67 valid orders remain.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Electronics": "Electronics",
+            "Office Supplies ": "Office Supplies"
+          },
+          "reason": "Merge case/space variants into allowed labels per rules file"
+        },
+        "reason": "Merge case/space variants into allowed labels per rules file",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({' Electronics': 'Electronics', 'Office Supplies ': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            41
+          ],
+          "reason": "Quantity is -4, violating rule that Quantity must be a positive whole number (min 1); Revenue is also negative. Row is invalid."
+        },
+        "reason": "Quantity is -4, violating rule that Quantity must be a positive whole number (min 1); Revenue is also negative. Row is invalid.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          41
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [41]",
+        "code": "df = df.drop(index=[41])"
+      },
+      {
+        "version": 3,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate rows (rows 6 and 49 are later copies of earlier identical rows)"
+        },
+        "reason": "Remove exact duplicate rows (rows 6 and 49 are later copies of earlier identical rows)",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          49
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen38-27b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

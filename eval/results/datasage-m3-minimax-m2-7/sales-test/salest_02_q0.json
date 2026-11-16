@@ -1,0 +1,103 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 4,
+  "tool_calls": 7,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 95.02,
+  "tokens": 18362,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 32.0,
+    "Electronics": 277.3333,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.1
+  },
+  "extra": {
+    "final_summary": "**Average Unit Price by Category:**\n\n| Category | Average Price |\n|----------|---------------|\n| Accessories | $32.00 |\n| Electronics | $277.33 |\n| Furniture | $191.05 |\n| Office Supplies | $11.10 |\n\n**Data Quality Issues Found & Fixed:**\n1. **Category misspellings** (2 rows): \"Furnture\" \u2192 \"Furniture\", \"Office Suplies\" \u2192 \"Office Supplies\" \u2014 normalized to match allowed values\n2. **Duplicate row** (1 row): Removed exact duplicate of row 5\n\n**Note:** The question asks for \"unit price\" which maps to the `Price` column. The `Revenue` column has 3 negative values (returns), but these don't affect the Price average since Price is a per-unit attribute, not derived from Quantity.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Fix misspellings in Category column per rules file allowed values"
+        },
+        "reason": "Fix misspellings in Category column per rules file allowed values",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate row (row 5) to avoid counting it twice in averages"
+        },
+        "reason": "Remove exact duplicate row (row 5) to avoid counting it twice in averages",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          5
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 5,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-minimax-m2-7",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

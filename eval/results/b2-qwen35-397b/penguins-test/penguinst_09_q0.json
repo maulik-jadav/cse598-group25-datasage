@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 340.17,
+  "tokens": 5100,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 193.16666666666666,
+    "Chinstrap": 196.91666666666666,
+    "Gentoo": 216.68421052631578
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix species label variants - normalize case and fix typo\n    df['species'] = df['species'].str.capitalize()\n    df.loc[df['species'] == 'Gentto', 'species'] = 'Gentoo'\n    \n    # Fix flipper_length_mm - convert to numeric and filter invalid values\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df.loc[df['flipper_length_mm'] < 170, 'flipper_length_mm'] = pd.NA\n    \n    # Fix body_mass_g - remove commas and convert to numeric\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    \n    return df\n\ndef answer(df):\n    valid = df[df['species'].notna() & df['flipper_length_mm'].notna()]\n    result = valid.groupby('species')['flipper_length_mm'].mean().to_dict()\n    return result"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-397b",
+  "dataset": "penguins-test",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 193.1667,
+    "Chinstrap": 197.0909,
+    "Gentoo": 216.6842
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

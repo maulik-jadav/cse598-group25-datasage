@@ -1,0 +1,105 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 33.42,
+  "tokens": 46300,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed label variants in Category (3 cells with extra spaces) and Region (2 cells with misspellings: \"Nort\"\u2192\"North\", \"Suoth\"\u2192\"South\"). Revenue values matched the formula Quantity * Price for all rows. Two Region values were missing (rows 15, 17), but since Region is not used in the aggregation, this did not affect the result. Total revenue by category: Accessories: $3,255, Electronics: $10,700, Furniture: $9,635, Office Supplies: $222.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            "Accessories ": "Accessories",
+            "Furniture ": "Furniture"
+          },
+          "reason": "Merge category label variants with extra spaces into allowed labels to ensure consistent grouping."
+        },
+        "reason": "Merge category label variants with extra spaces into allowed labels to ensure consistent grouping.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 3 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', 'Accessories ': 'Accessories', 'Furniture ': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Nort": "North",
+            "Suoth": "South"
+          },
+          "reason": "Merge region label variants and misspellings into allowed labels to ensure consistent grouping."
+        },
+        "reason": "Merge region label variants and misspellings into allowed labels to ensure consistent grouping.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'Nort': 'North', 'Suoth': 'South'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 9
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen3-coder-next",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 253.39,
+  "tokens": 3776,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix Price: strip '$' and convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)\n    \n    # Fix Region: normalize case variants and typos\n    region_map = {\n        'west': 'West',\n        'south': 'South',\n        'Wst': 'West',\n        'Suoth': 'South'\n    }\n    df['Region'] = df['Region'].replace(region_map)\n    \n    # Fix negative Quantity (must be positive whole number)\n    df.loc[df['Quantity'] < 0, 'Quantity'] = df.loc[df['Quantity'] < 0, 'Quantity'].abs()\n    \n    # Recalculate Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    electronics = df[df['Category'] == 'Electronics']\n    result = electronics.groupby('Region', dropna=True)['Revenue'].sum()\n    return result.to_dict()\n"
+  },
+  "corrections": 9,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-minimax-m3",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

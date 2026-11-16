@@ -1,0 +1,163 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 15,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 71.04,
+  "tokens": 68686,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "final_summary": "**Answer**\n\n| Month (YYYY\u2011MM) | Total Revenue |\n|-----------------|--------------:|\n| 2026\u201101 | 3\u202f138.0 |\n| 2026\u201102 | 1\u202f908.0 |\n| 2026\u201103 | 1\u202f050.0 |\n| 2026\u201104 | 10\u202f290.0 |\n| 2026\u201105 | 4\u202f953.0 |\n| 2026\u201106 | 2\u202f688.0 |\n\n**Summary of data\u2011quality work**\n\n1. **Label normalization** \u2013 Fixed misspelled/variant values in **Category** and **Region** using `normalize_labels`.  \n2. **Date parsing** \u2013 Converted the single invalid date \u201cTBD\u201d to a missing value with `parse_dates`.  \n3. **Revenue formula** \u2013 Two rows violated the rule `Revenue = Quantity * Price`; recomputed those values with `recompute_column`.  \n4. **Cross\u2011column check** \u2013 After the fix, all Revenue values now satisfy the formula.  \n\nNo duplicate rows, missing numeric values, or out\u2011of\u2011range numbers remain. The only remaining issue is the one missing date (row\u202f15), which does not affect the revenue aggregation. All calculations are based directly on the cleaned dataset.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "electronics": "Electronics",
+            "office supplies": "Office Supplies",
+            "Accesories": "Accessories",
+            "Electornics": "Electronics",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Normalize category labels to allowed values"
+        },
+        "reason": "Normalize category labels to allowed values",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Category: merged 5 label variant(s), 5 cells",
+        "code": "df['Category'] = df['Category'].replace({'electronics': 'Electronics', 'office supplies': 'Office Supplies', 'Accesories': 'Accessories', 'Electornics': 'Electronics', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " North": "North",
+            "East ": "East",
+            "North ": "North"
+          },
+          "reason": "Normalize region labels to allowed values"
+        },
+        "reason": "Normalize region labels to allowed values",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: merged 3 label variant(s), 3 cells",
+        "code": "df['Region'] = df['Region'].replace({' North': 'North', 'East ': 'East', 'North ': 'North'})"
+      },
+      {
+        "version": 3,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Convert dates and set invalid entries to missing"
+        },
+        "reason": "Convert dates and set invalid entries to missing",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Date: 1 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            13,
+            29
+          ],
+          "reason": "Fix Revenue values that violate formula"
+        },
+        "reason": "Fix Revenue values that violate formula",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[13, 29], 'Revenue'] = [45.0, 15.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 16
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

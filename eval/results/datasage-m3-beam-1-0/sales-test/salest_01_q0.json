@@ -1,0 +1,74 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 12,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 248.46,
+  "tokens": 27602,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 36.25,
+    "Electronics": 396.4286,
+    "Furniture": 161.0714,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "final_summary": "Average unit price by category (from 61 rows): Accessories 36.25, Electronics 396.43, Furniture 161.07, Office Supplies 12.00.\n\nProblems found:\n- Price stored as text with '$' on rows 11 and 22 \u2192 cast to numeric (auto).\n- Quantity has 3 negative values (rows 20, 35, 58) violating min=1; not used by this question, left alone.\n- Revenue mismatch on row 52 (14405 vs expected 144); not used by this question, left alone.\n- Region case variants 'south'/'east' (rows 6, 53); not used by this question, left alone.\n- No duplicate rows; Category clean.\n\nCaveats: averages include all rows (including those with invalid Quantity/Revenue) since Price itself is valid; if those rows should be excluded, results would change.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price stored as text with $ prefix on rows 11 and 22; convert to numeric so unit prices can be averaged."
+        },
+        "reason": "Price stored as text with $ prefix on rows 11 and 22; convert to numeric so unit prices can be averaged.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (61 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 2,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-beam-1-0",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

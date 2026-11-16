@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinsh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 33.12,
+  "tokens": 3247,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 190.1818181818182,
+    "Chinstrap": 199.53333333333333,
+    "Gentoo": 215.9375
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Normalize island label variants (case/extra spaces)\n    df['island'] = df['island'].astype(str).str.strip().str.title().replace({'nan': np.nan})\n    # Flipper length: negative values are sign errors; take absolute value\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce').abs()\n    # Body mass written as text with commas -> numeric\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False),\n        errors='coerce'\n    )\n    return df\n\ndef answer(df):\n    df = clean(df)\n    d = df.dropna(subset=['species', 'flipper_length_mm'])\n    g = d.groupby('species')['flipper_length_mm'].mean()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 9,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "penguins-heldout",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 190.2812,
+    "Chinstrap": 199.6429,
+    "Gentoo": 215.1429
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

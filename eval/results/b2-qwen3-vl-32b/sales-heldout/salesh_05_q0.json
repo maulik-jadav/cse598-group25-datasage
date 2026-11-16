@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 67.09,
+  "tokens": 2488,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Price from text to float, handling currency format\n    df['Price'] = df['Price'].astype(str).str.replace(r'[\\$\\,]', '', regex=True).astype(float)\n    \n    # Convert Quantity to int, handle negative values by setting to 0 (or drop if needed)\n    df['Quantity'] = df['Quantity'].astype(int)\n    df.loc[df['Quantity'] < 0, 'Quantity'] = 0  # or drop if required, but question asks for units sold, so 0 is safe\n    \n    # Standardize Region: convert to lowercase, then map variants to standard\n    region_map = {'west': 'West', 'south': 'South', 'Wst': 'West', 'Suoth': 'South'}\n    df['Region'] = df['Region'].astype(str).str.strip().map(region_map).fillna(df['Region'])\n    \n    # Handle missing Region: drop rows with missing Region (since question asks for region-wise sales)\n    df = df.dropna(subset=['Region'])\n    \n    # Recalculate Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\n\ndef answer(df):\n    # Group by Region and sum Quantity\n    result = df.groupby('Region')['Quantity'].sum().to_dict()\n    \n    # Return as dict with region labels as keys\n    return result"
+  },
+  "corrections": 6,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_02_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 72.0,
+  "tokens": 5325,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 80400.0,
+    "Chinstrap": 81475.0,
+    "Gentoo": 115200.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # fix label variant in sex (trailing spaces)\n    if 'sex' in df.columns:\n        df['sex'] = df['sex'].astype(str).str.strip()\n    # parse body_mass_g which is stored as text with commas / written as text\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip()\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # fix flipper_length_mm negatives / out of range\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n        neg_mask = df['flipper_length_mm'] < 0\n        df.loc[neg_mask, 'flipper_length_mm'] = df.loc[neg_mask, 'flipper_length_mm'].abs()\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    totals = dfc.groupby('species', dropna=False)['body_mass_g'].sum(min_count=1)\n    # drop missing group keys\n    result = {}\n    for k, v in totals.items():\n        if pd.isna(k):\n            continue\n        result[str(k)] = float(v) if pd.notna(v) else None\n    return result\n"
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 80400.0,
+    "Chinstrap": 73375.0,
+    "Gentoo": 110625.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

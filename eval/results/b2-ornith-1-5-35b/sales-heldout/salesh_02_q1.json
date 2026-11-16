@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1253.63,
+  "tokens": 5891,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\n\ndef clean(df):\n    df = df.copy()\n    # Normalize Region: strip whitespace and capitalize variants (e.g. ' South', 'north')\n    df['Region'] = df['Region'].str.strip().str.capitalize()\n    # Fix negative Quantity (rules: always a positive whole number)\n    df['Quantity'] = df['Quantity'].abs()\n    # Fix negative Revenue (Revenue = Quantity * Price, both positive)\n    df['Revenue'] = df['Revenue'].abs()\n    return df\n\n\ndef answer(df):\n    df = clean(df)\n    # Filter to Electronics category\n    df = df[df['Category'] == 'Electronics']\n    # Drop rows with missing Region (cannot be grouped)\n    df = df.dropna(subset=['Region'])\n    # Total revenue by region\n    result = df.groupby('Region')['Revenue'].sum()\n    return result.to_dict()\n"
+  },
+  "corrections": 9,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-ornith-1-5-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

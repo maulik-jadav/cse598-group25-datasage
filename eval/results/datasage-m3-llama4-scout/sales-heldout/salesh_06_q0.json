@@ -1,0 +1,99 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 10.35,
+  "tokens": 46407,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "extra": {
+    "final_summary": "Found 5 label variants in Region, merged them. Price had 3 text numbers, converted to numbers. No other problems found. Answered: 28 units sold in East, 40 in North, 53 in South, 62 in West.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "north": "North",
+            "Nort": "North",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "misspelled or case/spaces variants of allowed labels"
+        },
+        "reason": "misspelled or case/spaces variants of allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Region: merged 5 label variant(s), 6 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'north': 'North', 'Nort': 'North', 'Suoth': 'South', 'Wst': 'West'})"
+      },
+      {
+        "version": 2,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "convert to number for calculations"
+        },
+        "reason": "convert to number for calculations",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (43 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 9
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-llama4-scout",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

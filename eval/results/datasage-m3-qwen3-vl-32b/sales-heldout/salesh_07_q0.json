@@ -1,0 +1,163 @@
+{
+  "task_id": "salesh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 12,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 229.81,
+  "tokens": 58911,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "extra": {
+    "final_summary": "The data had several issues: 3 region labels were misspelled or had extra spaces ('South ', 'West ', 'east'), which were normalized to 'South', 'West', 'East'. Two rows had negative quantities (-5, -4), which were excluded as they violated the rule that Quantity must be at least 1. One row had a Revenue value (10000) that did not match Quantity * Price (100), so Revenue was recomputed. Two exact duplicate rows were removed. After cleaning, the average unit price per category is: Accessories: 30.67, Electronics: 360.00, Furniture: 205.00, Office Supplies: 10.67.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "South ": "South",
+            "West ": "West",
+            "east": "East"
+          },
+          "reason": "Standardize region labels to match allowed values: 'South ', 'West ', 'east' \u2192 'South', 'West', 'East'"
+        },
+        "reason": "Standardize region labels to match allowed values: 'South ', 'West ', 'east' \u2192 'South', 'West', 'East'",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: merged 3 label variant(s), 3 cells",
+        "code": "df['Region'] = df['Region'].replace({'South ': 'South', 'West ': 'West', 'east': 'East'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            19,
+            34
+          ],
+          "reason": "Quantity is negative, violating the rule that Quantity must be at least 1; these rows are inconsistent with the Revenue formula and likely data entry errors."
+        },
+        "reason": "Quantity is negative, violating the rule that Quantity must be at least 1; these rows are inconsistent with the Revenue formula and likely data entry errors.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          19,
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [19, 34]",
+        "code": "df = df.drop(index=[19, 34])"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            30
+          ],
+          "reason": "Revenue does not match Quantity * Price; likely a data entry error. Recomputing to correct it."
+        },
+        "reason": "Revenue does not match Quantity * Price; likely a data entry error. Recomputing to correct it.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[30], 'Revenue'] = [100.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 4,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate rows to avoid inflating counts and skewing averages."
+        },
+        "reason": "Remove exact duplicate rows to avoid inflating counts and skewing averages.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          17,
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 12
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen3-vl-32b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

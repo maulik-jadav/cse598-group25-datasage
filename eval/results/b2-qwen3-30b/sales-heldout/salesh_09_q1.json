@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 22.99,
+  "tokens": 2472,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix negative quantities and revenues\n    df['Quantity'] = df['Quantity'].astype(float).clip(lower=0)\n    df['Revenue'] = df['Revenue'].astype(float).clip(lower=0)\n    \n    # Fix Price: remove $ and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).astype(float)\n    \n    # Fix Region: standardize labels\n    region_mapping = {\n        'East ': 'East', ' West': 'West', 'Wst': 'West', 'Eats': 'East'\n    }\n    df['Region'] = df['Region'].astype(str).replace(region_mapping)\n    \n    # Fix Date: ensure YYYY-MM-DD format and convert to datetime\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df['Date'] = df['Date'].dt.to_period('M').astype(str)  # Convert to YYYY-MM\n    \n    return df\n\ndef answer(df):\n    # Group by month and sum revenue\n    result = df.groupby('Date', dropna=False)['Revenue'].sum().round(2)\n    # Convert to dict with 'all' key for total\n    return {k: float(v) for k, v in result.items() if pd.notna(k)}"
+  },
+  "corrections": 11,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 54,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

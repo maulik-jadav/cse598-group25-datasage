@@ -1,0 +1,69 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 143.23,
+  "tokens": 4306,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Normalize text columns (strip whitespace)\n    for col in [\"Category\", \"Region\"]:\n        if col in df.columns:\n            df[col] = df[col].where(df[col].isna(), df[col].astype(str).str.strip())\n    # Normalize Region case variants: title case (west->West, north->North, etc.)\n    if \"Region\" in df.columns:\n        df[\"Region\"] = df[\"Region\"].where(df[\"Region\"].isna(), df[\"Region\"].astype(str).str.title())\n    # Clean Date to ISO YYYY-MM-DD, invalid become NaT\n    if \"Date\" in df.columns:\n        df[\"Date\"] = pd.to_datetime(df[\"Date\"], errors=\"coerce\")\n    # Ensure numeric types\n    for col in [\"Quantity\", \"Price\", \"Revenue\"]:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors=\"coerce\")\n    # Quantity must be >=1 (positive whole number) - drop invalid rows\n    if \"Quantity\" in df.columns:\n        df = df[df[\"Quantity\"] >= 1]\n        # also drop NaN quantities\n        df = df.dropna(subset=[\"Quantity\"])\n    # Price min 0\n    if \"Price\" in df.columns:\n        df = df[df[\"Price\"] >= 0]\n    # Recalculate Revenue = Quantity * Price (cross-column fix)\n    if \"Quantity\" in df.columns and \"Price\" in df.columns:\n        df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n    return df\n\ndef answer(df):\n    # group by Category total revenue\n    allowed = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    if \"Category\" in df.columns:\n        df[\"Category\"] = df[\"Category\"].astype(str).str.strip()\n        df = df.dropna(subset=[\"Category\"])\n        df = df[df[\"Category\"].isin(allowed)]\n    grouped = df.groupby(\"Category\")[\"Revenue\"].sum()\n    result = {str(k): float(v) for k, v in grouped.items() if pd.notna(k)}\n    return result\n"
+  },
+  "corrections": 18,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

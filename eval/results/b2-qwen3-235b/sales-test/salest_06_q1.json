@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 19.46,
+  "tokens": 2198,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 92.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix label variant in Region: 'Nort' -> 'North'\n    df['Region'] = df['Region'].replace({'Nort': 'North'})\n    \n    # Convert Quantity to numeric, coerce errors to NaN (though it's already numeric in this case)\n    # But we need to handle negative values\n    # Since Quantity should be positive whole number, take absolute value and convert to int\n    df['Quantity'] = df['Quantity'].abs().astype(int)\n    \n    # Recompute Revenue = Quantity * Price to fix any inconsistencies\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('Region')['Quantity'].sum().round().astype(int)\n    return result.to_dict()"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-235b",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

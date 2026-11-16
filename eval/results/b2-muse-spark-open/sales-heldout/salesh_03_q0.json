@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 85.29,
+  "tokens": 3865,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Office Supplies": 23.0,
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Normalize Category (case variant \"office supplies\" -> \"Office Supplies\")\n    if \"Category\" in df.columns:\n        # strip whitespace\n        s = df[\"Category\"].astype(object)\n        # only process string values\n        mask = s.notna()\n        s_clean = s[mask].astype(str).str.strip()\n        allowed = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n        lower_map = {v.lower(): v for v in allowed}\n        s_clean = s_clean.str.lower().map(lower_map).fillna(s_clean)\n        df.loc[mask, \"Category\"] = s_clean\n    # Remove exact duplicate rows (Order_ID uniqueness / exact_duplicate_rows=2)\n    df = df.drop_duplicates()\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # drop missing group keys\n    if \"Category\" in df.columns:\n        df = df[df[\"Category\"].notna() & (df[\"Category\"].astype(str).str.strip() != \"\")]\n    # count orders per Category\n    vc = df[\"Category\"].value_counts(dropna=True)\n    # return as plain dict with int values\n    return {str(k): int(v) for k, v in vc.items()}\n"
+  },
+  "corrections": 5,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Region"
+    ]
+  ]
+}

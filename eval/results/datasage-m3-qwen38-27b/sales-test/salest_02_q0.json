@@ -1,0 +1,136 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 4,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 111.93,
+  "tokens": 36199,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "extra": {
+    "final_summary": "Average unit price by category (66 rows used): Accessories $32.50, Electronics $275.71, Furniture $191.05, Office Supplies $11.37.\n\nProblems found and fixed:\n- Category misspellings \"Furnture\" (row 9) and \"Office Suplies\" (row 20) \u2192 normalized to the allowed labels Furniture and Office Supplies.\n- 1 exact duplicate row (row 5, duplicate of row 4 / Order_ID 2005) \u2192 removed.\n- 3 rows with negative Quantity (rows 1, 34, 51: -8, -6, -2) violated the rule that Quantity must be a positive whole number \u2192 excluded.\n\nCaveats: Region has 2 missing values and some case/space variants, but Region is not used in this question, so it was left unchanged. Price had no out-of-range or non-numeric values.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Merge misspellings into allowed labels per rules file"
+        },
+        "reason": "Merge misspellings into allowed labels per rules file",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 5 is an exact duplicate of row 4 (same Order_ID 2005, all fields identical)"
+        },
+        "reason": "Row 5 is an exact duplicate of row 4 (same Order_ID 2005, all fields identical)",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          5
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            1,
+            34,
+            51
+          ],
+          "reason": "Negative Quantity values (-8, -6, -2) violate the rule that Quantity must be a positive whole number; these rows are impossible and would distort the average price"
+        },
+        "reason": "Negative Quantity values (-8, -6, -2) violate the rule that Quantity must be a positive whole number; these rows are impossible and would distort the average price",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          1,
+          34,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [1, 34, 51]",
+        "code": "df = df.drop(index=[1, 34, 51])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 7
+  },
+  "corrections": 8,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen38-27b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

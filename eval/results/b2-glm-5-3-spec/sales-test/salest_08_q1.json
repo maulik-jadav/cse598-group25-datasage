@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 53.75,
+  "tokens": 3544,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Normalize Category label variants to the allowed set\n    cat_map = {\n        'accesories': 'Accessories',\n        'electronics': 'Electronics',\n        'electornics': 'Electronics',\n        'office supplies': 'Office Supplies',\n        'office suplies': 'Office Supplies',\n    }\n    df['Category'] = (\n        df['Category'].astype(str).str.strip().str.replace(r'\\s+', ' ', regex=True)\n    )\n    df['Category'] = df['Category'].apply(\n        lambda x: cat_map.get(x.lower(), x)\n    )\n    # Normalize Region (strip stray whitespace)\n    df['Region'] = df['Region'].astype(str).str.strip()\n    # Fix the one non-ISO date; coerce unparseable values to NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # Enforce Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Category'])\n    g = d.groupby('Category')['Revenue'].sum()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

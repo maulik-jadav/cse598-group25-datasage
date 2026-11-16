@@ -1,0 +1,69 @@
+{
+  "task_id": "salest_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 4,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 9.19,
+  "tokens": 2313,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix Category label variants\n    df['Category'] = df['Category'].str.strip()\n    category_mapping = {\n        'Office Supplies ': 'Office Supplies',\n        ' Electronics': 'Electronics'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Convert Quantity, Price, Revenue to numeric, coercing errors to NaN\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Remove rows with negative Quantity or Revenue\n    df = df[(df['Quantity'] >= 1) & (df['Revenue'] >= 0)]\n    \n    # Recalculate Revenue from Quantity and Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Group by Category and sum Revenue\n    result = df.groupby('Category', as_index=False)['Revenue'].sum()\n    \n    # Convert to dictionary with category as key and total revenue as value\n    return dict(zip(result['Category'], result['Revenue']))"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

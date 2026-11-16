@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinst_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 38.02,
+  "tokens": 2874,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3767.2413793103447,
+    "Chinstrap": 3726.785714285714,
+    "Gentoo": 4895.833333333333
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # normalize species labels (strip extra spaces)\n    d['species'] = d['species'].astype(str).str.strip()\n    # normalize island labels (case variants)\n    d['island'] = d['island'].astype(str).str.strip().str.capitalize()\n    # body_mass_g written as text with commas -> numeric\n    d['body_mass_g'] = pd.to_numeric(\n        d['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    # ensure other numeric columns are numeric\n    for c in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'year']:\n        if c in d.columns:\n            d[c] = pd.to_numeric(d[c], errors='coerce')\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'body_mass_g'])\n    g = d.groupby('species')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3767.2414,
+    "Chinstrap": 3726.7857,
+    "Gentoo": 4895.8333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

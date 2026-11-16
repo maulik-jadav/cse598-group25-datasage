@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 60.62,
+  "tokens": 3046,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows (57 rows, only 56 distinct Order_IDs)\n    df = df.drop_duplicates()\n    # Fix region label variant 'Nort' -> 'North'\n    df['Region'] = df['Region'].astype(str).str.strip().replace({'Nort': 'North'})\n    # Quantity must be a positive whole number (min 1); drop the invalid negative row\n    df = df[pd.to_numeric(df['Quantity'], errors='coerce') >= 1]\n    return df\n\ndef answer(df):\n    df = clean(df)\n    g = df.groupby('Region')['Quantity'].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

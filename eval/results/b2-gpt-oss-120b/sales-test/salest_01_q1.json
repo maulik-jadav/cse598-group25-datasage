@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 20.49,
+  "tokens": 2906,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2490.0,
+    "Electronics": 27140.0,
+    "Furniture": 10430.0,
+    "Office Supplies": 780.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # Ensure Quantity is numeric and positive\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # Replace negative quantities with their absolute values (as per rule they should be positive)\n    df.loc[df['Quantity'] < 0, 'Quantity'] = df.loc[df['Quantity'] < 0, 'Quantity'].abs()\n    # Clean Price: remove currency symbols and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('[\\$,]', '', regex=True)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Standardize Region labels (title case)\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    # Re\u2011calculate Revenue based on cleaned Quantity and Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Group by Category and sum Revenue\n    result = df.groupby('Category', dropna=True)['Revenue'].sum().to_dict()\n    # Convert numpy types to native Python types for JSON serialisation\n    result = {k: float(v) for k, v in result.items()}\n    return result"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

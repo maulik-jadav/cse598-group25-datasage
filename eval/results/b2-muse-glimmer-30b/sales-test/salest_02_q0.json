@@ -1,0 +1,69 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 135.19,
+  "tokens": 5933,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7142857142857,
+    "Furniture": 191.05263157894737,
+    "Office Supplies": 11.368421052631579
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # strip whitespace from text columns\n    for col in df.select_dtypes(include=['object']).columns:\n        df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # fix category label variants\n    cat_map = {\n        'Office Suplies': 'Office Supplies',\n        'Furnture': 'Furniture'\n    }\n    df['Category'] = df['Category'].replace(cat_map)\n    # keep only allowed categories\n    allowed_cats = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed_cats)]\n    # remove exact duplicate rows\n    df = df.drop_duplicates()\n    # filter invalid quantity / price\n    df = df[(df['Quantity'] >= 1) & (df['Price'] >= 0)]\n    # ensure revenue consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    # average unit price = mean of Price per Category\n    out = df.groupby('Category', dropna=False)['Price'].mean()\n    return {str(k): float(v) for k, v in out.items()}\n"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

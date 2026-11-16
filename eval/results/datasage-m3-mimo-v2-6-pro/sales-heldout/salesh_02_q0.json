@@ -1,0 +1,120 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 60.63,
+  "tokens": 20757,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "extra": {
+    "final_summary": "**Total revenue by category:**\n\n| Category | Total Revenue |\n|---|---|\n| Electronics | $29,070 |\n| Furniture | $16,505 |\n| Accessories | $2,450 |\n| Office Supplies | $972 |\n\n**Problems found and fixes applied:**\n1. **Revenue formula violations (rows 10, 19, 61)** \u2014 Revenue didn't equal Quantity \u00d7 Price (e.g. row 10 showed 2400 instead of 240). Recomputed Revenue from Quantity \u00d7 Price per the rules file. *Approved and applied.*\n2. **Negative quantities (rows 5, 14, 65)** \u2014 Quantity must be a positive whole number (min 1) per the rules; these rows had negative quantities and negative revenue. Excluded from the analysis. *Approved and applied.*\n\n**Clean / not touched:** Category labels match the allowed values exactly (no variants or misspellings), no exact duplicate rows, Price and Quantity are properly numeric.\n\n**Caveats:** 64 of 67 rows were used (3 excluded for rule-breaking negative quantities). Three rows have invalid dates (rows 48, 50, 64: \"TBD\", \"2026-14-01\", \"not-a-date\") and 3 rows have missing Region values \u2014 neither affects this question, so I left them alone.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            10,
+            19,
+            61
+          ],
+          "reason": "Rules file states Revenue = Quantity * Price; these 3 rows violate the formula (e.g. row 10: 2400 vs 240). Recompute from the source columns."
+        },
+        "reason": "Rules file states Revenue = Quantity * Price; these 3 rows violate the formula (e.g. row 10: 2400 vs 240). Recompute from the source columns.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[10, 19, 61], 'Revenue'] = [240.0, 24.0, 48.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            5,
+            14,
+            65
+          ],
+          "reason": "Rules say Quantity must be a positive whole number (min 1); these rows have negative quantities (-2, -6, and one more), producing negative revenue. They break a rule, so exclude them from the analysis."
+        },
+        "reason": "Rules say Quantity must be a positive whole number (min 1); these rows have negative quantities (-2, -6, and one more), producing negative revenue. They break a rule, so exclude them from the analysis.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          5,
+          14,
+          65
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [5, 14, 65]",
+        "code": "df = df.drop(index=[5, 14, 65])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 9,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mimo-v2-6-pro",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

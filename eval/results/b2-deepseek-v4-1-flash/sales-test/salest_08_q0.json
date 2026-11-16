@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 342.81,
+  "tokens": 5531,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce', format='%Y-%m-%d')\n\n    df['Category'] = df['Category'].astype(str).str.strip()\n    cat_lower = df['Category'].str.lower()\n    cat_map = {\n        'electronics': 'Electronics',\n        'electornics': 'Electronics',\n        'accessories': 'Accessories',\n        'accesories': 'Accessories',\n        'furniture': 'Furniture',\n        'office supplies': 'Office Supplies',\n        'office suplies': 'Office Supplies'\n    }\n    df['Category'] = cat_lower.map(cat_map).fillna(df['Category'])\n\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Date'])\n    d['month'] = d['Date'].dt.strftime('%Y-%m')\n    result = d.groupby('month', dropna=True)['Revenue'].sum().sort_index()\n    return {str(k): float(v) for k, v in result.items()}"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

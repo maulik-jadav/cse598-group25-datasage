@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinst_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 57.63,
+  "tokens": 3765,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 39700.0,
+    "Gentoo": 103500.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Normalize species: strip spaces, lowercase, then map variants/typos to canonical names\n    s = df['species'].astype(str).str.strip().str.lower()\n    mapping = {\n        'adelie': 'Adelie', 'adeile': 'Adelie',\n        'chinstrap': 'Chinstrap', 'chinstarp': 'Chinstrap',\n        'gentoo': 'Gentoo', 'gentto': 'Gentoo'\n    }\n    df['species'] = s.map(mapping).fillna(s)\n    # Parse body_mass_g written as text (e.g. '3,750')\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False),\n        errors='coerce'\n    )\n    # Invalid negative flipper length -> NaN\n    df.loc[df['flipper_length_mm'] < 0, 'flipper_length_mm'] = float('nan')\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'body_mass_g'])\n    g = d.groupby('species')['body_mass_g'].sum()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "penguins-test",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 35900.0,
+    "Gentoo": 103500.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

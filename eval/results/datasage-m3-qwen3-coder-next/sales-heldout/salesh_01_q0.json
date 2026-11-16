@@ -1,0 +1,111 @@
+{
+  "task_id": "salesh_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 38.01,
+  "tokens": 45502,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed: 2 exact duplicate rows (removed), 6 category label variants (normalized to allowed labels), and 1 missing Region value (row 39, left as-is since no rule specifies how to fill it). Revenue correctly equals Quantity \u00d7 Price for all rows. Final unit sales by region: East: 60, North: 83, South: 64, West: 104.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "There are 2 exact duplicate rows (rows 6 and 60), which would inflate the unit count. Removing them ensures each order is counted once."
+        },
+        "reason": "There are 2 exact duplicate rows (rows 6 and 60), which would inflate the unit count. Removing them ensures each order is counted once.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          60
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            " Office Supplies": "Office Supplies",
+            "Furniture ": "Furniture",
+            "Accesories": "Accessories",
+            "Furnture": "Furniture"
+          },
+          "reason": "Fix category label variants (extra spaces and misspellings) to match allowed labels."
+        },
+        "reason": "Fix category label variants (extra spaces and misspellings) to match allowed labels.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Category: merged 5 label variant(s), 6 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', ' Office Supplies': 'Office Supplies', 'Furniture ': 'Furniture', 'Accesories': 'Accessories', 'Furnture': 'Furniture'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 9
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen3-coder-next",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 511.4,
+  "tokens": 5534,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    if \"Order_ID\" in df.columns:\n        df = df.drop_duplicates(subset=[\"Order_ID\"], keep=\"first\")\n    if \"Category\" in df.columns:\n        allowed = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n        mapping = {value.lower(): value for value in allowed}\n        df[\"Category\"] = df[\"Category\"].astype(str).str.strip().map(\n            lambda x: mapping.get(x.lower(), x)\n        )\n    return df\n\ndef answer(df):\n    counts = df.groupby(\"Category\", dropna=False).size()\n    result = {}\n    for key, value in counts.items():\n        if pd.isna(key):\n            continue\n        result[str(key)] = int(value)\n    return result\n"
+  },
+  "corrections": 5,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-beam-1-0",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

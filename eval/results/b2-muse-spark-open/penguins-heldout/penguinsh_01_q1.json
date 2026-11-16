@@ -1,0 +1,67 @@
+{
+  "task_id": "penguinsh_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 3,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 115.45,
+  "tokens": 4463,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 78775.0,
+    "Chinstrap": 28400.0,
+    "Gentoo": 160050.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # normalize species case variants: adelie->Adelie, gentoo->Gentoo\n    species_map = {'adelie': 'Adelie', 'chinstrap': 'Chinstrap', 'gentoo': 'Gentoo'}\n    # lower strip then map, keep original if not in map\n    df['species'] = df['species'].astype(str).str.strip()\n    lower_species = df['species'].str.lower()\n    df['species'] = lower_species.map(species_map).fillna(df['species'].str.strip())\n    # fix island typos: Bisco->Biscoe, Dram->Dream (not needed for question but fix)\n    island_map = {'bisco': 'Biscoe', 'dram': 'Dream', 'biscoe': 'Biscoe', 'dream': 'Dream', 'torgersen': 'Torgersen'}\n    df['island'] = df['island'].astype(str).str.strip()\n    lower_island = df['island'].str.lower()\n    df['island'] = lower_island.map(island_map).fillna(df['island'])\n    # convert text numbers to numeric\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    # fix negative flipper lengths (abs) which also fixes out_of_range for those rows\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    return df\n\ndef answer(df):\n    # drop missing group keys\n    df = df.dropna(subset=['species'])\n    # ensure body_mass_g numeric\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    grouped = df.groupby('species')['body_mass_g'].sum()\n    # convert to plain dict, keep numbers as int if integer-like\n    result = {}\n    for k, v in grouped.items():\n        if pd.isna(k):\n            continue\n        # v is sum\n        if float(v).is_integer():\n            result[str(k)] = int(v)\n        else:\n            result[str(k)] = float(v)\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 74875.0,
+    "Chinstrap": 24675.0,
+    "Gentoo": 155250.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

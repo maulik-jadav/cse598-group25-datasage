@@ -1,0 +1,129 @@
+{
+  "task_id": "salesh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 40.12,
+  "tokens": 18978,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "extra": {
+    "final_summary": "Total revenue by category (after cleaning):\n- Accessories: $4,275\n- Electronics: $16,690\n- Furniture: $20,970\n- Office Supplies: $516\n\nFixes applied:\n- Normalized 3 misspelled Category labels (\"Accesories\" \u2192 \"Accessories\", \"Office Suplies\" \u2192 \"Office Supplies\").\n- Trimmed 1 leading-space Region label (\" East\" \u2192 \"East\").\n- Removed 1 exact duplicate row (row 4, a copy of row 3).\n\nCaveats:\n- 2 invalid dates remain (rows 14 and 19: \"2026-02-30\" and \"2026-14-01\"), but they do not affect the revenue-by-category calculation.\n- 2 Region values are missing; they also do not affect this category aggregation.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Accesories": "Accessories",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Merge misspelled category labels into the allowed labels per rules file."
+        },
+        "reason": "Merge misspelled category labels into the allowed labels per rules file.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 2 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({'Accesories': 'Accessories', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " East": "East"
+          },
+          "reason": "Trim leading space in Region value to match allowed label East."
+        },
+        "reason": "Trim leading space in Region value to match allowed label East.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: merged 1 label variant(s), 1 cells",
+        "code": "df['Region'] = df['Region'].replace({' East': 'East'})"
+      },
+      {
+        "version": 3,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate row 4 (identical copy of row 3) to avoid double-counting revenue."
+        },
+        "reason": "Remove exact duplicate row 4 (identical copy of row 3) to avoid double-counting revenue.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          4
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-kimi-k2-7-code",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

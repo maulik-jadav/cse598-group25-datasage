@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 69.65,
+  "tokens": 2281,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Fix category label variants (extra spaces / casing)\n    df['Category'] = df['Category'].astype(str).str.strip().str.title()\n    df.loc[~df['Category'].isin(['Electronics', 'Accessories', 'Furniture', 'Office Supplies']), 'Category'] = df['Category'].str.strip()\n    # Fix region label variants (typos) and leave missing as NaN\n    df['Region'] = df['Region'].replace({'Suoth': 'South', 'Nort': 'North'})\n    df['Region'] = df['Region'].astype(str).str.strip().replace({'nan': None})\n    # Normalize dates where possible (not needed for the answer, but tidy)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d')\n    # Recompute revenue to be safe against formula violations\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Category'])\n    totals = d.groupby('Category')['Revenue'].sum()\n    return {str(k): float(v) for k, v in totals.items()}"
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

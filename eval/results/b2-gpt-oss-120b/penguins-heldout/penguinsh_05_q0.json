@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 27.53,
+  "tokens": 3495,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 189.7058823529412,
+    "Chinstrap": 195.73333333333332,
+    "Gentoo": 217.8125
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Ensure numeric types (coerce non\u2011numeric to NaN)\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # Remove values outside the allowed ranges\n    df.loc[~df['flipper_length_mm'].between(170, 235), 'flipper_length_mm'] = pd.NA\n    df.loc[~df['body_mass_g'].between(2500, 6500), 'body_mass_g'] = pd.NA\n    # Standardise sex labels (case/space variants) and keep missing as NaN\n    if 'sex' in df.columns:\n        df['sex'] = df['sex'].astype(str).str.strip().str.lower()\n        df['sex'] = df['sex'].replace({'female': 'female', 'male': 'male', 'nan': pd.NA})\n        df['sex'] = df['sex'].where(df['sex'].isin(['male', 'female']))\n    return df\n\ndef answer(df):\n    # Compute average flipper length per species, ignoring NaN values\n    result = df.groupby('species', as_index=False)['flipper_length_mm'].mean()\n    return dict(zip(result['species'], result['flipper_length_mm']))"
+  },
+  "corrections": 6,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 189.7059,
+    "Chinstrap": 195.7333,
+    "Gentoo": 217.6429
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ]
+  ]
+}

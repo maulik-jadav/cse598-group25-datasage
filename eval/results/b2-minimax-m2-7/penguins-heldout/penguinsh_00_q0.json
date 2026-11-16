@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_00_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 122.21,
+  "tokens": 3000,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 38.58,
+    "Dream": 39.489999999999995,
+    "Torgersen": 38.75555555555556
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix island label variants\n    df['island'] = df['island'].replace({'Torgerson': 'Torgersen', 'Bisco': 'Biscoe'})\n    # Fix sex label variants\n    df['sex'] = df['sex'].replace({'MALE': 'male', 'FEMALE': 'female'})\n    # Fix body_mass_g text numbers (remove commas)\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    # Filter for Adelie penguins\n    adelie = df_clean[df_clean['species'] == 'Adelie']\n    # Group by island and calculate mean bill_length_mm\n    result = adelie.groupby('island')['bill_length_mm'].mean()\n    return result.to_dict()"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-minimax-m2-7",
+  "dataset": "penguins-heldout",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 38.58,
+    "Dream": 39.49,
+    "Torgersen": 38.3375
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

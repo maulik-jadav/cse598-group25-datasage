@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 104.67,
+  "tokens": 5379,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    df = df.drop_duplicates()\n    if \"Order_ID\" in df.columns:\n        df = df.drop_duplicates(subset=[\"Order_ID\"], keep=\"first\")\n\n    for col in [\"Date\", \"Product\", \"Category\", \"Region\"]:\n        if col in df.columns:\n            df[col] = df[col].astype(\"string\").str.strip()\n\n    if \"Category\" in df.columns:\n        df[\"Category\"] = df[\"Category\"].replace({\n            \"Office Suplies\": \"Office Supplies\",\n            \"Accesories\": \"Accessories\",\n        })\n\n    for col in [\"Quantity\", \"Price\", \"Revenue\"]:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors=\"coerce\")\n\n    if \"Date\" in df.columns:\n        df[\"Date\"] = pd.to_datetime(df[\"Date\"], errors=\"coerce\")\n\n    if {\"Quantity\", \"Price\"}.issubset(df.columns):\n        df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=[\"Category\", \"Revenue\"])\n    totals = d.groupby(\"Category\", dropna=True)[\"Revenue\"].sum()\n    return {str(k): float(v) for k, v in totals.items()}"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

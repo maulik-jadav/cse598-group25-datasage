@@ -73,7 +73,7 @@ function tiles(all) {
 // ---------- accuracy matrix ----------
 function matrix() {
   const d = R.data, box = $("#matrix");
-  const rows = d.order.filter((id) => d.systems[id].kind !== "ablation");
+  const rows = d.order.filter((id) => !["ablation", "study"].includes(d.systems[id].kind));
   const head = el("div", "mx-row"); head.style.display = "contents"; head.setAttribute("role", "row");
   const corner = el("div", "mx-h", "System"); corner.setAttribute("role", "columnheader"); head.append(corner);
   d.splits.forEach((s) => {

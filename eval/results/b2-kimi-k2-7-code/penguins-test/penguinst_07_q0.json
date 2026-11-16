@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinst_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 39.58,
+  "tokens": 3836,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 39700.0,
+    "Gentoo": 103500.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    d = df.copy()\n    # Clean species labels: strip whitespace, normalize case, fix typos\n    sp = d['species'].astype(str).str.strip().str.lower()\n    species_map = {\n        'adelie': 'Adelie',\n        'adeile': 'Adelie',\n        'gentoo': 'Gentoo',\n        'gentto': 'Gentoo',\n        'chinstrap': 'Chinstrap',\n        'chinstarp': 'Chinstrap'\n    }\n    d['species'] = sp.map(species_map)\n    # Convert body_mass_g from text (with commas) to numeric\n    d['body_mass_g'] = pd.to_numeric(\n        d['body_mass_g'].astype(str).str.replace(',', '', regex=False),\n        errors='coerce'\n    )\n    # Enforce allowed body mass range\n    d.loc[(d['body_mass_g'] < 2500) | (d['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # Fix invalid flipper lengths (negative / out of range) \u2013 not used for the answer but clean them\n    d['flipper_length_mm'] = pd.to_numeric(d['flipper_length_mm'], errors='coerce')\n    d.loc[(d['flipper_length_mm'] < 170) | (d['flipper_length_mm'] > 235), 'flipper_length_mm'] = pd.NA\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'body_mass_g'])\n    totals = d.groupby('species')['body_mass_g'].sum()\n    return {str(species): int(total) for species, total in totals.items()}\n"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "penguins-test",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 35900.0,
+    "Gentoo": 103500.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 84.11,
+  "tokens": 5928,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 38.375,
+    "Dream": 39.385714285714286,
+    "Torgersen": 39.13333333333333
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # standardise species labels\n    if 'species' in df.columns:\n        df['species'] = df['species'].astype(str).str.strip()\n        df['species'] = df['species'].replace({'Chinstarp': 'Chinstrap'})\n        df = df[df['species'].isin(['Adelie', 'Chinstrap', 'Gentoo'])]\n    # drop exact duplicate rows and duplicate penguin_id\n    df = df.drop_duplicates()\n    if 'penguin_id' in df.columns:\n        df = df.drop_duplicates(subset=['penguin_id'], keep='first')\n    # ensure numeric columns are numeric\n    for col in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g', 'year']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    adelie = dfc[dfc['species'] == 'Adelie']\n    # average bill length per island\n    grp = adelie.groupby('island', dropna=False)['bill_length_mm'].mean()\n    # drop groups with missing key\n    result = {str(island): float(val) for island, val in grp.items() if pd.notna(island) and pd.notna(val)}\n    return result\n"
+  },
+  "corrections": 4,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 38.375,
+    "Dream": 39.3857,
+    "Torgersen": 38.125
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ]
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 20.77,
+  "tokens": 3162,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 78775.0,
+    "Chinstrap": 28400.0,
+    "Gentoo": 160050.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Normalize species case variants\n    df['species'] = df['species'].astype(str).str.strip().str.title()\n    # Fix island typos\n    island_map = {'Bisco': 'Biscoe', 'Dram': 'Dream'}\n    df['island'] = df['island'].astype(str).str.strip().replace(island_map)\n    # Fix negative flipper lengths (sign error)\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    # Drop exact duplicate rows (2 duplicates), keep first, preserve id column\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Total body mass per species\n    grouped = df.groupby('species')['body_mass_g'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 74875.0,
+    "Chinstrap": 24675.0,
+    "Gentoo": 155250.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ]
+  ]
+}

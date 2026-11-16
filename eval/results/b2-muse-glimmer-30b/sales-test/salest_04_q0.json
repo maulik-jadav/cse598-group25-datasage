@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 143.47,
+  "tokens": 6714,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # Price is text with $ signs / numbers written as text -> normalize to numeric\n    df['Price'] = df['Price'].astype(str).str.replace(r'[\\$,]', '', regex=True).str.strip()\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # ensure Quantity is numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # enforce Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # parse dates, invalid dates become NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # keep only allowed categorical values\n    df = df[df['Category'].isin(['Electronics', 'Accessories', 'Furniture', 'Office Supplies'])]\n    df = df[df['Region'].isin(['North', 'South', 'East', 'West'])]\n    # basic range checks\n    df = df[(df['Quantity'] >= 1) & (df['Price'] >= 0)]\n    return df\n\ndef answer(df):\n    sub = df[df['Category'] == 'Electronics']\n    sub = sub.dropna(subset=['Region'])\n    grouped = sub.groupby('Region')['Revenue'].sum()\n    # convert to native Python numbers\n    result = {}\n    for k, v in grouped.items():\n        if pd.isna(v):\n            continue\n        result[k] = int(v) if float(v).is_integer() else float(v)\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

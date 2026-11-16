@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 31.33,
+  "tokens": 3208,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 9858.0,
+    "2026-02": 23613.0,
+    "2026-03": 8246.0,
+    "2026-04": 1391.0,
+    "2026-05": 2346.0,
+    "2026-06": 4690.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    df = df.drop_duplicates()\n    df['Category'] = df['Category'].str.strip()\n    df['Price'] = df['Price'].replace(r'[\\$,]', '', regex=True).astype(float)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df['month'] = df['Date'].dt.strftime('%Y-%m')\n    df = df.dropna(subset=['month'])\n    result = df.groupby('month')['Revenue'].sum().to_dict()\n    return result"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 9858.0,
+    "2026-02": 23613.0,
+    "2026-03": 8246.0,
+    "2026-04": 1391.0,
+    "2026-05": 2346.0,
+    "2026-06": 4690.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

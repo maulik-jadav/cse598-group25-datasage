@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 23.02,
+  "tokens": 2989,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # 1. Drop exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n\n    # 2. Standardize Category values (strip spaces and title\u2011case)\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].astype(str).str.strip()\n        # map known variants to the allowed list\n        allowed = {\n            'Electronics': 'Electronics',\n            'Accessories': 'Accessories',\n            'Furniture': 'Furniture',\n            'Office Supplies': 'Office Supplies'\n        }\n        df['Category'] = df['Category'].map(allowed).fillna(df['Category'])\n\n    # 3. Remove rows with missing essential fields for the question\n    df = df.dropna(subset=['Category', 'Quantity', 'Price'])\n\n    # 4. Ensure Quantity is a positive integer; treat negatives as missing\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df.loc[df['Quantity'] <= 0, 'Quantity'] = pd.NA\n    df = df.dropna(subset=['Quantity'])\n    df['Quantity'] = df['Quantity'].astype(int)\n\n    # 5. Ensure Price is numeric\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df = df.dropna(subset=['Price'])\n\n    # 6. Re\u2011calculate Revenue from Quantity * Price (overwrites existing column)\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    # 7. (Optional) keep only columns that exist in the original data plus the cleaned ones\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Assume df is already cleaned via clean()\n    # Group by Category and sum Revenue\n    result = df.groupby('Category', dropna=False)['Revenue'].sum().to_dict()\n    # Convert possible numpy types to native Python types\n    result = {k: float(v) if isinstance(v, (float, int, pd.NA)) else v for k, v in result.items()}\n    return result"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

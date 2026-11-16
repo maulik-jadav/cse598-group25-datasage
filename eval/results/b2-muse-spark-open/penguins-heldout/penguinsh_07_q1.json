@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_07_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 136.69,
+  "tokens": 5762,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 117250.0,
+    "Chinstrap": 59400.0,
+    "Gentoo": 80325.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # fix island label variants: strip spaces and normalize case (torgersen -> Torgersen, 'Dream ' -> 'Dream')\n    if 'island' in df.columns:\n        df['island'] = df['island'].astype(str).str.strip().str.title()\n        df.loc[df['island'] == 'Nan', 'island'] = pd.NA\n    # fix body_mass_g: text numbers with commas like '3,150' -> 3150\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip()\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n        df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # fix flipper_length_mm: negatives and out of range (170-235)\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'].astype(str).str.strip(), errors='coerce')\n        df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n        df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = pd.NA\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # drop missing species keys and filter to allowed species\n    df = df.dropna(subset=['species'])\n    allowed = ['Adelie', 'Chinstrap', 'Gentoo']\n    df = df[df['species'].isin(allowed)]\n    grouped = df.groupby('species', dropna=True)['body_mass_g'].sum(min_count=1)\n    result = {}\n    for k, v in grouped.items():\n        if pd.isna(k):\n            continue\n        result[str(k)] = int(v) if not pd.isna(v) else 0\n    return result\n"
+  },
+  "corrections": 9,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 117250.0,
+    "Chinstrap": 55625.0,
+    "Gentoo": 70175.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

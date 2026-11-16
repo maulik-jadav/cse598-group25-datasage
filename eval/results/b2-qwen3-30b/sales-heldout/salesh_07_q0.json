@@ -1,0 +1,69 @@
+{
+  "task_id": "salesh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 4,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 26.44,
+  "tokens": 2343,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.67,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.67
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Convert numeric columns to proper numeric types\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Fix negative values in Quantity and Revenue\n    df = df[(df['Quantity'] >= 1) & (df['Revenue'] >= 0)]\n    \n    # Clean Region column: strip spaces and standardize case\n    df['Region'] = df['Region'].astype(str).str.strip().str.capitalize()\n    \n    # Drop rows with missing Region (since it's needed for grouping, but question doesn't require Region)\n    # But since the question is about Category only, we can keep missing Region\n    # However, we must ensure Category is valid\n    valid_categories = {'Electronics', 'Accessories', 'Furniture', 'Office Supplies'}\n    df = df[df['Category'].isin(valid_categories)]\n    \n    return df\n\ndef answer(df):\n    # Group by Category and calculate average unit price\n    result = df.groupby('Category', as_index=False)['Price'].mean()\n    \n    # Convert to dictionary with category as key and average price as value\n    return {row['Category']: round(row['Price'], 2) for _, row in result.iterrows()}\n"
+  },
+  "corrections": 9,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

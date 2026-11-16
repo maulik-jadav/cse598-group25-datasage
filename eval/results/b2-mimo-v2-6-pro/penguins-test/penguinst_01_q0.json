@@ -1,0 +1,53 @@
+{
+  "task_id": "penguinst_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 41.93,
+  "tokens": 3137,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3765.62,
+    "male": 4312.5
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # normalize text label variants (whitespace / case)\n    for c in ['species', 'island', 'sex']:\n        if c in d.columns:\n            d[c] = d[c].astype('string').str.strip()\n    d['species'] = d['species'].str.title()\n    d['island'] = d['island'].str.capitalize()\n    d['sex'] = d['sex'].str.lower()\n    # numbers written as text (with thousands separators) -> numeric\n    for c in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g', 'year']:\n        if c in d.columns:\n            d[c] = pd.to_numeric(d[c].astype('string').str.replace(',', '', regex=False).str.strip(), errors='coerce')\n    # enforce allowed ranges for the measures used\n    d = d[(d['body_mass_g'].notna()) & (d['body_mass_g'] >= 2500) & (d['body_mass_g'] <= 6500)]\n    d = d[(d['bill_length_mm'].isna()) | ((d['bill_length_mm'] >= 30) & (d['bill_length_mm'] <= 60))]\n    d = d[(d['flipper_length_mm'].isna()) | ((d['flipper_length_mm'] >= 170) & (d['flipper_length_mm'] <= 235))]\n    # drop rows with unknown sex (missing group key)\n    d = d[d['sex'].isin(['male', 'female'])]\n    return d\n\ndef answer(df):\n    d = clean(df)\n    g = d.groupby('sex')['body_mass_g'].mean()\n    return {str(k): round(float(v), 2) for k, v in g.items()}"
+  },
+  "corrections": 6,
+  "planted": 7,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3765.625,
+    "male": 4312.5
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

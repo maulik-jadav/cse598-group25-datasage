@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 88.58,
+  "tokens": 5032,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3848.91,
+    "Chinstrap": 3721.43,
+    "Gentoo": 5181.82
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Convert body mass from text (handling commas) to numeric\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', ''),\n        errors='coerce'\n    )\n    # Remove values outside the valid range\n    df.loc[~df['body_mass_g'].between(2500, 6500), 'body_mass_g'] = np.nan\n    # Keep only rows with a valid species and a valid body mass\n    df = df.dropna(subset=['species', 'body_mass_g'])\n    df = df[df['species'].isin(['Adelie', 'Chinstrap', 'Gentoo'])]\n    return df\n\ndef answer(df):\n    cleaned = clean(df)\n    means = cleaned.groupby('species')['body_mass_g'].mean()\n    return {str(species): round(float(mean_val), 2) for species, mean_val in means.items()}\n"
+  },
+  "corrections": 2,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3848.913,
+    "Chinstrap": 3721.4286,
+    "Gentoo": 5181.8182
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

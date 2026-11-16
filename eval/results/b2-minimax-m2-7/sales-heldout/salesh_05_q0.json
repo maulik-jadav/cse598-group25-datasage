@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 91.77,
+  "tokens": 2713,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Fix Price: remove $ and convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.strip().astype(float)\n    # Fix Region: standardize case variants and typos\n    region_map = {\n        'west': 'West', 'south': 'South', 'Wst': 'West', 'Suoth': 'South'\n    }\n    df['Region'] = df['Region'].replace(region_map)\n    # Drop rows with missing Region (can't group them)\n    df = df.dropna(subset=['Region'])\n    # Drop rows with negative Quantity (invalid per rules)\n    df = df[df['Quantity'] >= 0]\n    return df\n\ndef answer(df):\n    df = clean(df)\n    result = df.groupby('Region')['Quantity'].sum().to_dict()\n    return result"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-minimax-m2-7",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

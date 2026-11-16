@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 66.84,
+  "tokens": 3019,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.263157894736842,
+    "Electronics": 277.85714285714283,
+    "Furniture": 199.64285714285714,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Price to numeric (remove $ signs and convert)\n    df = df.copy()\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).astype(float)\n    \n    # Fix negative Quantity (take absolute value)\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Fix Region variants (strip whitespace and fix typos)\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Wst': 'West', 'Eats': 'East', 'nan': None})\n    \n    # Recalculate Revenue\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Group by Category and calculate average Price\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    return result"
+  },
+  "corrections": 8,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-122b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 201.1538,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

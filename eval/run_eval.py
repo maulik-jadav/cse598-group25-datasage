@@ -76,6 +76,40 @@ DATASETS = ["sales", "penguins", "sales-heldout", "penguins-heldout", "sales-tes
             # hard split (eval/generate_hard.py): bigger tables, mass rule breaks, distractors; hard2 is a second seed
             "sales-hard", "penguins-hard", "sales-hard2", "penguins-hard2"]
 
+# Model comparison study (docs/final/findings_models.md): datasage-m3-<short> is datasage-m3 with only the model
+# changed, and b2-<short> is the B2 single call with that model. Models that passed the tool-calling probe in
+# eval/model_study.py. datasage-m3-qwen3-30b is datasage-m3 run again alongside the others, so its latency is
+# measured under the same load.
+MODEL_SYSTEMS = {
+    "qwen3-30b": SMALL_MODEL, "qwen3-235b": "qwen3-235b-a22b-instruct-2507", "qwen3-30b-think": "qwen3-30b-a3b-thinking-2507",
+    "qwen3-235b-think": "qwen3-235b-a22b-thinking-2507", "qwen3-coder-30b": "qwen3-coder-30b-a3b-instruct",
+    "qwen3-coder-next": "qwen3-coder-next", "qwen3-vl-32b": "qwen3-vl-32b-instruct",
+    "qwen3-vl-32b-think": "qwen3-vl-32b-thinking", "qwen35-27b": "qwen35-27b", "qwen35-122b": "qwen35-122b-a10b",
+    "qwen35-397b": "qwen35-397b-a17b", "qwen36-27b": "qwen36-27b", "qwen36-35b": "qwen36-35b-a3b",
+    "qwen38-27b": "qwen38-27b", "qwen-agentworld-35b": "qwen-agentworld-35b-a3b", "hemmingway-1-5": "hemmingway-1-5",
+    "olmo3-7b": "olmo3-7b-instruct", "olmo3-7b-think": "olmo3-7b-think", "olmo3-32b": "olmo3-32b-instruct",
+    "olmo3-32b-think": "olmo3-32b-think", "gpt-oss-120b": "gpt-oss-120b", "llama4-scout": "llama4-scout-17b",
+    "llama4-maverick": "llama4-maverick-17b", "gemma4-31b": "gemma4-31b-it", "granite41-30b": "granite41-30b",
+    "devstral2-123b": "devstral2-123b", "mistral-large-4": "mistral-large-4", "glm-5-2": "glm-5-2",
+    "glm-5-3": "glm-5-3", "glm-5-3-flash": "glm-5-3-flash", "glm-5-3-spec": "glm-5-3-spec",
+    "deepseek-v4-1-flash": "deepseek-v4-1-flash", "kimi-k2-7-code": "kimi-k2-7-code", "minimax-m2-7": "minimax-m2-7",
+    "minimax-m3": "minimax-m3", "mimo-v2-6-flash": "mimo-v2-6-flash", "mimo-v2-6-pro": "mimo-v2-6-pro",
+    "beam-1-0": "beam-1-0", "inkling-small": "inkling-small", "laguna-s-2-1": "laguna-s-2-1",
+    "muse-glimmer-30b": "muse-glimmer-30b", "muse-spark-open": "muse-spark-open", "ornith-1-5-35b": "ornith-1-5-35b-a3b",
+}
+
+
+def _model_systems(short: str, model: str) -> dict:
+    return {
+        f"datasage-m3-{short}": lambda b, t, c, trace: systems.run_datasage(b, t, model=model, m3=True, client=c,
+                                                                           trace_path=trace),
+        f"b2-{short}": lambda b, t, c, trace: systems.run_b2(b, t, model=model, client=c),
+    }
+
+
+for _short, _model in MODEL_SYSTEMS.items():
+    SYSTEMS.update(_model_systems(_short, _model))
+
 
 def run(system: str, dataset: str, workers: int, limit: int | None, results_dir: Path, only: set[str] | None = None) -> None:
     out_dir = results_dir / system / dataset

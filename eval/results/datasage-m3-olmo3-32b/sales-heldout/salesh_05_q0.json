@@ -1,0 +1,160 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 30,
+  "tool_errors": 13,
+  "recovered_errors": 1,
+  "approvals_asked": 3,
+  "seconds": 43.88,
+  "tokens": 114998,
+  "stop_reason": "tool_budget_exhausted",
+  "note": "",
+  "answer": null,
+  "extra": {
+    "final_summary": "",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            8,
+            48,
+            57
+          ],
+          "reason": "Region is missing for these rows; we cannot compute region-level totals without a region value."
+        },
+        "reason": "Region is missing for these rows; we cannot compute region-level totals without a region value.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 3 value(s) to missing",
+        "code": "df.loc[[8, 48, 57], 'Region'] = pd.NA"
+      },
+      {
+        "version": 2,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains text numbers like '$900.00'; cast to numeric to compute revenue correctly."
+        },
+        "reason": "Price contains text numbers like '$900.00'; cast to numeric to compute revenue correctly.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (62 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "south": "South",
+            "west": "West",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "Standardize region labels to North, South, East, West."
+        },
+        "reason": "Standardize region labels to North, South, East, West.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Region: merged 4 label variant(s), 4 cells",
+        "code": "df['Region'] = df['Region'].replace({'south': 'South', 'west': 'West', 'Suoth': 'South', 'Wst': 'West'})"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            44
+          ],
+          "reason": "Row 44 has negative Quantity and negative Revenue; this is impossible for sales data."
+        },
+        "reason": "Row 44 has negative Quantity and negative Revenue; this is impossible for sales data.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          44
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [44]",
+        "code": "df = df.drop(index=[44])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 19
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-olmo3-32b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

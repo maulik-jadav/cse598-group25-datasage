@@ -1,0 +1,98 @@
+{
+  "task_id": "salest_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 7,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 103.98,
+  "tokens": 18001,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 9.0,
+    "Electronics": 12.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "final_summary": "Orders per category (47 unique orders after cleaning): Furniture 14, Electronics 12, Office Supplies 12, Accessories 9. Problems found and fixed: (1) Category had 3 whitespace variants (' Electronics', ' Furniture', 'Office Supplies ') on rows 13, 28, 37 \u2014 merged into the allowed labels with normalize_labels; (2) one exact duplicate row (row 31) \u2014 removed with drop_duplicates. Caveats: the question only depends on Category and row uniqueness, so other issues left untouched (negative Quantity/Revenue on row 40, '$300.00' text prices) do not affect this count.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Electronics": "Electronics",
+            " Furniture": "Furniture",
+            "Office Supplies ": "Office Supplies"
+          },
+          "reason": "Merge whitespace variants of Category into the allowed labels so each order is counted in the correct category."
+        },
+        "reason": "Merge whitespace variants of Category into the allowed labels so each order is counted in the correct category.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 3 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({' Electronics': 'Electronics', ' Furniture': 'Furniture', 'Office Supplies ': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove the one exact duplicate row (row 31) so it is not counted twice as an order."
+        },
+        "reason": "Remove the one exact duplicate row (row 31) so it is not counted twice as an order.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          31
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 6,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mistral-large-4",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

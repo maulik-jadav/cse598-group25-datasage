@@ -1,0 +1,130 @@
+{
+  "task_id": "salesh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 86.2,
+  "tokens": 23927,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "extra": {
+    "final_summary": "**Total Revenue per Month (2026)**\n\n| Month   | Total Revenue |\n|---------|---------------|\n| January | $6,680        |\n| February| $4,424        |\n| March   | $7,202        |\n| April   | $5,260        |\n| May     | $14,196       |\n| June    | $3,640        |\n\n**Data Quality Issues Found & Fixed:**\n1. **Duplicate row** (row 23) \u2014 removed to prevent double-counting revenue.\n2. **Category misspelling** \u2014 \"Furnture\" \u2192 \"Furniture\" in 2 rows (rows 36, 38).\n3. **Region whitespace variants** \u2014 \" North\", \"East \", \"West \" normalized to clean labels in 3 rows.\n\n**No other issues found:** Dates are valid YYYY-MM-DD, Revenue = Quantity \u00d7 Price holds for all rows, and all numeric columns are within expected ranges.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 23 is an exact duplicate of an earlier row; removing it prevents double-counting revenue."
+        },
+        "reason": "Row 23 is an exact duplicate of an earlier row; removing it prevents double-counting revenue.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture"
+          },
+          "reason": "\"Furnture\" is a misspelling of \"Furniture\" per the rules file allowed labels."
+        },
+        "reason": "\"Furnture\" is a misspelling of \"Furniture\" per the rules file allowed labels.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 1 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " North": "North",
+            "East ": "East",
+            "West ": "West"
+          },
+          "reason": "These Region values have leading/trailing spaces that differ from the allowed labels."
+        },
+        "reason": "These Region values have leading/trailing spaces that differ from the allowed labels.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: merged 3 label variant(s), 3 cells",
+        "code": "df['Region'] = df['Region'].replace({' North': 'North', 'East ': 'East', 'West ': 'West'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-minimax-m2-7",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

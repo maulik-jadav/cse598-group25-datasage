@@ -1,0 +1,107 @@
+{
+  "task_id": "salesh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 54.65,
+  "tokens": 26380,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "extra": {
+    "final_summary": "Total revenue by category (after fixes):\n\n- Furniture: $20,970\n- Electronics: $16,690\n- Accessories: $4,275\n- Office Supplies: $516\n\nProblems found and fixed:\n1. Category misspellings \u2014 \"Accesories\" (1 row) and \"Office Suplies\" (2 rows) were merged into the allowed labels \"Accessories\" and \"Office Supplies\" via normalize_labels. Without this, they would have shown as separate categories.\n2. Exact duplicate row \u2014 Row 4 was a duplicate of row 3 (Order 2004, Lamp). It was removed so its revenue wasn't double-counted.\n\nData quality checks that passed:\n- Revenue = Quantity \u00d7 Price held for all rows (0 violations), so no revenue corrections were needed.\n- Region had a space variant (\" East\") but Region is not used in this question, so it was left unchanged.\n\nCaveat: Office Supplies total ($516) is small because those rows are low-priced items (e.g., Notebooks at $6). All figures come directly from the analyze tool on the cleaned data (67 rows used).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Accesories": "Accessories",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Fix misspelled category labels so they merge into allowed labels; otherwise they would appear as separate categories in the revenue total."
+        },
+        "reason": "Fix misspelled category labels so they merge into allowed labels; otherwise they would appear as separate categories in the revenue total.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 2 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({'Accesories': 'Accessories', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 4 is an exact duplicate of row 3 (Order 2004), which would double-count its revenue in the category total."
+        },
+        "reason": "Row 4 is an exact duplicate of row 3 (Order 2004), which would double-count its revenue in the category total.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          4
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-ornith-1-5-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

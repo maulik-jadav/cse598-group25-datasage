@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 129.08,
+  "tokens": 4500,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 92.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # remove exact duplicate rows (Order_ID unique)\n    df = df.drop_duplicates()\n    # fix Region label variant Nort -> North\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Nort': 'North'})\n    # ensure Quantity is numeric and positive (min 1)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # negative values are data entry errors -> take absolute value\n    df.loc[df['Quantity'] < 0, 'Quantity'] = df.loc[df['Quantity'] < 0, 'Quantity'].abs()\n    df = df[df['Quantity'] >= 1]\n    df = df.dropna(subset=['Quantity'])\n    # recompute Revenue to satisfy Revenue = Quantity * Price\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # keep only allowed regions\n    allowed = ['North', 'South', 'East', 'West']\n    df = df[df['Region'].isin(allowed)]\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df = df.dropna(subset=['Region'])\n    df = df[df['Region'].astype(str).str.strip() != '']\n    grouped = df.groupby('Region', dropna=True)['Quantity'].sum()\n    # drop missing group keys and convert to int\n    result = {}\n    for k, v in grouped.items():\n        if pd.isna(k) or str(k).strip() == '':\n            continue\n        result[str(k)] = int(v) if float(v).is_integer() else float(v)\n    return result\n"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

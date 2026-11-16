@@ -1,0 +1,147 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 12,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 41.04,
+  "tokens": 30906,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "final_summary": "After cleaning, the order counts by category are: Accessories 10, Electronics 24, Furniture 20, Office Supplies 13 (67 rows used). I fixed two safe Category label variants (\" Electronics\" and \"Office Supplies \") and excluded 2 exact duplicate rows and 1 row with a negative Quantity. I did not exclude the 3 rows where Revenue does not equal Quantity * Price because that fix was rejected; those rows remain in the count.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Electronics": "Electronics",
+            "Office Supplies ": "Office Supplies"
+          },
+          "reason": "Category has leading/trailing space variants that should map to allowed labels."
+        },
+        "reason": "Category has leading/trailing space variants that should map to allowed labels.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({' Electronics': 'Electronics', 'Office Supplies ': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            6,
+            49
+          ],
+          "reason": "Rows 6 and 49 are exact duplicate copies of earlier rows (Order_ID 2006 and another), per the duplicate check."
+        },
+        "reason": "Rows 6 and 49 are exact duplicate copies of earlier rows (Order_ID 2006 and another), per the duplicate check.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          49
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [6, 49]",
+        "code": "df = df.drop(index=[6, 49])"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            41
+          ],
+          "reason": "Row 41 has Quantity = -4, violating the rule that Quantity must be a positive whole number (min 1)."
+        },
+        "reason": "Row 41 has Quantity = -4, violating the rule that Quantity must be a positive whole number (min 1).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          41
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [41]",
+        "code": "df = df.drop(index=[41])"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "summary": "excluded 3 row(s): [0, 7, 66]"
+      }
+    ],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": false,
+        "why": "removes row 0 (id 2001) that should be kept"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 8
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-kimi-k2-7-code",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinst_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 93.75,
+  "tokens": 4681,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 39700.0,
+    "Gentoo": 103500.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # --- species: strip spaces and fix variants/typos ---\n    if 'species' in df.columns:\n        df['species'] = df['species'].astype('string').str.strip()\n        # direct typo mapping (case-sensitive)\n        typo_map = {\n            'Adeile': 'Adelie',\n            'Gentto': 'Gentoo',\n            'Chinstarp': 'Chinstrap'\n        }\n        df['species'] = df['species'].replace(typo_map)\n        # case-insensitive normalization to allowed values\n        allowed_map = {'adelie': 'Adelie', 'gentoo': 'Gentoo', 'chinstrap': 'Chinstrap'}\n        # map lowercased version\n        lower = df['species'].str.lower()\n        mask = lower.isin(allowed_map)\n        df.loc[mask, 'species'] = lower[mask].map(allowed_map)\n        # keep only allowed species\n        df = df[df['species'].isin(['Adelie', 'Chinstrap', 'Gentoo'])]\n    # --- body_mass_g: text numbers with commas -> numeric ---\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip()\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n        # enforce valid range 2500-6500 (set out-of-range to NaN, not needed for sum)\n        df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # --- flipper_length_mm: fix text numbers and negative/out-of-range ---\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'].astype(str).str.strip(), errors='coerce')\n        # negative is data entry error: take absolute value (-200 -> 200)\n        df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n        # optional: mark out-of-range as NaN (170-235)\n        # df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = pd.NA\n    return df\n\ndef answer(df):\n    # df is expected to be cleaned by clean()\n    if df.empty:\n        return {}\n    # ensure body_mass_g numeric\n    if df['body_mass_g'].dtype == object:\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'].astype(str).str.replace(',', '', regex=False), errors='coerce')\n    grouped = df.dropna(subset=['species']).groupby('species', dropna=True)['body_mass_g'].sum()\n    # convert to int/float for JSON serialization\n    result = {}\n    for k, v in grouped.items():\n        if pd.isna(k):\n            continue\n        # body mass sums are integers\n        result[str(k)] = int(round(float(v))) if pd.notna(v) else 0\n    return result\n"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "penguins-test",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 35900.0,
+    "Gentoo": 103500.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

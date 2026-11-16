@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 94.11,
+  "tokens": 2446,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # drop exact duplicate rows\n    d = d.drop_duplicates().reset_index(drop=True)\n    # normalize Category labels (strip stray spaces)\n    d['Category'] = d['Category'].astype(str).str.strip()\n    # parse Price written as text (e.g. '$300.00') to numeric\n    d['Price'] = pd.to_numeric(d['Price'].astype(str).str.replace('$', '', regex=False).str.strip(), errors='coerce')\n    d['Quantity'] = pd.to_numeric(d['Quantity'], errors='coerce')\n    # recompute Revenue and drop rows violating Quantity >= 1\n    d['Revenue'] = d['Quantity'] * d['Price']\n    d = d[d['Quantity'] >= 1].reset_index(drop=True)\n    return d\n\ndef answer(df):\n    d = clean(df)\n    counts = d.dropna(subset=['Category']).groupby('Category')['Order_ID'].nunique()\n    return {str(k): int(v) for k, v in counts.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "task_id": "penguinst_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 308.19,
+  "tokens": 2662,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3765.625,
+    "male": 4312.5
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # normalize text columns\n    for col in ['species', 'island', 'sex']:\n        df[col] = df[col].astype('string').str.strip()\n    # fix label variants\n    df['species'] = df['species'].replace({'Adelie': 'Adelie'})\n    df['island'] = df['island'].str.capitalize().replace({'Biscoe': 'Biscoe', 'Dream': 'Dream', 'Torgersen': 'Torgersen'})\n    # body_mass_g stored as text with commas -> numeric\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype('string').str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    # enforce allowed ranges if present\n    df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # keep id column and all rows; missing sex handled at answer time\n    return df\n\ndef answer(df):\n    d = df[df['sex'].notna() & df['body_mass_g'].notna()].copy()\n    grouped = d.groupby('sex')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3765.625,
+    "male": 4312.5
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

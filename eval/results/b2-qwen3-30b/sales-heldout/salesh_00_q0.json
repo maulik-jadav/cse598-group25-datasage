@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 8.21,
+  "tokens": 2237,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.65,
+    "Electronics": 259.23,
+    "Furniture": 251.94,
+    "Office Supplies": 9.23
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix label variants in Category\n    category_mapping = {\n        'Office Suplies': 'Office Supplies',\n        'Accesories': 'Accessories'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Fix label variants in Region\n    df['Region'] = df['Region'].str.strip()\n    \n    # Convert text numbers to actual numbers\n    df['Quantity'] = pd.to_numeric(df['Quantity'])\n    df['Price'] = pd.to_numeric(df['Price'])\n    df['Revenue'] = pd.to_numeric(df['Revenue'])\n    \n    return df\n\ndef answer(df):\n    # Group by Category and calculate average unit price\n    result = df.groupby('Category', as_index=False)['Price'].mean()\n    \n    # Convert to dictionary with category as key and average price as value\n    return dict(zip(result['Category'], result['Price'].round(2)))"
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.6522,
+    "Electronics": 259.2308,
+    "Furniture": 251.9444,
+    "Office Supplies": 9.2308
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

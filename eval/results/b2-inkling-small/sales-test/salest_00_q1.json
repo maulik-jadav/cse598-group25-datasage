@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 65.74,
+  "tokens": 4611,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix Region whitespace and misspelling\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Suoth': 'South'})\n    # Fix Price written as text with $ signs\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Fix invalid dates\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # Ensure Quantity is numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # Recalculate Revenue to resolve cross-column errors\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # Drop rows that cannot be assigned to a month or have bad core values\n    df = df.dropna(subset=['Date', 'Price', 'Quantity', 'Revenue'])\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n    result = df.groupby('Month')['Revenue'].sum().to_dict()\n    # Ensure plain float values and string keys\n    result = {str(k): float(v) for k, v in result.items()}\n    return result"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

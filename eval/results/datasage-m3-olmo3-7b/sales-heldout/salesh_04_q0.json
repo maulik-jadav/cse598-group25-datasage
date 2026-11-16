@@ -1,0 +1,161 @@
+{
+  "task_id": "salesh_04_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 28,
+  "tool_errors": 13,
+  "recovered_errors": 2,
+  "approvals_asked": 3,
+  "seconds": 31.87,
+  "tokens": 166338,
+  "stop_reason": "no_tool_calls",
+  "note": "",
+  "answer": null,
+  "extra": {
+    "final_summary": "",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "accessories": "Accessories",
+            "office supplies": "Office Supplies",
+            "Furnture": "Furniture"
+          },
+          "reason": "Merging misspelled and case variant labels in Category to canonical names per rules."
+        },
+        "reason": "Merging misspelled and case variant labels in Category to canonical names per rules.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Category: merged 3 label variant(s), 4 cells",
+        "code": "df['Category'] = df['Category'].replace({'accessories': 'Accessories', 'office supplies': 'Office Supplies', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            30,
+            35
+          ],
+          "reason": "Dates are not valid ISO YYYY-MM-DD format."
+        },
+        "reason": "Dates are not valid ISO YYYY-MM-DD format.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Date: set 2 value(s) to missing",
+        "code": "df.loc[[30, 35], 'Date'] = pd.NA"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            34
+          ],
+          "reason": "Row 34 is a duplicate and should be excluded to provide accurate per-category statistics."
+        },
+        "reason": "Row 34 is a duplicate and should be excluded to provide accurate per-category statistics.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [34]",
+        "code": "df = df.drop(index=[34])"
+      },
+      {
+        "version": 4,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Quantity",
+          "reason": "Ensure Quantity is stored as a number for accurate aggregation."
+        },
+        "reason": "Ensure Quantity is stored as a number for accurate aggregation.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Quantity: converted to numbers (0 text values, 0 became missing)",
+        "code": "df['Quantity'] = pd.to_numeric(df['Quantity'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 5,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Ensure Price is stored as a number for accurate aggregation."
+        },
+        "reason": "Ensure Price is stored as a number for accurate aggregation.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (0 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 1,
+    "model_turns": 30
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-olmo3-7b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.1818,
+    "Electronics": 568.6667,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

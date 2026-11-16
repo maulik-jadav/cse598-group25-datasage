@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 118.74,
+  "tokens": 6340,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.strip().str.replace(r'[$,]', '', regex=True),\n        errors='coerce'\n    )\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Quantity'] = df['Quantity'].abs()\n\n    region_map = {\n        'north': 'North', 'south': 'South', 'east': 'East', 'west': 'West',\n        'wst': 'West', 'suoth': 'South'\n    }\n\n    def norm_region(x):\n        if pd.isna(x):\n            return x\n        s = str(x).strip()\n        return region_map.get(s.lower(), s)\n\n    df['Region'] = df['Region'].map(norm_region)\n    df['Category'] = df['Category'].astype('string').str.strip()\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['Category'].str.lower() == 'electronics']\n    d = d.dropna(subset=['Region'])\n    totals = d.groupby('Region')['Revenue'].sum()\n    return {str(k): float(v) for k, v in totals.items()}\n"
+  },
+  "corrections": 9,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

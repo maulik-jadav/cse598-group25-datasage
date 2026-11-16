@@ -1,0 +1,49 @@
+{
+  "task_id": "salesh_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 39.39,
+  "tokens": 3243,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.65217391304348,
+    "Electronics": 259.2307692307692,
+    "Furniture": 251.94444444444446,
+    "Office Supplies": 9.23076923076923
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Fix category label variants\n    df['Category'] = df['Category'].replace({\n        'Office Suplies': 'Office Supplies',\n        'Accesories': 'Accessories'\n    })\n    # Trim whitespace in text fields that could affect grouping (optional cleanup)\n    if df['Region'].dtype == object:\n        df['Region'] = df['Region'].str.strip()\n    # Ensure Price is numeric\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    return df\n\ndef answer(df):\n    # Average unit price per category\n    avg_price = df.groupby('Category')['Price'].mean()\n    avg_price = avg_price.dropna()\n    return {str(k): float(v) for k, v in avg_price.items()}\n"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.6522,
+    "Electronics": 259.2308,
+    "Furniture": 251.9444,
+    "Office Supplies": 9.2308
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

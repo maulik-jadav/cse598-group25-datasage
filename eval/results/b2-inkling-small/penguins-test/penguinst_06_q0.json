@@ -1,0 +1,57 @@
+{
+  "task_id": "penguinst_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 77.76,
+  "tokens": 5386,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3876.0,
+    "male": 4485.227272727273
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Drop exact duplicate rows\n    df = df.drop_duplicates()\n    # Fix island whitespace variant\n    df['island'] = df['island'].astype(str).str.strip()\n    # Convert body_mass_g text to numeric, removing commas\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip()\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # Enforce valid range; invalid values become NaN\n    df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = float('nan')\n    # Clean sex: strip whitespace, keep true missing as NaN\n    df['sex'] = df['sex'].astype(str).str.strip()\n    df['sex'] = df['sex'].replace({'nan': float('nan'), '': float('nan'), 'None': float('nan')})\n    # Ensure numeric columns are numeric (safe for flipper if loaded as text)\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    sub = df.dropna(subset=['sex', 'body_mass_g'])\n    means = sub.groupby('sex')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in means.items()}"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3876.0,
+    "male": 4485.2273
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

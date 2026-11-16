@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 37.78,
+  "tokens": 2662,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3767.2413793103447,
+    "Chinstrap": 3726.785714285714,
+    "Gentoo": 4895.833333333333
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Clean species column: strip whitespace and standardize\n    df['species'] = df['species'].str.strip()\n    # Clean island column: strip whitespace and standardize\n    df['island'] = df['island'].str.strip().str.title()\n    # Convert flipper_length_mm from text to numeric\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    # Convert body_mass_g from text to numeric (remove commas)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'].str.replace(',', ''), errors='coerce')\n    # Ensure species is in allowed list (per rules)\n    df = df[df['species'].isin(['Adelie', 'Chinstrap', 'Gentoo'])]\n    # Drop any rows with missing body_mass_g (should be none after cleaning)\n    df = df.dropna(subset=['body_mass_g'])\n    return df\n\ndef answer(df):\n    # Group by species and calculate average body mass\n    result = df.groupby('species')['body_mass_g'].mean().to_dict()\n    # Return as dict with species as keys\n    return result"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3767.2414,
+    "Chinstrap": 3726.7857,
+    "Gentoo": 4895.8333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

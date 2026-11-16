@@ -1,0 +1,148 @@
+{
+  "task_id": "salest_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 423.73,
+  "tokens": 25254,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "extra": {
+    "final_summary": "Total revenue by category (after fixes):\n- Electronics: $27,140\n- Furniture: $7,665\n- Accessories: $2,390\n- Office Supplies: $780\n\nProblems found and fixed:\n1. Region label variants: rows 6 (\"south\") and 53 (\"east\") were case-only variants of allowed labels \u2014 normalized to \"South\" and \"East\".\n2. Price stored as text: \"$6.00\" and \"$180.00\" \u2014 cast to numbers.\n3. Revenue formula violation: row 52 had Revenue=14405 but Quantity*Price=144 \u2014 recomputed per the rules formula.\n4. Negative quantities: rows 20, 35, 58 had Quantity = -7, -2, -7 (rules require Quantity \u2265 1) and produced negative revenue \u2014 excluded from the analysis.\n\nCaveats: The 3 excluded rows removed $2,865 of negative revenue from the totals. No other data-quality issues affected the question.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "south": "South"
+          },
+          "reason": "Case-only variants of allowed Region labels (east\u2192East, south\u2192South)."
+        },
+        "reason": "Case-only variants of allowed Region labels (east\u2192East, south\u2192South).",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'south': 'South'})"
+      },
+      {
+        "version": 2,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Two values stored as text with $ prefix ($6.00, $180.00); convert to numbers."
+        },
+        "reason": "Two values stored as text with $ prefix ($6.00, $180.00); convert to numbers.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (61 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            52
+          ],
+          "reason": "Row 52 Revenue (14405) does not match Quantity * Price (144); recompute per rules formula."
+        },
+        "reason": "Row 52 Revenue (14405) does not match Quantity * Price (144); recompute per rules formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[52], 'Revenue'] = [144.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            20,
+            35,
+            58
+          ],
+          "reason": "Rules require Quantity \u2265 1 (positive whole number); rows 20, 35, 58 have negative quantities and negative revenue."
+        },
+        "reason": "Rules require Quantity \u2265 1 (positive whole number); rows 20, 35, 58 have negative quantities and negative revenue.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          20,
+          35,
+          58
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [20, 35, 58]",
+        "code": "df = df.drop(index=[20, 35, 58])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-minimax-m3",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

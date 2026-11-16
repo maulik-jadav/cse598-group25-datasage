@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 27.55,
+  "tokens": 3392,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 78775.0,
+    "Chinstrap": 28400.0,
+    "Gentoo": 160050.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows (2 duplicates; 62 rows -> 60 unique penguins)\n    df = df.drop_duplicates()\n    # Normalize species case variants (adelie -> Adelie, gentoo -> Gentoo)\n    df['species'] = df['species'].astype(str).str.strip().str.title()\n    # Fix island typos\n    island_map = {'Bisco': 'Biscoe', 'Dram': 'Dream'}\n    df['island'] = df['island'].replace(island_map)\n    # Fix negative flipper lengths (sign errors): take absolute value\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    # Enforce valid ranges\n    df = df[df['bill_length_mm'].between(30, 60)]\n    df = df[df['flipper_length_mm'].between(170, 235)]\n    df = df[df['body_mass_g'].between(2500, 6500)]\n    return df\n\ndef answer(df):\n    df = clean(df)\n    grouped = df.groupby('species')['body_mass_g'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 74875.0,
+    "Chinstrap": 24675.0,
+    "Gentoo": 155250.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ]
+  ]
+}

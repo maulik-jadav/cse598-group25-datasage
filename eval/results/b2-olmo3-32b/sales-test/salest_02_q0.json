@@ -1,0 +1,76 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 5,
+  "detect_fp": 5,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 19.85,
+  "tokens": 2517,
+  "stop_reason": "code_error",
+  "note": "ValueError: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    \n    # Fix label variants in Category\n    df['Category'] = df['Category'].replace({'Office Suplies': 'Office Supplies', 'Furnture': 'Furniture'})\n    \n    # Fix label variants in Region\n    df['Region'] = df['Region'].replace({' West': 'West', ' South': 'South', 'West ': 'West'})\n    df['Region'] = df['Region'].str.strip()\n    \n    # Drop rows with missing Region\n    df = df.dropna(subset=['Region'])\n    \n    # Parse and validate Date\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n    \n    # Convert Quantity to integer and validate\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df = df[df['Quantity'].notnull()]\n    df['Quantity'] = df['Quantity'].astype(int)\n    df = df[(df['Quantity'] >= 1)]\n    \n    # Convert Price to numeric and validate\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df = df.dropna(subset=['Price'])\n    # Price must be >= 0\n    df = df[df['Price'] >= 0]\n    \n    # Compute Revenue and validate\n    df['Revenue'] = df['Quantity'] * df['Price']\n    df = df[df['Revenue'] >= 0]\n    \n    # Keep only id column if present, else keep Order_ID as identifier\n    if 'id' in df.columns:\n        pass # keep id\n    else:\n        # We are told to keep Order_ID as the identifier\n        pass\n    \n    return df\n\ndef answer(df):\n    # Group by Category\n    grouped = df.groupby('Category')\n    result = {}\n    # Compute average unit price per category\n    for cat, group in grouped[['Price']].mean().items():\n        if pd.notnull(group):\n            result[cat] = round(group, 2)\n    # If no categories, return {'all': ...}\n    if not result:\n        avg_price = df['Price'].mean()\n        if pd.notnull(avg_price):\n            result = {'all': round(avg_price, 2)}\n    return result"
+  },
+  "corrections": 0,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

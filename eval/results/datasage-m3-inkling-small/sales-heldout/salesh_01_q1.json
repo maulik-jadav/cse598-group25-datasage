@@ -1,0 +1,119 @@
+{
+  "task_id": "salesh_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 31.66,
+  "tokens": 31254,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "extra": {
+    "final_summary": "Fixed Category label variants (trimmed spaces, normalized misspellings: \"Furnture\"\u2192Furniture, \"Accesories\"\u2192Accessories, space variants) and removed 2 exact duplicate rows (rows 6 and 60). After cleaning 70 unique orders remain. Counts by category: Accessories 21, Electronics 18, Furniture 14, Office Supplies 17. Note: Region has 1 missing value (row 39) but it doesn't affect this question; Revenue formula (Quantity*Price) was not verified per-row.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Category",
+          "reason": "trim leading/trailing spaces from category labels"
+        },
+        "reason": "trim leading/trailing spaces from category labels",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: trimmed 3 values",
+        "code": "df['Category'] = df['Category'].str.strip()"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Accesories": "Accessories",
+            "Furnture": "Furniture"
+          },
+          "reason": "merge misspelled category labels into allowed labels"
+        },
+        "reason": "merge misspelled category labels into allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 2 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({'Accesories': 'Accessories', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 3,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "remove 2 exact duplicate rows (later copies of earlier rows)"
+        },
+        "reason": "remove 2 exact duplicate rows (later copies of earlier rows)",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          60
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 8
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-inkling-small",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

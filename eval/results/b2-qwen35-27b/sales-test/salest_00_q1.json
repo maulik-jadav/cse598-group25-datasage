@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 114.04,
+  "tokens": 3563,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Clean Date column - convert to datetime, drop invalid dates\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n    \n    # Clean Price column - remove $ and convert to numeric\n    df['Price'] = df['Price'].str.replace('$', '', regex=False).astype(float)\n    \n    # Clean Quantity column - ensure numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # Clean Region column - trim spaces and fix typos\n    df['Region'] = df['Region'].str.strip()\n    df['Region'] = df['Region'].replace({'Suoth': 'South'})\n    \n    # Recalculate Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Extract month from Date in YYYY-MM format\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n    \n    # Group by month and sum revenue\n    result = df.groupby('Month')['Revenue'].sum().to_dict()\n    \n    return result"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-27b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

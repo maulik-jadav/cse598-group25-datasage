@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 13.08,
+  "tokens": 2232,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.333333333333336,
+    "Electronics": 396.42857142857144,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Quantity to numeric (already numeric but ensure int) and drop rows with negative quantity\n    df = df.copy()\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce').astype(int)\n    df = df.dropna(subset=['Quantity'])\n    df = df[df['Quantity'] >= 0]\n    \n    # Clean Price: remove $ and convert to numeric\n    df['Price'] = (df['Price'].str.replace('$', '', regex=False)\n                     .astype(float))\n    \n    # Standardize Region labels (title case)\n    df['Region'] = df['Region'].str.title()\n    \n    # Keep Order_ID as identifier (no changes needed)\n    return df\n\ndef answer(df):\n    # Compute average unit price per Category\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    # Drop any missing group keys (should not be any after cleaning)\n    result = {k: v for k, v in result.items() if pd.notna(v)}\n    return result"
+  },
+  "corrections": 7,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-granite41-30b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

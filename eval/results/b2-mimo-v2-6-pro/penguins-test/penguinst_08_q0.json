@@ -1,0 +1,53 @@
+{
+  "task_id": "penguinst_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 61.52,
+  "tokens": 3600,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3727.4193548387098,
+    "male": 4590.384615384615
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n\n    # Fix species label variants (typos)\n    df['species'] = df['species'].replace({'Gentto': 'Gentoo', 'Adeile': 'Adelie'})\n\n    # Fix island label variants (case)\n    island_map = {'biscoe': 'Biscoe', 'Biscoe': 'Biscoe', 'Dream': 'Dream',\n                  'Torgersen': 'Torgersen'}\n    df['island'] = df['island'].astype(str).str.strip().map(lambda v: island_map.get(v, v))\n\n    # body_mass_g: text with commas/spaces -> numeric\n    s = df['body_mass_g'].astype(str).str.strip().str.replace(',', '', regex=False).str.replace(' ', '', regex=False)\n    num = pd.to_numeric(s, errors='coerce')\n\n    # Unit error: values like 3650000 (mg) -> 3650 g when dividing by 1000 lands in valid range\n    bad = (num > 6500) & (num / 1000 >= 2500) & (num / 1000 <= 6500)\n    num = num.mask(bad, num / 1000)\n\n    # Anything still out of the plausible range -> treat as missing\n    num = num.where((num >= 2500) & (num <= 6500))\n    df['body_mass_g'] = num\n\n    # Sex must be one of male/female; unknown stays missing and is dropped for grouping\n    df.loc[~df['sex'].isin(['male', 'female']), 'sex'] = pd.NA\n    df = df.dropna(subset=['sex', 'body_mass_g'])\n    return df\n\n\ndef answer(df):\n    d = clean(df)\n    g = d.groupby('sex')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in g.items()}\n"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3735.0,
+    "male": 4570.8333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

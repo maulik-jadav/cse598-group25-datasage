@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 63.09,
+  "tokens": 3167,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Strip whitespace from Category (label variants)\n    df['Category'] = df['Category'].str.strip()\n    \n    # Convert Quantity to numeric (it's stored as text in some rows)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # Filter out negative quantities (invalid per rules: min 1)\n    df = df[df['Quantity'] > 0].copy()\n    \n    # Convert Price to numeric (remove $ signs)\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    return df\n\ndef answer(df):\n    # Group by Region and sum Quantity (units sold)\n    result = df.groupby('Region')['Quantity'].sum().to_dict()\n    return result"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-397b",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

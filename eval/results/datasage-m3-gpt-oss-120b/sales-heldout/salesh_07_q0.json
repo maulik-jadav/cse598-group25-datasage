@@ -1,0 +1,172 @@
+{
+  "task_id": "salesh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 14,
+  "tool_errors": 1,
+  "recovered_errors": 1,
+  "approvals_asked": 3,
+  "seconds": 77.71,
+  "tokens": 55934,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "extra": {
+    "final_summary": "**Answer**\n\n| Category          | Average Unit Price |\n|-------------------|--------------------|\n| Accessories       | **$30.67** |\n| Electronics       | **$360.00** |\n| Furniture         | **$205.00** |\n| Office Supplies   | **$10.67** |\n\n**What was done**\n\n1. **Removed exact duplicate rows** (2 rows).  \n2. **Excluded rows with negative Quantity** (rows\u202f19 and\u202f34) because the rules require Quantity\u202f\u2265\u202f1.  \n3. **Trimmed whitespace** in the *Region* column and normalized the case variant \u201ceast\u201d \u2192 \u201cEast\u201d.  \n4. **Recomputed Revenue** for the single row where it did not match *Quantity\u202f\u00d7\u202fPrice* (row\u202f30).  \n5. After these fixes, the dataset had 43 valid rows.  \n\nThe average unit price (mean of the *Price* column) was then calculated for each *Category*.\n\n**Caveats**\n\n- The two rows with negative quantities were excluded rather than corrected, as the rules state Quantity must be a positive whole number.  \n- No missing values remained in the columns needed for this calculation.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Exact duplicate rows affect average price calculation"
+        },
+        "reason": "Exact duplicate rows affect average price calculation",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          17,
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            19,
+            34
+          ],
+          "reason": "Negative Quantity values violate rules (must be positive)"
+        },
+        "reason": "Negative Quantity values violate rules (must be positive)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          19,
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [19, 34]",
+        "code": "df = df.drop(index=[19, 34])"
+      },
+      {
+        "version": 3,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "Remove trailing spaces that cause mismatched region labels"
+        },
+        "reason": "Remove trailing spaces that cause mismatched region labels",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: trimmed 2 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      },
+      {
+        "version": 4,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East"
+          },
+          "reason": "Normalize case variant for region label"
+        },
+        "reason": "Normalize case variant for region label",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: merged 1 label variant(s), 1 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East'})"
+      },
+      {
+        "version": 5,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            30
+          ],
+          "reason": "Fix Revenue mismatch with Quantity and Price"
+        },
+        "reason": "Fix Revenue mismatch with Quantity and Price",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[30], 'Revenue'] = [100.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 15
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

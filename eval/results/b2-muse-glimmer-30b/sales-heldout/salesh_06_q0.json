@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 349.37,
+  "tokens": 7302,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\nfrom difflib import get_close_matches\n\ndef clean(df):\n    df = df.copy()\n    # Region standardisation\n    allowed_regions = [\"North\", \"South\", \"East\", \"West\"]\n    region_map = {}\n    for val in df[\"Region\"].astype(str).unique():\n        v = val.strip()\n        match = next((a for a in allowed_regions if a.lower() == v.lower()), None)\n        if match:\n            region_map[v] = match\n        else:\n            close = get_close_matches(v, allowed_regions, n=1, cutoff=0.7)\n            region_map[v] = close[0] if close else v\n    df[\"Region\"] = df[\"Region\"].astype(str).map(lambda x: region_map.get(x.strip(), x))\n\n    # Price text -> numeric\n    def parse_price(p):\n        if pd.isna(p):\n            return np.nan\n        s = str(p).replace(\"$\", \"\").replace(\",\", \"\").strip()\n        try:\n            return float(s)\n        except:\n            return np.nan\n    df[\"Price\"] = df[\"Price\"].apply(parse_price)\n\n    # Date parsing, coerce invalid\n    df[\"Date\"] = pd.to_datetime(df[\"Date\"], errors=\"coerce\", format=\"%Y-%m-%d\")\n\n    # Quantity numeric\n    df[\"Quantity\"] = pd.to_numeric(df[\"Quantity\"], errors=\"coerce\")\n\n    # Enforce Revenue = Quantity * Price\n    df[\"Revenue\"] = df[\"Quantity\"].astype(float) * df[\"Price\"]\n    return df\n\ndef answer(df):\n    df = df.copy()\n    allowed = [\"North\", \"South\", \"East\", \"West\"]\n    # ensure Region is canonical after cleaning\n    out = df.groupby(\"Region\")[\"Quantity\"].sum()\n    result = {}\n    for k, v in out.items():\n        k_str = str(k)\n        if k_str in allowed and pd.notna(v):\n            result[k_str] = int(v)\n    return result\n"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

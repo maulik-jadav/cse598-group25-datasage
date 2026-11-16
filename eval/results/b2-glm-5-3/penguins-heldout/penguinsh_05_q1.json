@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_05_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 28.81,
+  "tokens": 3435,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3667.8571428571427,
+    "Chinstrap": 3726.6666666666665,
+    "Gentoo": 5210.294117647059
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Normalize sex label variants (FEMALE -> female); keep missing as NaN\n    df['sex'] = df['sex'].apply(lambda v: v.strip().lower() if isinstance(v, str) else v)\n    # Fix negative flipper lengths (sign errors): -185 -> 185, -212 -> 212\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    # Fix out-of-range body mass (extra zeros, e.g. 5700000 -> 5700)\n    bm = df['body_mass_g'].astype(float)\n    df['body_mass_g'] = bm.apply(lambda v: v / 1000.0 if pd.notna(v) and v > 6500 else v)\n    return df\n\ndef answer(df):\n    df = clean(df)\n    g = df.groupby('species')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 6,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3687.5,
+    "Chinstrap": 3726.6667,
+    "Gentoo": 5253.5714
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

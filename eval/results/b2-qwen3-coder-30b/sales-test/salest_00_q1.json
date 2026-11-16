@@ -1,0 +1,50 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 45.23,
+  "tokens": 2382,
+  "stop_reason": "code_error",
+  "note": "AttributeError: Can only use .str accessor with string values, not floating. Did you mean: 'std'?",
+  "answer": null,
+  "extra": {
+    "code": "def clean(df):\n    # Fix invalid dates\n    df = df[df['Date'] != 'TBD']\n    df = df[df['Date'] != 'not-a-date']\n    \n    # Fix region label variants\n    df['Region'] = df['Region'].str.strip()\n    df['Region'] = df['Region'].replace('Suoth', 'South')\n    \n    # Fix price text numbers\n    df['Price'] = df['Price'].str.replace('$', '').astype(float)\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    \n    # Extract year-month from Date\n    df['YearMonth'] = df['Date'].str.slice(0, 7)\n    \n    # Calculate total revenue per month\n    monthly_revenue = df.groupby('YearMonth')['Revenue'].sum()\n    \n    # Convert to dictionary\n    result = monthly_revenue.to_dict()\n    \n    # Format keys as YYYY-MM\n    formatted_result = {}\n    for key, value in result.items():\n        formatted_result[key] = float(value)\n    \n    return formatted_result"
+  },
+  "corrections": 0,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-qwen3-coder-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

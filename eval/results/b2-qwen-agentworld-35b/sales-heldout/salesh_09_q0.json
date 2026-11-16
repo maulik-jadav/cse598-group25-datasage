@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 652.3,
+  "tokens": 8830,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.263157894736842,
+    "Electronics": 277.85714285714283,
+    "Furniture": 199.64285714285714,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix Price: convert to numeric, remove '$'\n    df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace('$', '').str.strip(), errors='coerce')\n    \n    # Fix Quantity: negative values -> make positive\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df.loc[df['Quantity'] < 0, 'Quantity'] = df.loc[df['Quantity'] < 0, 'Quantity'].abs()\n    \n    # Fix Region: label variants\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Wst': 'West', 'Eats': 'East'})\n    \n    return df\n\ndef answer(df):\n    # Average unit price in each category\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    return result"
+  },
+  "corrections": 8,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen-agentworld-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 201.1538,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

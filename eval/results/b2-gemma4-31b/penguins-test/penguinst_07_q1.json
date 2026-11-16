@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinst_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 101.57,
+  "tokens": 2957,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 40.93333333333334,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix species label variants\n    # Mapping based on profile: Gentoo, Adelie, Chinstrap\n    def fix_species(val):\n        if pd.isna(val):\n            return val\n        val = str(val).strip().lower()\n        if 'adelie' in val or 'adeile' in val:\n            return 'Adelie'\n        if 'gentoo' in val or 'gentto' in val:\n            return 'Gentoo'\n        if 'chinstrap' in val or 'chinstarp' in val:\n            return 'Chinstrap'\n        return val\n    \n    df['species'] = df['species'].apply(fix_species)\n    \n    # Fix flipper_length_mm negatives\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df.loc[df['flipper_length_mm'] < 0, 'flipper_length_mm'] = np.nan\n    \n    # Fix body_mass_g text numbers\n    if df['body_mass_g'].dtype == 'object':\n        df['body_mass_g'] = df['body_mass_g'].str.replace(',', '').astype(float)\n    \n    return df\n\ndef answer(df):\n    # Filter for Adelie penguins\n    adelie_df = df[df['species'] == 'Adelie']\n    \n    # Group by island and calculate average bill length\n    result = adelie_df.groupby('island')['bill_length_mm'].mean().to_dict()\n    \n    return result"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gemma4-31b",
+  "dataset": "penguins-test",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 40.9333,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

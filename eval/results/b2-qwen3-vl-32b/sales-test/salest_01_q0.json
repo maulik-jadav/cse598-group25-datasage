@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 141.47,
+  "tokens": 2472,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.333333333333336,
+    "Electronics": 396.42857142857144,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Quantity to numeric and handle negatives\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df = df[df['Quantity'] >= 0].copy()  # Remove negative quantities\n    \n    # Convert Price to numeric, handling text like '$6.00'\n    df['Price'] = df['Price'].astype(str).str.replace(r'\\$', '', regex=True).astype(float)\n    \n    # Convert Region to standardized case\n    df['Region'] = df['Region'].str.title()\n    \n    # Recalculate Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Drop rows where Revenue is negative (should not happen after cleaning)\n    df = df[df['Revenue'] >= 0].copy()\n    \n    # Ensure Category is valid\n    valid_categories = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(valid_categories)].copy()\n    \n    return df\n\n\ndef answer(df):\n    # Group by Category and compute average unit price\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    \n    # Return as dict with group labels as keys\n    return result"
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 25.81,
+  "tokens": 3235,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.26,
+    "Electronics": 277.86,
+    "Furniture": 201.15,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # Keep a copy to avoid SettingWithCopy warnings\n    df = df.copy()\n\n    # ----- Order_ID (keep as is) -----\n    # Ensure Order_ID is numeric (it is already numeric type according to profile)\n    df['Order_ID'] = pd.to_numeric(df['Order_ID'], errors='coerce')\n\n    # ----- Date -----\n    # Convert to proper datetime, coerce errors to NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n\n    # ----- Region -----\n    # Strip surrounding whitespace\n    df['Region'] = df['Region'].astype(str).str.strip()\n    # Standardise known variants\n    region_map = {\n        'Wst': 'West',\n        'West': 'West',\n        ' West': 'West',\n        'East': 'East',\n        'East ': 'East',\n        'Eats': 'East',\n        'North': 'North',\n        'South': 'South'\n    }\n    df['Region'] = df['Region'].replace(region_map)\n    # Keep NaN as is for missing values\n\n    # ----- Quantity -----\n    # Ensure numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # Remove rows with non\u2011positive quantity (negative or zero)\n    df = df[df['Quantity'] > 0]\n\n    # ----- Price -----\n    # Remove currency symbols and commas, then convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace('[$,]', '', regex=True).str.strip()\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n\n    # ----- Revenue (re\u2011calculate for consistency) -----\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    # ----- Category -----\n    # Trim possible whitespace (none expected but safe)\n    df['Category'] = df['Category'].astype(str).str.strip()\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    \"\"\"Return average unit price per Category.\n    The key is the Category name; the value is the average Price (float).\n    \"\"\"\n    # Ensure the dataframe is clean (in case caller passes raw df)\n    df = clean(df)\n    # Group by Category and compute mean of Price\n    result_series = df.groupby('Category')['Price'].mean()\n    # Convert to plain python dict, rounding to 2 decimals for readability\n    result = {cat: round(val, 2) for cat, val in result_series.items()}\n    return result"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 201.1538,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

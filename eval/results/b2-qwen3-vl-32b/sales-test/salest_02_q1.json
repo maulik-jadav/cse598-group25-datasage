@@ -1,0 +1,78 @@
+{
+  "task_id": "salest_02_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 3,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 160.87,
+  "tokens": 2592,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4249.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0,
+    "all": 26485.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Quantity and Price to numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Fix label variants in Category\n    df['Category'] = df['Category'].replace({'Office Suplies': 'Office Supplies', 'Furnture': 'Furniture'})\n    \n    # Fix label variants in Region\n    df['Region'] = df['Region'].str.strip() if df['Region'].dtype == 'object' else df['Region']\n    df['Region'] = df['Region'].replace({' West': 'West', ' South': 'South', 'West ': 'West'})\n    \n    # Remove negative Quantity and Revenue (invalid per rules)\n    df = df[(df['Quantity'] >= 0) & (df['Revenue'] >= 0)]\n    \n    # Recalculate Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Drop rows with missing Region\n    df = df.dropna(subset=['Region'])\n    \n    # Drop exact duplicate rows (based on all columns)\n    df = df.drop_duplicates()\n    \n    # Ensure Date is in YYYY-MM-DD format (already is per profile)\n    df['Date'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m-%d')\n    \n    return df\n\n\ndef answer(df):\n    # Extract month from Date\n    df['Month'] = pd.to_datetime(df['Date']).dt.to_period('M')\n    \n    # Group by Month and sum Revenue\n    monthly_revenue = df.groupby('Month')['Revenue'].sum().to_dict()\n    \n    # Format keys as 'YYYY-MM'\n    result = {str(k): v for k, v in monthly_revenue.items()}\n    \n    # Add overall total\n    result['all'] = df['Revenue'].sum()\n    \n    return result"
+  },
+  "corrections": 10,
+  "planted": 12,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

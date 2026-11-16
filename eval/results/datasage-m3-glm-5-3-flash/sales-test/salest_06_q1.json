@@ -1,0 +1,127 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 87.89,
+  "tokens": 17070,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "extra": {
+    "final_summary": "Units sold per region (after cleaning, 55 valid rows): North 90, West 62, East 46, South 42.\n\nData problems found and fixed:\n1. Exact duplicate row (row 46) \u2014 removed to avoid double-counting units.\n2. Region misspelling \"Nort\" (row 12) \u2014 normalized to \"North\" per the rules file's allowed regions.\n3. Invalid Quantity = -2 (row 43, a Webcam order with Revenue -120) \u2014 excluded, since the rules say Quantity must be a positive whole number (min 1).\n\nCaveats: The excluded row's 2 units are not counted anywhere; if that order was actually a valid return/adjustment you want included, the totals would change. All other columns (Date, Price, Revenue) were consistent with the rules and needed no changes.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 46 is an exact duplicate of an earlier row; keeping it would double-count its units."
+        },
+        "reason": "Row 46 is an exact duplicate of an earlier row; keeping it would double-count its units.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          46
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Nort": "North"
+          },
+          "reason": "\"Nort\" is a misspelling of the allowed region \"North\" (rules allow only North/South/East/West)."
+        },
+        "reason": "\"Nort\" is a misspelling of the allowed region \"North\" (rules allow only North/South/East/West).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: merged 1 label variant(s), 1 cells",
+        "code": "df['Region'] = df['Region'].replace({'Nort': 'North'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            43
+          ],
+          "reason": "Row 43 has Quantity = -2, but the rules say Quantity (units sold) must be a positive whole number (min 1). A negative quantity is invalid and would understate units sold."
+        },
+        "reason": "Row 43 has Quantity = -2, but the rules say Quantity (units sold) must be a positive whole number (min 1). A negative quantity is invalid and would understate units sold.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          43
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [43]",
+        "code": "df = df.drop(index=[43])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3-flash",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

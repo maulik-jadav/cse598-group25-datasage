@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 174.71,
+  "tokens": 6338,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    df = df.drop_duplicates().reset_index(drop=True)\n    for col in df.select_dtypes(include='object').columns:\n        df[col] = df[col].str.strip()\n    df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = df.copy()\n    d['Date'] = pd.to_datetime(d['Date'], format='%Y-%m-%d', errors='coerce')\n    d = d.dropna(subset=['Date'])\n    d['Revenue'] = pd.to_numeric(d['Revenue'], errors='coerce')\n    monthly = d.groupby(d['Date'].dt.to_period('M'))['Revenue'].sum()\n    return {str(period): float(total) for period, total in monthly.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-beam-1-0",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 11.79,
+  "tokens": 2623,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 39.025,
+    "Dream": 37.666666666666664,
+    "Torgersen": 39.26666666666667
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean island column: strip spaces and standardize\n    df['island'] = df['island'].str.strip()\n    \n    # Convert flipper_length_mm to numeric and fix out-of-range values (negative values are invalid)\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df = df[(df['flipper_length_mm'] >= 170) & (df['flipper_length_mm'] <= 235)]\n    \n    # Convert body_mass_g to numeric (remove commas if any) and fix out-of-range values\n    df['body_mass_g'] = df['body_mass_g'].str.replace(',', '').astype(float)\n    df = df[(df['body_mass_g'] >= 2500) & (df['body_mass_g'] <= 6500)]\n    \n    # Filter for Adelie penguins only\n    df = df[df['species'] == 'Adelie']\n    \n    return df\n\ndef answer(df):\n    # Group by island and compute average bill length\n    grouped = df.groupby('island')['bill_length_mm'].mean()\n    return grouped.to_dict()"
+  },
+  "corrections": 6,
+  "planted": 11,
+  "damaged_rows": 35,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "penguins-test",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 39.025,
+    "Dream": 37.6667,
+    "Torgersen": 39.2667
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ]
+  ]
+}

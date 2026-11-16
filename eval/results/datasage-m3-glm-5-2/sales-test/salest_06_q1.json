@@ -1,0 +1,162 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 39.46,
+  "tokens": 22551,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "extra": {
+    "final_summary": "**Units sold by region (after cleaning):**\n\n| Region | Units Sold |\n|--------|-----------|\n| North  | 90        |\n| West   | 62        |\n| East   | 46        |\n| South  | 42        |\n\n**Data problems found and fixed:**\n1. **Region misspelling** \u2014 \"Nort\" (row 12) was a misspelling of \"North\"; merged into \"North\" via normalize_labels.\n2. **Invalid Quantity** \u2014 Row 43 had Quantity = -2 (and Revenue = -120), violating the rule that units sold must be \u2265 1. This row was excluded.\n3. **Exact duplicate row** \u2014 Row 46 was an exact duplicate of an earlier row; removed to avoid double-counting.\n4. **Revenue formula mismatches** \u2014 Rows 20, 27, and 49 had Revenue values that didn't match Quantity \u00d7 Price (e.g., 2405 vs 24, 500 vs 50, 18000 vs 180). Recomputed Revenue for those rows. (This didn't affect the Quantity totals but ensures the dataset is consistent.)\n\n**Caveat:** The Revenue corrections on rows 20, 27, and 49 were assumed to be data-entry errors where the formula Quantity \u00d7 Price is authoritative per the rules file. If those Revenue figures were intentional (e.g., bulk discounts or surcharges), they should be reviewed manually. The Quantity column itself was clean except for the excluded row 43.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Nort": "North"
+          },
+          "reason": "\"Nort\" is a misspelling of \"North\" per the rules file allowed labels"
+        },
+        "reason": "\"Nort\" is a misspelling of \"North\" per the rules file allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: merged 1 label variant(s), 1 cells",
+        "code": "df['Region'] = df['Region'].replace({'Nort': 'North'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            43
+          ],
+          "reason": "Row 43 has Quantity = -2, which violates the rules (min 1, units sold must be positive). Its Revenue is also negative (-120), consistent with the bad quantity."
+        },
+        "reason": "Row 43 has Quantity = -2, which violates the rules (min 1, units sold must be positive). Its Revenue is also negative (-120), consistent with the bad quantity.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          43
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [43]",
+        "code": "df = df.drop(index=[43])"
+      },
+      {
+        "version": 3,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 46 is an exact duplicate of an earlier row; removing to avoid double-counting units sold."
+        },
+        "reason": "Row 46 is an exact duplicate of an earlier row; removing to avoid double-counting units sold.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          46
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            20,
+            27,
+            49
+          ],
+          "reason": "Revenue does not equal Quantity * Price for these rows per the rules formula; correcting to the computed value."
+        },
+        "reason": "Revenue does not equal Quantity * Price for these rows per the rules formula; correcting to the computed value.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[20, 27, 49], 'Revenue'] = [24.0, 50.0, 180.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-2",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

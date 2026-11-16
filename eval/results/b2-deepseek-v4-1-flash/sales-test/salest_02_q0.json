@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 177.96,
+  "tokens": 4211,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.0,
+    "Electronics": 277.3333333333333,
+    "Furniture": 191.05263157894737,
+    "Office Supplies": 11.1
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n\n    # Normalize text label columns\n    for col in [\"Category\", \"Region\"]:\n        if col in df.columns:\n            df[col] = df[col].astype(\"string\").str.strip()\n\n    # Fix category label variants\n    category_map = {\n        \"Office Suplies\": \"Office Supplies\",\n        \"Furnture\": \"Furniture\",\n    }\n    if \"Category\" in df.columns:\n        df[\"Category\"] = df[\"Category\"].replace(category_map)\n\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n\n    # Ensure numeric columns are numeric\n    for col in [\"Quantity\", \"Price\", \"Revenue\"]:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors=\"coerce\")\n\n    # Quantity must be positive; treat negative values as sign-entry errors\n    if \"Quantity\" in df.columns:\n        df[\"Quantity\"] = df[\"Quantity\"].abs()\n\n    # Recompute Revenue from corrected Quantity and Price\n    if all(c in df.columns for c in [\"Quantity\", \"Price\", \"Revenue\"]):\n        df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n\n    return df\n\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=[\"Category\", \"Price\"])\n    result = d.groupby(\"Category\", dropna=True)[\"Price\"].mean().to_dict()\n    return {str(k): float(v) for k, v in result.items()}"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

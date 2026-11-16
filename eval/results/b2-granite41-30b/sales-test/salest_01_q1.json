@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.42,
+  "tokens": 2198,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 6405.0,
+    "Office Supplies": 738.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Price from text (possible $) to numeric\n    df['Price'] = pd.to_numeric(df['Price'].str.replace('[$]', '', regex=False), errors='coerce')\n    # Ensure Quantity is integer and non-negative (fix negatives)\n    df['Quantity'] = df['Quantity'].astype(float).round().astype(int)\n    df.loc[df['Quantity'] < 0, 'Quantity'] = 0\n    # Standardize Region labels (title case)\n    df['Region'] = df['Region'].str.title()\n    # Recalculate Revenue correctly (Quantity * Price) and ensure non-negative\n    df['Revenue'] = df['Quantity'] * df['Price']\n    df.loc[df['Revenue'] < 0, 'Revenue'] = 0\n    return df\n\ndef answer(df):\n    # Total revenue by Category\n    result = df.groupby('Category')['Revenue'].sum().to_dict()\n    return result\n"
+  },
+  "corrections": 3,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 2,
+  "cleaned_available": true,
+  "system": "b2-granite41-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

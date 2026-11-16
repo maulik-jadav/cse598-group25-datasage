@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 352.56,
+  "tokens": 5569,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    if \"Category\" in df.columns:\n        df[\"Category\"] = df[\"Category\"].astype(str).str.strip()\n    if {\"Quantity\", \"Price\"}.issubset(df.columns):\n        df[\"Revenue\"] = pd.to_numeric(df[\"Quantity\"], errors=\"coerce\") * pd.to_numeric(df[\"Price\"], errors=\"coerce\")\n    return df\n\ndef answer(df):\n    d = clean(df)\n    grouped = d.groupby(\"Category\", dropna=True)[\"Revenue\"].sum()\n    result = {}\n    for key, value in grouped.items():\n        if pd.isna(key):\n            continue\n        result[str(key)] = value.item() if hasattr(value, \"item\") else value\n    return dict(sorted(result.items()))\n"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-beam-1-0",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

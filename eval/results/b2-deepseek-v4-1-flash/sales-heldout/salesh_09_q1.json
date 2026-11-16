@@ -1,0 +1,69 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 97.63,
+  "tokens": 9276,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 5420.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    d = df.copy()\n\n    def parse_date(x):\n        if pd.isna(x):\n            return pd.NaT\n        s = str(x).strip()\n        for fmt in ('%Y-%m-%d', '%Y/%m/%d', '%Y.%m.%d', '%m/%d/%Y', '%m-%d-%Y', '%d/%m/%Y', '%d-%m-%Y', '%Y-%m-%d %H:%M:%S', '%b %d, %Y', '%B %d, %Y'):\n            try:\n                return pd.to_datetime(s, format=fmt)\n            except Exception:\n                pass\n        return pd.to_datetime(s, errors='coerce')\n\n    d['Date'] = d['Date'].apply(parse_date)\n    d['Price'] = pd.to_numeric(\n        d['Price'].astype(str).str.replace(r'[$,]', '', regex=True).str.strip(),\n        errors='coerce'\n    )\n    d['Quantity'] = pd.to_numeric(d['Quantity'], errors='coerce')\n    d.loc[d['Quantity'] < 0, 'Quantity'] = d.loc[d['Quantity'] < 0, 'Quantity'].abs()\n    d['Revenue'] = d['Quantity'] * d['Price']\n\n    if 'Region' in d.columns:\n        d['Region'] = d['Region'].astype('string').str.strip()\n        d['Region'] = d['Region'].replace({'Wst': 'West', 'Eats': 'East'})\n\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Date'])\n    d['month'] = d['Date'].dt.strftime('%Y-%m')\n    out = d.groupby('month', dropna=True)['Revenue'].sum().to_dict()\n    return {str(k): float(v) for k, v in out.items()}"
+  },
+  "corrections": 11,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

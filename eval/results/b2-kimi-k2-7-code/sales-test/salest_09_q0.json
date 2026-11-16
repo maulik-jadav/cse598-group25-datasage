@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 97.25,
+  "tokens": 6454,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 9.0,
+    "Electronics": 12.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows so orders are not double-counted\n    df = df.drop_duplicates().reset_index(drop=True)\n    # Standardize category labels by trimming surrounding whitespace\n    df['Category'] = df['Category'].str.strip()\n    # Convert Price from text to numeric (e.g., \"$300.00\" -> 300.00)\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.replace(r'[$,]', '', regex=True),\n        errors='coerce'\n    )\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Count orders per category, ignoring rows with missing category\n    counts = df.dropna(subset=['Category']).groupby('Category')['Order_ID'].count()\n    return counts.to_dict()\n"
+  },
+  "corrections": 6,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

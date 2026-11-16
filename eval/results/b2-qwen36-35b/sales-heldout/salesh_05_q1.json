@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 146.02,
+  "tokens": 8645,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).astype(float)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    region_map = {'west': 'West', 'south': 'South', 'Wst': 'West', 'Suoth': 'South'}\n    df['Region'] = df['Region'].replace(region_map)\n    df = df.dropna(subset=['Region'])\n    \n    df = df[df['Category'] == 'Electronics']\n    df = df[df['Quantity'] >= 1]\n    \n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    grouped = df.groupby('Region')['Revenue'].sum()\n    return {k: float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 45,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen36-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

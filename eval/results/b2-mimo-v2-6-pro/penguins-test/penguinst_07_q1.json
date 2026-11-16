@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinst_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 67.54,
+  "tokens": 3730,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 40.93,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n\n    # --- species: fix case variants, trailing spaces, and typos ---\n    s = d['species'].astype(str).str.strip().str.lower()\n    canon = {\n        'adelie': 'Adelie', 'adeile': 'Adelie',\n        'chinstrap': 'Chinstrap', 'chinstarp': 'Chinstrap',\n        'gentoo': 'Gentoo', 'gentto': 'Gentoo',\n    }\n    d['species'] = s.map(lambda x: canon.get(x, x)).where(d['species'].notna())\n\n    # --- island / sex: strip stray spaces, keep missing sex as unknown ---\n    d['island'] = d['island'].astype(str).str.strip().where(d['island'].notna())\n    d['sex'] = d['sex'].astype(str).str.strip().str.lower().where(d['sex'].notna())\n    d.loc[~d['sex'].isin(['male', 'female']), 'sex'] = pd.NA\n\n    # --- numbers written as text (commas, quotes) ---\n    for col in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g', 'year']:\n        d[col] = pd.to_numeric(\n            d[col].astype(str).str.replace(',', '', regex=False).str.strip(),\n            errors='coerce'\n        )\n\n    # --- range / sign violations -> NaN (do not guess) ---\n    d.loc[(d['bill_length_mm'] < 30) | (d['bill_length_mm'] > 60), 'bill_length_mm'] = float('nan')\n    d.loc[(d['flipper_length_mm'] < 170) | (d['flipper_length_mm'] > 235), 'flipper_length_mm'] = float('nan')\n    d.loc[(d['body_mass_g'] < 2500) | (d['body_mass_g'] > 6500), 'body_mass_g'] = float('nan')\n\n    return d\n\n\ndef answer(df):\n    d = clean(df)\n    a = d[d['species'] == 'Adelie'].dropna(subset=['island', 'bill_length_mm'])\n    g = a.groupby('island')['bill_length_mm'].mean()\n    return {str(k): round(float(v), 2) for k, v in g.items()}"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-test",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 40.9333,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

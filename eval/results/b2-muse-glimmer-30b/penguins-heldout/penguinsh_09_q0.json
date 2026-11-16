@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 698.67,
+  "tokens": 9734,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3666.6666666666665,
+    "Chinstrap": 3818.3333333333335,
+    "Gentoo": 5158.823529411765
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # strip whitespace from object columns\n    for col in df.select_dtypes(include=['object']).columns:\n        df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # normalise sex\n    if 'sex' in df.columns:\n        df['sex'] = df['sex'].replace({'': np.nan, 'nan': np.nan, 'None': np.nan})\n        df['sex'] = df['sex'].astype(object).apply(lambda x: x.strip().lower() if isinstance(x, str) else x)\n    # numeric conversion\n    num_cols = ['bill_length_mm','bill_depth_mm','flipper_length_mm','body_mass_g','year']\n    for col in num_cols:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n    # flipper length negative -> take absolute value\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    # body_mass_g out of range: values >6500 are likely mg, convert to g\n    if 'body_mass_g' in df.columns:\n        mask = df['body_mass_g'] > 6500\n        df.loc[mask, 'body_mass_g'] = df.loc[mask, 'body_mass_g'] / 1000.0\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    dfc = dfc.dropna(subset=['species','body_mass_g'])\n    avg = dfc.groupby('species')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in avg.items()}\n"
+  },
+  "corrections": 4,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3694.4444,
+    "Chinstrap": 3801.7857,
+    "Gentoo": 5173.3333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ]
+  ]
+}

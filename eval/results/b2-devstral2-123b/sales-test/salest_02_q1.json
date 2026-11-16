@@ -1,0 +1,69 @@
+{
+  "task_id": "salest_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 26.08,
+  "tokens": 2409,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates(keep='first')\n    \n    # Correct label variants in 'Category'\n    df['Category'] = df['Category'].replace({'Office Suplies': 'Office Supplies', 'Furnture': 'Furniture'})\n    \n    # Correct label variants in 'Region'\n    df['Region'] = df['Region'].str.strip()\n    \n    # Remove rows with negative 'Quantity' or 'Revenue'\n    df = df[(df['Quantity'] >= 0) & (df['Revenue'] >= 0)]\n    \n    # Recalculate 'Revenue' to ensure it matches 'Quantity * Price'\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Clean the data\n    df_clean = clean(df)\n    \n    # Extract month from 'Date' and group by month to calculate total revenue\n    df_clean['Month'] = pd.to_datetime(df_clean['Date']).dt.to_period('M').astype(str)\n    revenue_per_month = df_clean.groupby('Month')['Revenue'].sum().to_dict()\n    \n    return revenue_per_month\n"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-devstral2-123b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

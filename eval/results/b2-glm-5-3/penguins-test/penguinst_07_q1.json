@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinst_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 63.9,
+  "tokens": 4118,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 40.93,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Normalize species: strip spaces, lowercase, fix typos, then canonical casing\n    s = df['species'].astype(str).str.strip().str.lower()\n    s = s.replace({'adeile': 'adelie', 'gentto': 'gentoo', 'chinstarp': 'chinstrap'})\n    df['species'] = s.str.capitalize()\n    # body_mass_g stored as text (some with thousands separators)\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False),\n        errors='coerce'\n    )\n    # flipper_length_mm: coerce to numeric, invalidate out-of-range values\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    bad = (df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235)\n    df.loc[bad, 'flipper_length_mm'] = float('nan')\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['species'] == 'Adelie']\n    d = d.dropna(subset=['island', 'bill_length_mm'])\n    g = d.groupby('island')['bill_length_mm'].mean()\n    return {str(k): round(float(v), 2) for k, v in g.items()}"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "penguins-test",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 40.9333,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

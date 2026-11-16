@@ -62,6 +62,15 @@ SYSTEMS = {
     "datasage-m3-nomerge": ("Final, no merge rule", "The final agent with the prompt that lacks the spelling-merge rule", "ablation"),
     "datasage-m3-reject": ("Final, every risky fix rejected", "The final agent when the person says no to every risky fix", "ablation"),
 }
+# Model study (docs/final/findings_models.md): one agent and one single call per model. They have their own write-up,
+# so the page lists them but leaves them out of the charts (kind "study").
+try:
+    from eval.run_eval import MODEL_SYSTEMS
+except ImportError:  # the study systems need the openai package; the page works without them
+    MODEL_SYSTEMS = {}
+for _short, _model in MODEL_SYSTEMS.items():
+    SYSTEMS[f"datasage-m3-{_short}"] = (f"Model study: agent, {_model}", f"datasage-m3 with {_model} as the model", "study")
+    SYSTEMS[f"b2-{_short}"] = (f"Model study: single call, {_model}", f"Baseline B2 with {_model}", "study")
 PROGRESSION = ["datasage", "datasage-fix", "datasage-small-fix", "datasage-m3"]
 ABLATION = ["datasage", "datasage-novalidator", "datasage-reject"]
 FINAL = "datasage-m3"
@@ -100,7 +109,7 @@ def results() -> dict:
     for gid, label, members in GROUPS:
         systems = {}
         for system in order:
-            if SYSTEMS.get(system, ("", "", ""))[2] == "ablation":
+            if system in ("datasage-reject", "datasage-novalidator") or SYSTEMS.get(system, ("", "", ""))[2] in ("ablation", "study"):
                 continue
             if not all(system in per_split.get(s, {}) for s in members):
                 continue
@@ -211,8 +220,27 @@ def story(per_split: dict) -> dict:
         out["hard"] = hard
     models = RESULTS / "study_models.json"
     if models.exists():
-        out["models_file"] = True  # filled in once the model study's format is final
+        out["models"] = _models_story(json.loads(models.read_text()))
     return out
+
+
+def _models_story(study: dict) -> dict:
+    """Every model tried as DataSage's planner on the 80 held-out and test questions, against its own single call."""
+    rows = []
+    for short, m in study.get("models", {}).items():
+        agent = (m.get("agent") or {}).get("heldout_test")
+        if not agent or agent.get("tasks") != 80 or short.endswith("-original"):
+            continue
+        single = (m.get("single_call") or {}).get("heldout_test") or {}
+        rows.append({"id": short, "model": m.get("model", short), "accuracy": agent["accuracy"], "ci95": agent.get("ci95"),
+                     "seconds": agent.get("seconds_median"), "single": single.get("accuracy") if single.get("tasks") == 80 else None})
+    rows.sort(key=lambda r: -r["accuracy"])
+    lifts = sorted(r["accuracy"] - r["single"] for r in rows if r["single"] is not None)
+    default = next((r for r in rows if r["id"] == "qwen3-30b"), None)
+    rank = 1 + sum(r["accuracy"] > default["accuracy"] for r in rows) if default else None
+    return {"count": len(rows), "rows": rows, "default": default, "rank": rank,
+            "median_lift": lifts[len(lifts) // 2] if lifts else None, "lift_models": len(lifts),
+            "worse_than_single": sum(1 for x in lifts if x < 0)}
 
 
 # ---- data profile ---------------------------------------------------------------------------------

@@ -1,0 +1,104 @@
+{
+  "task_id": "salesh_04_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 7,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 670.12,
+  "tokens": 36501,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 11.0,
+    "Electronics": 15.0,
+    "Furniture": 15.0,
+    "Office Supplies": 20.0
+  },
+  "extra": {
+    "final_summary": "Fixed 4 label variants in Category (e.g., 'Furnture' \u2192 'Furniture') and removed 1 duplicate row. Final counts: Office Supplies (20), Electronics (15), Furniture (15), Accessories (11). All categories now match allowed values per rules.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "accessories": "Accessories",
+            "office supplies": "Office Supplies",
+            "Furnture": "Furniture"
+          },
+          "reason": "Correct case inconsistencies and misspelling ('Furnture' \u2192 'Furniture') to match allowed categories per rules file"
+        },
+        "reason": "Correct case inconsistencies and misspelling ('Furnture' \u2192 'Furniture') to match allowed categories per rules file",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Category: merged 3 label variant(s), 4 cells",
+        "code": "df['Category'] = df['Category'].replace({'accessories': 'Accessories', 'office supplies': 'Office Supplies', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove 1 exact duplicate row (row 34) to ensure each order is counted once, as Order_ID should be unique per rules"
+        },
+        "reason": "Remove 1 exact duplicate row (row 34) to ensure each order is counted once, as Order_ID should be unique per rules",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 7
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen3-235b-think",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 11.0,
+    "Electronics": 15.0,
+    "Furniture": 15.0,
+    "Office Supplies": 20.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

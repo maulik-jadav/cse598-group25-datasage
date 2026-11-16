@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_04_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 68.46,
+  "tokens": 2249,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.0,
+    "Electronics": 568.6666666666666,
+    "Furniture": 203.0,
+    "Office Supplies": 12.333333333333334
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix label variants in Category\n    df['Category'] = df['Category'].replace({'accessories': 'Accessories', 'Furnture': 'Furniture', 'office supplies': 'Office Supplies'})\n    \n    # Drop exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Convert Quantity and Price to numeric (they are strings in sample)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Ensure Revenue matches Quantity * Price (for validation, but not needed for question)\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Drop missing Region (not needed for question, but per profile)\n    df = df.dropna(subset=['Region'])\n    \n    return df\n\n\ndef answer(df):\n    # Group by Category and compute average unit price\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    \n    # Return as dict with keys as category names\n    return result"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.1818,
+    "Electronics": 568.6667,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}
