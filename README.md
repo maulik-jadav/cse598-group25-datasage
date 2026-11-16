@@ -4,6 +4,8 @@ Capstone project for CSE 598 Agentic AI (Arizona State University, Fall 2026).
 
 DataSage is an agent that takes a messy CSV or Excel file and a question about it, finds data-quality problems, fixes or flags them (asking the user before any risky change), and then answers the question on the cleaned data with a report of every change it made.
 
+**Try it online:** https://cse598-group25-datasage.vercel.app (the browser app below, hosted on Vercel; pick a sample and press Run).
+
 **Stakeholder:** Vyshanth Buddani ([@VB914](https://github.com/VB914)). Original proposal and baseline: https://github.com/VB914/DataSage
 
 ## Results at a glance
@@ -149,6 +151,22 @@ It needs the same `.env` key as the command line and nothing else (standard libr
 outputs go to `outputs/web/<run id>/`. Options: `--port`, `--model`, `--host` (default 127.0.0.1, so only
 your machine can open it). An approval left unanswered for 10 minutes, or a run replaced by a new one,
 counts as rejected.
+
+### The hosted version (Vercel)
+
+https://cse598-group25-datasage.vercel.app runs the same pages and agent from `app/web/hosted.py` (FastAPI).
+A serverless host keeps nothing between requests and may send each one to a different machine, so the
+hosted app carries each run over **one WebSocket**: the upload, every step, each approval and Stop, and at
+the end the output files and column profile. The page keeps those in the browser, so View, Download and
+the profile tab work from that browser. Differences from the local app: a run stops after 4 minutes
+(the free plan ends a connection at 5), an approval waits 2 minutes, and uploads should stay under about
+10 MB. To try it locally: `uvicorn app.web.hosted:app --port 8600`.
+
+Deploys: the Vercel project is connected to this repository, so a merge to `main` redeploys production
+and other branches get preview deployments. Settings live in the Vercel project, not in the repo:
+`RC_LLM_API_KEY` and `RC_LLM_BASE_URL` (required), and optionally `DATASAGE_MODEL`, `DATASAGE_RUN_LIMIT`,
+`DATASAGE_APPROVAL_TIMEOUT`. `pyproject.toml` names the entry point and `.vercelignore` keeps `.env`,
+traces and other large folders out of the deployment.
 
 ## Reproduce the evaluation
 
