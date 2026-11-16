@@ -63,6 +63,12 @@ python -m datasage --input baseline/examples/messy_sales.csv \
   --request "What was total revenue by category?"
 ```
 
+Several files with the same columns (for example monthly exports) can be given together:
+`--input jan.csv feb.csv mar.csv`. They are stacked into one table with a `source_file` column, so a
+question can be answered across all of them or per file ("What was total revenue in each monthly file?").
+Columns are matched by name (order and case can differ); files with different columns are refused with a
+list of what is missing or extra.
+
 Input files: CSV (the separator `,` `;` tab or `|` and the encoding UTF-8, Windows-1252 or Latin-1 are
 detected) or Excel `.xlsx` (`--sheet NAME` picks a sheet; default the first). The replay script reads the
 file the same way.
@@ -80,9 +86,12 @@ python -m app.web.server          # then open http://127.0.0.1:8501
 ```
 
 Drop a CSV or Excel file (and optionally a JSON rules file), type a question and press Run, or pick one
-of the two samples: Vyshanth's 8-row `messy_sales.csv`, or `examples/large_sales.csv` (1,208 rows, about 50
-planted problems; rebuild it with `python examples/make_large_sales.py`). Both use
-`examples/messy_sales_rules.json` and the question "What was total revenue by category?".
+of the samples: Vyshanth's 8-row `messy_sales.csv`; `examples/large_sales.csv` (1,208 rows, about 50 planted
+problems; `python examples/make_large_sales.py`); the same orders as three monthly files
+(`examples/demo/monthly/`, stacked into one table); an HR table (407 rows, average salary by department) and
+an inventory table (606 rows, stock value by warehouse, with 18 rule-breaking rows), both made by
+`python examples/make_demo_files.py`, which also prints the right answers. You can also pick or drop
+several files with the same columns at once.
 
 - **Ask me or Auto.** Next to Run: *Ask me* (default) stops at every risky fix; *Auto* applies every fix
   without asking, shows each one briefly, and still logs it as approved automatically.

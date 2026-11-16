@@ -56,3 +56,10 @@ def test_replay_reads_a_semicolon_latin1_csv_the_same_way(tmp_path):
     namespace = {"pd": pd}
     exec(line, namespace)
     assert list(namespace["df"].columns) == ["Ville", "Montant"]
+
+
+def test_non_utf8_character_at_the_end_of_a_small_file(tmp_path):
+    f = tmp_path / "t.csv"
+    f.write_bytes("City;Note\nKöln;Süd\n".encode("cp1252"))  # the last characters are not UTF-8
+    df = load_table(f)
+    assert df.iloc[0].tolist() == ["Köln", "Süd"] and detect_csv(f)["encoding"] == "cp1252"

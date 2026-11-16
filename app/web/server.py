@@ -23,6 +23,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from datasage.session import detect_csv, excel_sheets
+from datasage.stack import MAX_FILES, stack_files
 
 from . import analysis
 from .runner import Run
@@ -35,6 +36,13 @@ SAMPLES = {
               "question": "What was total revenue by category?"},
     "large": {"input": ROOT / "examples" / "large_sales.csv", "rules": ROOT / "examples" / "messy_sales_rules.json",
               "question": "What was total revenue by category?"},
+    "monthly": {"inputs": [ROOT / "examples" / "demo" / "monthly" / f"orders_2026-{m}.csv" for m in ("07", "08", "09")],
+                "input": ROOT / "examples" / "demo" / "monthly", "rules": ROOT / "examples" / "messy_sales_rules.json",
+                "question": "What was total revenue in each monthly file?"},
+    "hr": {"input": ROOT / "examples" / "demo" / "hr_employees.csv", "rules": ROOT / "examples" / "demo" / "hr_rules.json",
+           "question": "What is the average salary by department?"},
+    "inventory": {"input": ROOT / "examples" / "demo" / "inventory.csv", "rules": ROOT / "examples" / "demo" / "inventory_rules.json",
+                  "question": "What is the total stock value by warehouse?"},
 }
 MAX_UPLOAD = 20 * 1024 * 1024
 FILES = {"cleaned.csv": "text/csv", "report.md": "text/markdown", "replay.py": "text/x-python",
@@ -89,7 +97,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._static(parts[1])
         if parts == ["api", "sample"]:
             s = SAMPLES.get(parse_qs(url.query).get("size", ["small"])[0], SAMPLES["small"])
-            return self._json({"question": s["question"], "input": s["input"].name, "rules": s["rules"].name})
+            label = f"{len(s['inputs'])} monthly files" if s.get("inputs") else s["input"].name
+            return self._json({"question": s["question"], "input": label, "rules": s["rules"].name})
         if len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "events":
             run = self._run(parts[2])
             return self._events(run, int(parse_qs(url.query).get("from", ["0"])[0])) if run else self._error(404, "no such run")
@@ -166,6 +175,18 @@ class Handler(BaseHTTPRequestHandler):
             except Exception as err:  # a damaged file: say so instead of failing later
                 return self._error(400, f"could not open the file: {type(err).__name__}")
 
+    def _rules(self, body: dict, folder: Path):
+        """The uploaded rules file saved in the run folder; None without one, False when it is not valid JSON."""
+        if not body.get("rules_text"):
+            return None
+        try:
+            json.loads(body["rules_text"])
+        except json.JSONDecodeError:
+            return False
+        path = folder / "rules.json"
+        path.write_text(body["rules_text"])
+        return path
+
     def _start(self, body: dict) -> None:
         question = str(body.get("question") or "").strip()
         if not question:
@@ -173,9 +194,32 @@ class Handler(BaseHTTPRequestHandler):
         run_id = uuid.uuid4().hex[:10]
         folder = OUT / run_id
         folder.mkdir(parents=True, exist_ok=True)
+        sources = None
         if body.get("sample"):
             s = SAMPLES.get(str(body["sample"]), SAMPLES["small"])
             input_path, rules_path = s["input"], s["rules"]
+            if s.get("inputs"):
+                input_path = folder / "input.csv"
+                sources = stack_files(s["inputs"], input_path)
+        elif isinstance(body.get("files"), list) and len(body["files"]) > 1:
+            parts = []
+            for i, f in enumerate(body["files"][:MAX_FILES]):
+                try:
+                    suffix, data = self._decode(f)
+                except ValueError as err:
+                    return self._error(400, f"{Path(str(f.get('file_name') or '')).name or 'a file'}: {err}")
+                part = folder / "parts" / f"{i:02d}{suffix}"
+                part.parent.mkdir(parents=True, exist_ok=True)
+                part.write_bytes(data)
+                parts.append((part, Path(str(f.get("file_name") or part.name)).name))
+            input_path = folder / "input.csv"
+            try:
+                sources = stack_files([p for p, _ in parts], input_path, [n for _, n in parts])
+            except ValueError as err:
+                return self._error(400, str(err))
+            rules_path = self._rules(body, folder)
+            if rules_path is False:
+                return self._error(400, "the rules file is not valid JSON")
         else:
             try:
                 suffix, data = self._decode(body)
@@ -183,14 +227,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self._error(400, str(err))
             input_path = folder / ("input" + suffix)
             input_path.write_bytes(data)
-            rules_path = None
-            if body.get("rules_text"):
-                try:
-                    json.loads(body["rules_text"])
-                except json.JSONDecodeError:
-                    return self._error(400, "the rules file is not valid JSON")
-                rules_path = folder / "rules.json"
-                rules_path.write_text(body["rules_text"])
+            rules_path = self._rules(body, folder)
+            if rules_path is False:
+                return self._error(400, "the rules file is not valid JSON")
         client = str(body.get("client_id") or "")
         client = client if CLIENT_ID.match(client) else ""
         for old in RUNS.values():  # a new run replaces this browser's earlier run, never someone else's
@@ -199,6 +238,7 @@ class Handler(BaseHTTPRequestHandler):
         sheet = body.get("sheet")
         run = Run(input_path, question, rules_path, folder, MODEL, sheet=str(sheet) if sheet not in (None, "") else None,
                   client_id=client, mode=str(body.get("approve") or "ask"))
+        run.sources = sources
         RUNS[run_id] = run
         run.start()
         prune()

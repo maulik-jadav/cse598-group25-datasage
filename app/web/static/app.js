@@ -15,8 +15,18 @@ const S = { file: null, rules: null, sample: false, runId: null, es: null, lastS
 // ---------- inputs ----------
 const SEP_NAMES = { ";": "semicolon", "\t": "tab", "|": "pipe" };
 const ENC_NAMES = { cp1252: "Windows-1252", "latin-1": "Latin-1" };
+function setFiles(list) {
+  const files = [...list].filter((f) => /\.(csv|xlsx)$/i.test(f.name));
+  if (files.length <= 1) return setFile(files[0] || null);
+  S.file = null; S.files = files; S.sample = false; S.sheet = null;
+  $("#fileName").textContent = `${files.length} files`;
+  $("#fileChip").title = `Stacked into one table: ${files.map((f) => f.name).join(", ")}. They need the same columns.`;
+  $("#fileChip").classList.add("set");
+  $("#sheetChip").hidden = true;
+  $("#question").focus();
+}
 function setFile(file) {
-  S.file = file; S.sample = false; S.sheet = null;
+  S.file = file; S.files = null; S.sample = false; S.sheet = null;
   $("#fileName").textContent = file ? file.name : "Choose file";
   $("#fileChip").classList.toggle("set", !!file);
   $("#fileChip").title = "Choose a CSV or Excel file";
@@ -42,7 +52,7 @@ async function inspect(file) {
   } catch { /* the run itself will report a problem with the file */ }
 }
 $("#sheetSel").addEventListener("change", (e) => { S.sheet = e.target.value; });
-$("#fileInput").addEventListener("change", (e) => setFile(e.target.files[0] || null));
+$("#fileInput").addEventListener("change", (e) => setFiles(e.target.files));
 $("#rulesInput").addEventListener("change", async (e) => {
   const f = e.target.files[0];
   S.rules = f ? await f.text() : null;
@@ -53,15 +63,15 @@ const drop = $("#drop");
 ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
 ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", (e) => {
-  for (const f of e.dataTransfer.files) {
-    if (/\.json$/i.test(f.name)) { $("#rulesInput").files = e.dataTransfer.files; f.text().then((t) => { S.rules = t; $("#rulesName").textContent = f.name; $("#rulesChip").classList.add("set"); }); }
-    else if (/\.(csv|xlsx)$/i.test(f.name)) setFile(f);
-  }
+  const all = [...e.dataTransfer.files];
+  const rules = all.find((f) => /\.json$/i.test(f.name));
+  if (rules) rules.text().then((t) => { S.rules = t; $("#rulesName").textContent = rules.name; $("#rulesChip").classList.add("set"); });
+  setFiles(all);
 });
 document.querySelectorAll("[data-sample]").forEach((b) => b.addEventListener("click", async () => {
   const size = b.dataset.sample;
   const s = await (await fetch(`/api/sample?size=${size}`)).json();
-  S.sample = size; S.file = null; $("#sheetChip").hidden = true;
+  S.sample = size; S.file = null; S.files = null; $("#sheetChip").hidden = true;
   $("#fileName").textContent = s.input; $("#fileChip").classList.add("set");
   $("#rulesName").textContent = s.rules; $("#rulesChip").classList.add("set");
   $("#question").value = s.question;
@@ -83,10 +93,13 @@ const toB64 = (file) => new Promise((res, rej) => { const r = new FileReader(); 
 // ---------- run ----------
 async function start() {
   const question = $("#question").value.trim();
-  if (!S.sample && !S.file) { $("#fileChip").animate([{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(0)" }], { duration: 260 }); $("#fileInput").click(); return; }
+  if (!S.sample && !S.file && !(S.files && S.files.length)) { $("#fileChip").animate([{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(0)" }], { duration: 260 }); $("#fileInput").click(); return; }
   if (!question) { $("#question").focus(); return; }
   const mode = (document.querySelector('input[name="mode"]:checked') || {}).value || "ask";
-  const body = S.sample ? { sample: S.sample, question, client_id: CLIENT_ID, approve: mode } : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules, sheet: S.sheet, client_id: CLIENT_ID, approve: mode };
+  const body = S.sample ? { sample: S.sample, question, client_id: CLIENT_ID, approve: mode }
+    : S.files && S.files.length > 1
+      ? { question, files: await Promise.all(S.files.map(async (f) => ({ file_name: f.name, file_b64: await toB64(f) }))), rules_text: S.rules, client_id: CLIENT_ID, approve: mode }
+      : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules, sheet: S.sheet, client_id: CLIENT_ID, approve: mode };
   setRunning(true); setStatus("Uploading");
   let res;
   try { res = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
@@ -221,7 +234,12 @@ function buildTable(ev) {
   ev.rows.forEach((r) => { const row = makeRow(r.id, r.cells); table.append(row); S.ids.push(r.id); });
   S.total = ev.total_rows;
   refreshGaps();
-  if (ev.total_rows > ev.rows.length) { $("#more").hidden = false; $("#more").textContent = `Showing the first ${ev.rows.length} rows, plus every row with a problem as it is found. The agent works on all ${ev.total_rows.toLocaleString("en-US")}.`; }
+  if (ev.sources) {
+    $("#more").hidden = false;
+    $("#more").textContent = `Stacked ${ev.sources.files.length} files into one table: ` +
+      ev.sources.files.map((f) => `${f.name} (${f.rows.toLocaleString("en-US")} rows)`).join(", ") +
+      ". The source_file column says where each row came from.";
+  } else if (ev.total_rows > ev.rows.length) { $("#more").hidden = false; $("#more").textContent = `Showing the first ${ev.rows.length} rows, plus every row with a problem as it is found. The agent works on all ${ev.total_rows.toLocaleString("en-US")}.`; }
   setStatus("Reading the table");
 }
 

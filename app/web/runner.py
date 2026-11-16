@@ -270,6 +270,7 @@ class Run:
         self.input_path, self.question, self.rules_path, self.out_dir, self.model = input_path, question, rules_path, out_dir, model
         self.sheet = sheet
         self.client_id = client_id
+        self.sources = None  # set by the server when several files were stacked into one table
         self.mode = mode if mode in ("ask", "auto") else "ask"
         self.created = time.time()
         self.events: list[dict] = []
@@ -327,7 +328,7 @@ class Run:
             df = load_table(self.input_path, sheet=self.sheet)
             self.emit({"type": "start", "question": self.question, "columns": [str(c) for c in df.columns],
                        "total_rows": len(df), "rows": initial_rows(self.input_path, self.sheet),
-                       "read": df.attrs.get("read", {})})
+                       "read": df.attrs.get("read", {}), "sources": self.sources})
             kwargs = {"model": self.model} if self.model else {}
             result = run_agent(self.input_path, self.question, BrowserApprover(self), rules_path=self.rules_path,
                                on_event=self._on_event, sheet=self.sheet,
