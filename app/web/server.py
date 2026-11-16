@@ -24,6 +24,7 @@ from urllib.parse import parse_qs, urlparse
 
 from datasage.session import detect_csv, excel_sheets
 
+from . import analysis
 from .runner import Run
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -98,6 +99,13 @@ class Handler(BaseHTTPRequestHandler):
                 return self._error(404, "file not ready")
             data = (run.out_dir / name).read_bytes()
             return self._send(200, data, FILES[name], {"Content-Disposition": f'attachment; filename="{name}"'})
+        if parts in (["results"], ["profile"]):  # analysis pages, see app/web/analysis.py
+            return self._static(parts[0] + ".html")
+        if parts == ["api", "results"]:
+            return self._json(analysis.results())
+        if len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "profile":
+            status, body = analysis.run_profile(parts[2], RUNS, OUT)
+            return self._json(body, status)
         self._error(404, "not found")
 
     def do_POST(self):  # noqa: N802

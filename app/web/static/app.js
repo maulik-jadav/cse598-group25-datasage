@@ -415,6 +415,12 @@ function finish(ev) {
     link.setAttribute("aria-label", `Download ${f}`);
     li.append(text, link); files.append(li);
   });
+  const prof = el("li", "file");
+  const ptext = el("div", "file-text");
+  ptext.append(el("span", "file-title", "Column profile"), el("span", "file-name", "opens a new tab"),
+    el("span", "file-desc", "Each column before and after cleaning: type, blanks, top values or a histogram, and what changed."));
+  const open = el("a", "ghost small", "Open"); open.href = `/profile?run=${S.runId}`; open.target = "_blank"; open.rel = "noopener";
+  prof.append(ptext, open); files.append(prof);
   renderHealth(ev.health, ev.answer);
   const asked = ev.mode === "auto" ? "approved automatically" : `${ev.approvals} question${ev.approvals === 1 ? "" : "s"} to you`;
   $("#aStats").textContent = `${ev.tool_calls} tool calls · ${asked} · ${ev.model}`;
