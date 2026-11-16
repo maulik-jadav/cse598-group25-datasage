@@ -66,6 +66,20 @@ modes: `--approve auto`, `--approve reject`, and `--approve tools --allow drop_d
 `report.md`, `cleaned.csv` (the original file is never changed), `replay.py` (plain pandas), and
 `trace.jsonl` (every tool call).
 
+## Run DataSage in the browser
+
+```bash
+python -m app.web.server          # then open http://127.0.0.1:8501
+```
+
+Drop a CSV or Excel file (and optionally a JSON rules file), type a question and press Run, or press
+"Try the sample sales file". The table shows each problem as the agent finds it; risky fixes appear as a
+card under the affected row and wait for Keep or Apply; the answer, the change log and the four output
+files appear on the right. It needs the same `.env` key as the command line and nothing else (standard
+library only). Uploads and outputs go to `outputs/web/<run id>/`. Options: `--port`, `--model`, `--host`
+(default 127.0.0.1, so only your machine can open it). An approval left unanswered for 10 minutes, or a
+run replaced by a new one, counts as rejected.
+
 ## Reproduce the evaluation
 
 ```bash

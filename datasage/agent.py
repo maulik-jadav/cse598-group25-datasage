@@ -122,7 +122,9 @@ def build_messages(head: list[dict], turns: list[list[dict]], session: Session, 
 def run_agent(path: str | Path, request: str, approver: Approver, *, rules_path=None, model: str = DEFAULT_MODEL,
               client=None, max_tool_calls: int = 30, use_validator: bool = True, verbose: bool = False,
               trace_path: str | Path | None = None, system_prompt: str = SYSTEM_PROMPT_V3, memory: str = "full",
-              coverage: bool = True) -> RunResult:
+              coverage: bool = True, on_event=None) -> RunResult:
+    """Run the planner loop. `on_event(event, session)`, if given, is called after every logged event, so a
+    caller such as the browser app can show progress live; the agent's behaviour does not change."""
     client = client or make_client()
     session = Session(load_table(path), source=str(path), request=request, rules=load_rules(rules_path))
     dispatcher = Dispatcher(session, approver, use_validator=use_validator, coverage=coverage)
@@ -138,6 +140,8 @@ def run_agent(path: str | Path, request: str, approver: Approver, *, rules_path=
         result.trace.append(event)
         if verbose:
             _print_event(event)
+        if on_event:
+            on_event(event, session)
 
     while True:
         if result.tool_calls >= max_tool_calls:
