@@ -82,22 +82,59 @@ def future(tool: str, args: dict, preview: dict) -> str:
     return plural(text)
 
 
-def examples(preview: dict, limit: int = 5) -> dict:
-    """The exact rows a fix touches, for the approval card: removed rows in full, or each changed cell old -> new."""
+def duplicate_sources(df: pd.DataFrame, rows) -> dict[int, int]:
+    """For each duplicate row id, the earlier identical row it repeats."""
+    first: dict[tuple, int] = {}
+    wanted, found = set(int(r) for r in rows), {}
+    for r, values in zip(df.index, df.astype(str).itertuples(index=False, name=None)):
+        if values not in first:
+            first[values] = int(r)
+        elif int(r) in wanted:
+            found[int(r)] = first[values]
+    return found
+
+
+def _row_problems(session, r: int) -> dict[str, str]:
+    """Column -> problem name for the open findings on one row."""
+    out = {}
+    if session is None:
+        return out
+    for (kind, column), issue in session.issues.items():
+        if column != "*" and r in set(issue.get("rows", [])):
+            out.setdefault(str(column), NAMES.get(kind, kind))
+    return out
+
+
+def examples(preview: dict, tool: str = "", args: dict | None = None, session=None, limit: int = 5) -> dict:
+    """What the approval card shows under Details: the exact rows a fix touches, with the evidence for each.
+
+    duplicates: each copy and the earlier row it repeats; remove: the row with the cells that break a rule
+    marked; change: each changed cell old -> new, plus the formula's inputs for recompute_column.
+    """
+    args = args or {}
     before, after = preview.get("before"), preview.get("after")
     if before is None or after is None:
         return {"kind": "none", "rows": [], "more": 0}
+    cols = [str(c) for c in before.columns]
     removed = [int(r) for r in (preview.get("rows_removed") or []) if r in before.index]
+    if removed and tool == "drop_duplicates":
+        sources = duplicate_sources(before, removed)
+        rows = [{"id": r, "same_as": sources.get(r), "cells": {c: _text(before.at[r, c]) for c in cols}} for r in removed[:limit]]
+        return {"kind": "duplicates", "columns": cols, "rows": rows, "more": max(0, len(removed) - limit)}
     if removed:
-        rows = [{"id": r, "cells": {str(c): _text(before.at[r, c]) for c in before.columns}} for r in removed[:limit]]
-        return {"kind": "remove", "columns": [str(c) for c in before.columns], "rows": rows, "more": max(0, len(removed) - limit)}
+        rows = []
+        for r in removed[:limit]:
+            problems = _row_problems(session, r)
+            rows.append({"id": r, "cells": {c: _text(before.at[r, c]) for c in cols}, "problems": problems})
+        return {"kind": "remove", "columns": cols, "rows": rows, "more": max(0, len(removed) - limit)}
     common = after.index.intersection(before.index)
     changed = sorted(_changed_rows(before.loc[common], after.loc[common, list(before.columns)]))
+    inputs = [c for c in cols if c != args.get("column") and re.search(rf"\b{re.escape(c)}\b", str(args.get("expression", "")))]
     rows = []
     for r in changed[:limit]:
         diffs = [{"column": str(c), "before": _text(before.at[r, c]), "after": _text(after.at[r, c])}
                  for c in before.columns if not _same(before.at[r, c], after.at[r, c])]
-        rows.append({"id": r, "changes": diffs})
+        rows.append({"id": r, "changes": diffs, "inputs": [{"column": c, "value": _text(before.at[r, c])} for c in inputs]})
     return {"kind": "change", "rows": rows, "more": max(0, len(changed) - limit)}
 
 
@@ -165,7 +202,9 @@ def table_state(session) -> dict:
     removed = set(int(r) for r in original.index.difference(current.index))
     common = current.index.intersection(original.index)
     changed = _changed_rows(original.loc[common], current.loc[common, list(original.columns)])
-    extra = sorted((set(flagged) | set(kept) | removed | changed) - set(range(FIRST_ROWS)))
+    dup_rows = [r for r, cols in flagged.items() if "*" in cols]
+    sources = set(duplicate_sources(original, dup_rows).values()) if dup_rows else set()
+    extra = sorted((set(flagged) | set(kept) | removed | changed | sources) - set(range(FIRST_ROWS)))
     shown = [int(r) for r in original.index[:FIRST_ROWS]] + [r for r in extra if r in original.index]
     shown = shown[:MAX_ROWS]
     rows_out = {}
@@ -204,7 +243,8 @@ class BrowserApprover(Approver):
             "type": "approval", "id": approval_id, "tool": tool, "risk": risk,
             "title": QUESTIONS.get(tool, f"Apply {tool}?").format(column=args.get("column", "this column")),
             "summary": future(tool, args, preview), "reason": args.get("reason", ""),
-            "rows": [int(r) for r in rows][:20], "column": args.get("column"), "examples": examples(preview),
+            "rows": [int(r) for r in rows][:20], "column": args.get("column"),
+            "examples": examples(preview, tool, args, getattr(self.run, "session", None)),
         })
         answered = waiter.wait(APPROVAL_TIMEOUT) and not self.run.cancelled
         answer = bool(self.run.pending.pop(approval_id)["answer"]) if answered else False
@@ -223,6 +263,7 @@ class Run:
         self.done = False
         self.counts = {"checks": 0, "fixes": 0}
         self.analyze_args: dict | None = None
+        self.session = None
 
     def emit(self, event: dict) -> None:
         with self.cond:
@@ -249,6 +290,7 @@ class Run:
     def _on_event(self, event: dict, session) -> None:
         if event.get("event") != "tool":
             return
+        self.session = session
         name, args = event["name"], event["args"] if isinstance(event["args"], dict) else {}
         if name.startswith("check_"):
             self.counts["checks"] += 1
