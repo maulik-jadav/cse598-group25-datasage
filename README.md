@@ -101,6 +101,11 @@ planted problems; rebuild it with `python examples/make_large_sales.py`). Both u
 
 With Docker instead: `docker build -t datasage .` then `docker run --rm -p 8501:8501 --env-file .env datasage`.
 
+Two more pages: **Results** (`/results`, linked in the header) is the evaluation dashboard: accuracy per
+system and split, accuracy against speed, detection, damage, the Milestone 2 to 3 progression, ablations
+and the remaining failure causes, all read from `eval/results/`. **Column profile** (`/profile?run=<id>`,
+linked under "Your files" after a run) compares every column before and after cleaning.
+
 It needs the same `.env` key as the command line and nothing else (standard library only). Uploads and
 outputs go to `outputs/web/<run id>/`. Options: `--port`, `--model`, `--host` (default 127.0.0.1, so only
 your machine can open it). An approval left unanswered for 10 minutes, or a run replaced by a new one,
