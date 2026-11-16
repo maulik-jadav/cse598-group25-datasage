@@ -256,6 +256,24 @@ def test_stop_before_an_approval_does_not_wait(tmp_path):
     assert _time.time() - t0 < 1
 
 
+def test_event_stream_ends_when_the_run_is_done(tmp_path, monkeypatch):
+    import time as _time
+    run = Run(Path("x.csv"), "q", None, tmp_path / "r1", None, mode="auto")
+    run.emit({"type": "start"})
+    run.emit({"type": "done", "finished": True})
+    run.done = True
+    monkeypatch.setattr(server, "RUNS", {"r1": run})
+    httpd, base = _serve(tmp_path, monkeypatch)
+    try:
+        t0 = _time.time()
+        with urllib.request.urlopen(base + "/api/runs/r1/events", timeout=10) as res:
+            body = res.read().decode()  # returns only once the server closes the stream
+        assert _time.time() - t0 < 5
+        assert body.count("data: ") == 2 and '"done"' in body
+    finally:
+        httpd.shutdown()
+
+
 def test_auto_mode_approves_without_waiting_and_says_so(tmp_path):
     run = Run(Path("x.csv"), "q", None, tmp_path, None, mode="auto")
     assert BrowserApprover(run).decide("drop_duplicates", {}, "medium", {"summary": "", "rows_removed": [1]}) is True
