@@ -3,7 +3,7 @@
 For: Arsha, Ritik, Maulik and Vatsal. Last updated November 16, 2026.
 
 Milestone 2 is submitted, items 1 and 2 of Section 6 are merged (PR #7), and the browser app for the demo
-(item 7's page) is done (PRs #10 to #19). The rest of the work is split below. Individual grades draw on commit
+(item 7's page) is done (PRs #10 to #19). All four research studies have landed (PRs #21 to #26). The rest of the work is split below. Individual grades draw on commit
 and PR authorship, so **each task should end in its own merged PR** under your own GitHub account.
 
 **New since the last version of this doc (please skim before starting):**
@@ -19,12 +19,24 @@ and PR authorship, so **each task should end in its own merged PR** under your o
   10 row ids); extra tool arguments no longer fail a call; the coverage check now also requires the
   metric's formula check. A no-regression re-run on held-out and test after these changes gave 74/80,
   the same as recorded.
-- **Testing:** 79 unit tests run on GitHub for every PR (CI). `python scripts/smoke_e2e.py` is an
+- **Testing:** 105 unit tests run on GitHub for every PR (CI). `python scripts/smoke_e2e.py` is an
   end-to-end check with the real model (123 checks, a few minutes). There is also a Dockerfile.
-- **Research studies in progress** (Shrey, results land as `docs/final/findings_*.md`): a hard benchmark
-  split with bigger tables, the cost of Auto mode, a scale-up with new seeds, repeated runs and ablations,
-  and a comparison of the 42 models on the ASU API. Early model numbers: the 30B default is at or near the
-  top (75/80) and much faster than most larger models.
+- **Research studies, all merged** (write-ups in `docs/final/findings_*.md`, charts on the app's `/results` page):
+  - *Scale and ablations* (`findings_scale_and_ablations.md`): 95.5% of 200 unseen questions (95% range 92.0 to
+    98.5; 4 runs between 94.0% and 96.0%), against 49.0% for B1 and 46.5% for B2. Turning parts off: no approvals
+    12.0%, short memory 86.0%, no coverage check 91.5%; the validator and the merge rule showed no clear effect.
+  - *Hard benchmark* (`findings_hard.md`): tables of 343 to 1,935 rows. DataSage 30B 90.0% (seed 404: 85.0%),
+    235B 97.5%, B1 10.0%, B2 55.0% with 637 damaged cells. DataSage damaged none and fixed all 1,750 errors
+    the questions depended on.
+  - *Auto mode* (`findings_auto_mode.md`): 113/120 right against 114/120 with a careful approver. Auto now
+    pauses and asks before dropping rows that are blank only in the risky column.
+  - *Model comparison* (`findings_models.md`): 41 models fully run as the planner. The 30B default ranks 4th
+    (93.8%) and is among the fastest; with DataSage around it a model answers a median 20 points more than
+    in one call. No model damaged clean data; the weakest fail on tool-call format.
+- **Two things for the Nov 20 review** (see R2): 36 of 39 misses on the 200 questions are rows breaking a
+  rule in a column the question does not use (60.9% right on those questions, 99.6% on the rest), which
+  is the question-columns-only scope Vyshanth chose. On the hard split, every Qwen miss comes from
+  `analyze` grouping by the column it also filters on; a small fix is ready but not merged.
 
 ## Dates
 
@@ -47,15 +59,16 @@ and PR authorship, so **each task should end in its own merged PR** under your o
 | All results | `eval/results/summary.md`; final system is `datasage-m3` |
 | Report view (Arsha) and recipe format (Ritik) | `app/report_view.py`, `app/preview_report.py`, `datasage/recipes.py` |
 | Item 7 design note | `docs/design/item7_recipes_ui.md` |
-| Poster draft (print-ready PDF, source and figures) | `docs/final/poster/` (see its README) |
+| Poster (print-ready PDF, source and figures) | `docs/final/poster/`: `poster.html` is the source, `Group25_Poster.pdf` the export, `make_figs.py` rebuilds the figures from the result files (see its README). The older Claude Design canvas is out of date; edit the repo copy. |
 | Demo run with the 30B default | `docs/final/demo/` (13 s, same answer as the Milestone 2 demo) |
 | Browser app (item 7 page) | `app/web/`; run `python -m app.web.server` and open http://127.0.0.1:8501 (README, "Run DataSage in the browser") |
 | Evaluation dashboard, column profile, file viewer | `/results`, `/profile?run=<id>`, `/view?run=<id>` in the app (`app/web/analysis.py`, `app/web/static/`) |
 | Demo tables with known answers | `examples/large_sales.csv`, `examples/demo/` (HR, inventory, 3 monthly files); `python examples/make_demo_files.py` prints the right answers |
 | End-to-end check with the real model | `python scripts/smoke_e2e.py` |
-| Research findings (arriving) | `docs/final/findings_hard.md`, `findings_auto_mode.md`, `findings_scale_and_ablations.md`, `findings_models.md` |
+| Research findings | `docs/final/findings_hard.md`, `findings_auto_mode.md`, `findings_scale_and_ablations.md`, `findings_models.md` |
 
-Final system (`datasage-m3`, Qwen3-30B), share of questions answered correctly:
+Final system (`datasage-m3`, Qwen3-30B), share of questions answered correctly on the original held-out and
+test splits (the 200-question and hard numbers are in the bullets above and on the poster):
 
 | System | Held-out (40) | Test (40) | Damaged cells | Seconds per question |
 |---|---|---|---|---|
@@ -63,8 +76,9 @@ Final system (`datasage-m3`, Qwen3-30B), share of questions answered correctly:
 | B2 single model call | 60.0% | 47.5% | 35 | about 32 |
 | DataSage 30B (final) | 92.5% | 92.5% | 0 | about 17 |
 
-All 6 remaining misses are rows that break a rule in a column the question doesn't use. Vyshanth chose
-to check only the question's columns, so we raise this at the Nov 20 review rather than change it.
+All 6 misses here, and 36 of 39 on the 200 questions, are rows that break a rule in a column the question
+doesn't use. Vyshanth chose to check only the question's columns, so we raise this at the Nov 20 review
+rather than change it.
 
 ## Your tasks
 
@@ -76,14 +90,14 @@ Every task ends in a PR into `main`. Put a short note of what you did in `docs/t
 |---|---|---|---|
 | A1 | **Ratings packet (item 6).** Run DataSage on 10 questions (the browser app in *Ask me* mode is easiest; each run's report has a View and Download button): Vyshanth's two files plus questions from the held-out tables. Send him the 10 `report.md` files and a short form (correct? clear? would you trust it? each 1 to 5, plus a comment). Collect his answers. | His ratings are summarised in `docs/final/ratings.md` (scores and quotes, no copy of his files). | Send Nov 17, collect Nov 20 |
 | A2 | **Acceptance test (item 6).** 3 files (Vyshanth's two plus one test-split table), each with questions and expected answers. Pass = at least 90% correct and no valid cell changed. | `docs/final/acceptance_test.md` with the command, each question, expected and actual answer, pass or fail. | Nov 25 |
-| A3 | **Poster.** Check every number on the draft against `eval/results/summary.md`, collect team edits, export the PDF at 24 × 36 in and submit it on Canvas. The draft predates the browser app and the research studies: add a small panel for the app (a screenshot of the Table tab) and, if the findings have landed by Nov 21, one line from the model comparison. Rebuild steps are in `docs/final/poster/README.md`. | `Group25_Poster.pdf` submitted and copied to `docs/final/`. | Submit by Nov 22 |
+| A3 | **Poster check.** The poster is done and up to date (`docs/final/poster/Group25_Poster.pdf`, with the app screenshot and all four studies). Check every number on it against its source: `eval/results/study_scale_ablations.json` and `findings_scale_and_ablations.md` (200 questions, ablations, misses), `findings_hard.md` (hard split), `findings_models.md` (models). Collect team edits, make them in `poster.html`, re-export (steps in `docs/final/poster/README.md`) and check it is still one 24 × 36 in page. Then message Shrey "poster verified". **Shrey submits it on Canvas.** | Your sign-off to Shrey, and a PR with any corrections. | Sign off by Nov 22 |
 
 ### Ritik
 
 | # | Task | Done when | Due |
 |---|---|---|---|
 | R1 | **Recipe replay (item 7).** Build a recipe from a run's approved fixes and replay it on a new file without the model, as planned in the design note. | Tests in `tests/test_recipes.py` show a recipe from one table replayed on another table with the same columns. | Nov 25 |
-| R2 | **Nov 20 review.** Send Vyshanth an agenda by Nov 19: results, the out-of-question-column misses, ratings, demo plan. Take notes. | `docs/meetings/2026-11-20-review.md`, same format as the Oct 28 notes. | Nov 20 |
+| R2 | **Nov 20 review.** Send Vyshanth an agenda by Nov 19: results, the out-of-question-column misses (ask whether to check all columns with a rule), the hard-split grouping fix, ratings, demo plan. Take notes. | `docs/meetings/2026-11-20-review.md`, same format as the Oct 28 notes. | Nov 20 |
 
 ### Maulik
 
@@ -97,12 +111,12 @@ Every task ends in a PR into `main`. Put a short note of what you did in `docs/t
 
 | # | Task | Done when | Due |
 |---|---|---|---|
-| V1 | **Repeated runs (item 5).** The scale-up study is already repeating held-out and test 3 times, so to avoid doing the same work: once the hard benchmark lands (`sales-hard`, `penguins-hard`, Shrey will say when), run `datasage-m3` 3 times on it (separate `--results` folders) and report the mean and range of accuracy and seconds per question, next to the held-out and test numbers from `findings_scale_and_ablations.md`. | `docs/final/repeated_runs.md` with a table and the commands used. | Nov 25 |
+| V1 | **Repeated runs on the hard split (item 5).** Unblocked: the hard benchmark is merged (`sales-hard`, `penguins-hard`, and a second seed `sales-hard2`, `penguins-hard2`). The scale-up study already repeated the standard splits 4 times, and the hard split has 2 runs so far (90.0% in `eval/results/datasage-m3/`, 87.5% in `eval/results/repeat2/`). Run `datasage-m3` 2 more times on `sales-hard` and `penguins-hard` (`--results eval/results/hard_rep3`, then `hard_rep4`) and report the mean and range of accuracy and seconds per question over the 4 runs, next to the standard-split numbers from `findings_scale_and_ablations.md`. | `docs/final/repeated_runs.md` with a table and the commands used. | Nov 25 |
 | V2 | **Real messy files (item 4).** The tables in `examples/demo/` are synthetic, so real files are still needed. Pick 2 public messy CSV files with a license that allows reuse. Write 3 questions, a rules file and the correct answers by hand for each, then run DataSage. | Data, rules and questions in `eval/real/`; results and what went wrong in `docs/final/real_files.md`. | Nov 27 |
 
 ### Shrey
 
-Owns the browser app (`app/web/`), the research studies (`docs/final/findings_*.md`) and the Demo Day plan (a 3-minute walk-through for the poster session plus a backup screen recording, in `docs/final/demo_script.md`, by Nov 30). Also reviews and merges every PR and assembles the final report. Each of you writes the final-report paragraph for your own tasks.
+Owns the browser app (`app/web/`), the research studies (`docs/final/findings_*.md`), **submits the poster on Canvas** after Arsha's sign-off (by Nov 23, 2 PM), and the Demo Day plan (a 3-minute walk-through for the poster session plus a backup screen recording, in `docs/final/demo_script.md`, by Nov 30). Also reviews and merges every PR and assembles the final report. Each of you writes the final-report paragraph for your own tasks.
 
 ## Setup (about 5 minutes)
 
@@ -114,7 +128,7 @@ cd cse598-group25-datasage
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m pytest -q tests                          # 79 tests, no API key needed
+python -m pytest -q tests                          # 105 tests, no API key needed
 python -m eval.summarize                           # prints the results tables
 python -m app.web.server                           # the browser app at http://127.0.0.1:8501 (needs the key)
 ```
