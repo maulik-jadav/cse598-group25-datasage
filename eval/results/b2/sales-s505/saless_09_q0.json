@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 30.69,
+  "tokens": 2335,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 12.0,
+    "Electronics": 13.0,
+    "Furniture": 12.0,
+    "Office Supplies": 21.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Category case variant\n    df['Category'] = df['Category'].str.title()\n    \n    # Fix Price: remove $ and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).astype(float)\n    \n    # Fix Quantity: convert to int (it's currently string)\n    df['Quantity'] = df['Quantity'].astype(int)\n    \n    # Fix negative Quantity\n    df.loc[df['Quantity'] < 1, 'Quantity'] = 1\n    \n    # Recompute Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    result = df['Category'].value_counts().sort_index()\n    return {k: v for k, v in result.items()}\n"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 12.0,
+    "Electronics": 11.0,
+    "Furniture": 12.0,
+    "Office Supplies": 20.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

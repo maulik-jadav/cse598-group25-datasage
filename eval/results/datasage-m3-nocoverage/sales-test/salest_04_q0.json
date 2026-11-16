@@ -1,0 +1,178 @@
+{
+  "task_id": "salest_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 17,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 44.9,
+  "tokens": 88010,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues: 2 duplicate rows (25, 56) were excluded; the 'Date' column had 2 invalid dates, which were set to missing; the 'Price' column contained currency symbols ('$6.00') and was converted to numbers; the 'Revenue' column had one incorrect value (row 61, 9000 instead of 90) and was corrected using the formula Quantity * Price; 3 missing 'Region' values were set to missing. After fixes, the total revenue by region for Electronics is: East $1,680, North $4,600, South $19,590, West $1,380.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            25,
+            56
+          ],
+          "reason": "exact duplicate rows, keeping only the first occurrence"
+        },
+        "reason": "exact duplicate rows, keeping only the first occurrence",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          25,
+          56
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [25, 56]",
+        "code": "df = df.drop(index=[25, 56])"
+      },
+      {
+        "version": 2,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "dates are in YYYY-MM-DD format, but stored as text"
+        },
+        "reason": "dates are in YYYY-MM-DD format, but stored as text",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Date: 2 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 3,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains currency symbols like '$6.00', which should be converted to numbers"
+        },
+        "reason": "Price contains currency symbols like '$6.00', which should be converted to numbers",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (68 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            61
+          ],
+          "reason": "Revenue does not match Quantity * Price; row 61 has a typo (9000 instead of 90)"
+        },
+        "reason": "Revenue does not match Quantity * Price; row 61 has a typo (9000 instead of 90)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[61], 'Revenue'] = [90.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 5,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            29,
+            44,
+            67
+          ],
+          "reason": "Region is missing for these rows, and they are otherwise valid"
+        },
+        "reason": "Region is missing for these rows, and they are otherwise valid",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 3 value(s) to missing",
+        "code": "df.loc[[29, 44, 67], 'Region'] = pd.NA"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 17
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-nocoverage",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

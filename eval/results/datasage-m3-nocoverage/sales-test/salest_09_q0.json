@@ -1,0 +1,146 @@
+{
+  "task_id": "salest_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 12,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 28.85,
+  "tokens": 57996,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "final_summary": "The data had three main issues: (1) one exact duplicate row (row 31) was removed; (2) Category labels had whitespace and case variants (' Furniture', ' Electronics', 'Office Supplies ') which were normalized to standard forms; (3) one row (row 40) had a negative Quantity (-6), which violates the rule that Quantity must be at least 1, so it was excluded. After these fixes, the analysis shows 9 orders in Accessories, 11 in Electronics, 14 in Furniture, and 12 in Office Supplies.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found one exact duplicate row (row 31), keeping the first occurrence."
+        },
+        "reason": "Found one exact duplicate row (row 31), keeping the first occurrence.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          31
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            " Electronics": "Electronics",
+            "Office Supplies ": "Office Supplies"
+          },
+          "reason": "Standardize whitespace and case in Category column to merge variants into allowed labels."
+        },
+        "reason": "Standardize whitespace and case in Category column to merge variants into allowed labels.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 3 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', ' Electronics': 'Electronics', 'Office Supplies ': 'Office Supplies'})"
+      },
+      {
+        "version": 3,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains values like '$300.00' that should be numeric."
+        },
+        "reason": "Price contains values like '$300.00' that should be numeric.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (47 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            40
+          ],
+          "reason": "Quantity = -6 is invalid; Quantity must be at least 1 per rules."
+        },
+        "reason": "Quantity = -6 is invalid; Quantity must be at least 1 per rules.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          40
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [40]",
+        "code": "df = df.drop(index=[40])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 12
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-nocoverage",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

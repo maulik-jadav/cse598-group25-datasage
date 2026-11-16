@@ -1,0 +1,154 @@
+{
+  "task_id": "saless_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 3,
+  "tool_calls": 12,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 22.21,
+  "tokens": 59250,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 15.0,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the question: 2 duplicate rows (35, 59) were removed; two misspelled category labels ('Furnture', 'Office Suplies') were corrected to 'Furniture' and 'Office Supplies'; two negative Quantity values (-7, -2) were excluded as they violate the rule that Quantity must be at least 1. The Price column had one value with a dollar sign ('$450.00') which was successfully converted to a number. After these fixes, the analysis shows: Accessories (21 orders), Electronics (18), Furniture (15), and Office Supplies (14).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found 2 exact duplicate rows (35, 59) that are identical to earlier rows; keeping only the first occurrence."
+        },
+        "reason": "Found 2 exact duplicate rows (35, 59) that are identical to earlier rows; keeping only the first occurrence.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          35,
+          59
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Merge misspelled variants into correct labels: 'Furnture' \u2192 'Furniture', 'Office Suplies' \u2192 'Office Supplies'."
+        },
+        "reason": "Merge misspelled variants into correct labels: 'Furnture' \u2192 'Furniture', 'Office Suplies' \u2192 'Office Supplies'.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 2 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 3,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains one value with a dollar sign: '$450.00' in row 45. Convert to numeric."
+        },
+        "reason": "Price contains one value with a dollar sign: '$450.00' in row 45. Convert to numeric.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (70 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            4,
+            38
+          ],
+          "reason": "Quantity is negative (-7, -2) but must be at least 1 per rules. These rows violate the business rule and are likely data entry errors."
+        },
+        "reason": "Quantity is negative (-7, -2) but must be at least 1 per rules. These rows violate the business rule and are likely data entry errors.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          4,
+          38
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [4, 38]",
+        "code": "df = df.drop(index=[4, 38])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 12
+  },
+  "corrections": 10,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-s505",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 15.0,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

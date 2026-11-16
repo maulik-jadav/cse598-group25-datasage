@@ -1,0 +1,155 @@
+{
+  "task_id": "saless_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 12,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 42.33,
+  "tokens": 59489,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 60.0,
+    "North": 76.0,
+    "South": 72.0,
+    "West": 43.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the analysis: 1 exact duplicate row (row 18) was removed; 5 label variants in the 'Region' column (e.g., 'East ', 'South ', 'Nort', 'Suoth', 'Wst') were normalized to standard values; the 'Price' column, which contained currency symbols, was successfully converted to numeric; and 2 rows had incorrect 'Revenue' values that were fixed by recomputing as Quantity * Price. After these fixes, the analysis shows that 60 units were sold in the East, 76 in the North, 72 in the South, and 43 in the West.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found one exact duplicate row (row 18), removing it to avoid double-counting in analysis."
+        },
+        "reason": "Found one exact duplicate row (row 18), removing it to avoid double-counting in analysis.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          18
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "East ": "East",
+            "South ": "South",
+            "Nort": "North",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "Merge case and space variants and likely misspellings into the allowed Region labels to ensure consistent grouping."
+        },
+        "reason": "Merge case and space variants and likely misspellings into the allowed Region labels to ensure consistent grouping.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Region: merged 5 label variant(s), 5 cells",
+        "code": "df['Region'] = df['Region'].replace({'East ': 'East', 'South ': 'South', 'Nort': 'North', 'Suoth': 'South', 'Wst': 'West'})"
+      },
+      {
+        "version": 3,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains currency symbols ('$') and is stored as text; convert to numeric for accurate calculation."
+        },
+        "reason": "Price contains currency symbols ('$') and is stored as text; convert to numeric for accurate calculation.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (53 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            30,
+            42
+          ],
+          "reason": "Revenue does not match Quantity * Price in 2 rows; recompute using the correct formula."
+        },
+        "reason": "Revenue does not match Quantity * Price in 2 rows; recompute using the correct formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[30, 42], 'Revenue'] = [96.0, 24.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 12
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-s303",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 60.0,
+    "North": 76.0,
+    "South": 72.0,
+    "West": 43.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

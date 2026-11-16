@@ -1,0 +1,159 @@
+{
+  "task_id": "saless_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 26.39,
+  "tokens": 60875,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 3000.0,
+    "North": 450.0,
+    "South": 7970.0,
+    "West": 4500.0
+  },
+  "extra": {
+    "final_summary": "Problems found: 3 invalid dates in 'Date' column, 1 missing 'Region' value, 1 row with incorrect 'Revenue' (3600 vs 360), and 2 label variants in 'Region' (Suoth \u2192 South, east \u2192 East). Fixed: parsed invalid dates to missing, set missing Region value, recomputed Revenue for row 23, and normalized Region labels. The total revenue by region for Electronics is: East $3,000, North $450, South $7,970, West $4,500.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "3 rows have invalid dates: '13/45/2026', 'TBD', 'not-a-date'; these cannot be parsed as YYYY-MM-DD"
+        },
+        "reason": "3 rows have invalid dates: '13/45/2026', 'TBD', 'not-a-date'; these cannot be parsed as YYYY-MM-DD",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Suoth": "South",
+            "east": "East"
+          },
+          "reason": "merge case/space variants and likely misspellings into allowed labels"
+        },
+        "reason": "merge case/space variants and likely misspellings into allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'Suoth': 'South', 'east': 'East'})"
+      },
+      {
+        "version": 3,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            33
+          ],
+          "reason": "missing Region value in row 33"
+        },
+        "reason": "missing Region value in row 33",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 1 value(s) to missing",
+        "code": "df.loc[[33], 'Region'] = pd.NA"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            23
+          ],
+          "reason": "Revenue does not match Quantity * Price: 3600 vs 360"
+        },
+        "reason": "Revenue does not match Quantity * Price: 3600 vs 360",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[23], 'Revenue'] = [360.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 13
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-nocoverage",
+  "dataset": "sales-s505",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 3000.0,
+    "North": 450.0,
+    "South": 7970.0,
+    "West": 4500.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

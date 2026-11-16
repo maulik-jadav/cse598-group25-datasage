@@ -1,0 +1,151 @@
+{
+  "task_id": "saless_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 28.18,
+  "tokens": 69075,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 15.0,
+    "Electronics": 13.0,
+    "Furniture": 15.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the question:\n- 'Category' had a case/space variant 'office supplies' which was merged into 'Office Supplies'.\n- 'Region' had space variants (' West', 'East ', 'West ') which were normalized to 'West' and 'East'.\n- One 'Region' value was null and marked as missing.\n- One 'Revenue' value was incorrect (4800 instead of 48) and was fixed by recomputing as Quantity * Price.\n\nAfter these fixes, the analysis shows 15 orders in Accessories, 13 in Electronics, 15 in Furniture, and 12 in Office Supplies.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "office supplies": "Office Supplies"
+          },
+          "reason": "merge case and space variant into the allowed label 'Office Supplies'"
+        },
+        "reason": "merge case and space variant into the allowed label 'Office Supplies'",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({'office supplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " West": "West",
+            "East ": "East",
+            "West ": "West"
+          },
+          "reason": "merge space variants into the allowed labels: 'West', 'East', 'West'"
+        },
+        "reason": "merge space variants into the allowed labels: 'West', 'East', 'West'",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: merged 3 label variant(s), 3 cells",
+        "code": "df['Region'] = df['Region'].replace({' West': 'West', 'East ': 'East', 'West ': 'West'})"
+      },
+      {
+        "version": 3,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            35
+          ],
+          "reason": "value is null, so mark as missing"
+        },
+        "reason": "value is null, so mark as missing",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 1 value(s) to missing",
+        "code": "df.loc[[35], 'Region'] = pd.NA"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            5
+          ],
+          "reason": "Revenue does not match Quantity * Price; fix the incorrect value"
+        },
+        "reason": "Revenue does not match Quantity * Price; fix the incorrect value",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[5], 'Revenue'] = [48.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 14
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-s505",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 15.0,
+    "Electronics": 13.0,
+    "Furniture": 15.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

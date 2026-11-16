@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 35.91,
+  "tokens": 2498,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 28.93,
+    "Electronics": 410.83,
+    "Furniture": 226.88,
+    "Office Supplies": 14.18
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix Date: Convert to datetime, invalid dates (like 'not-a-date') become NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Fix Price: Remove non-numeric characters and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'[^0-9.]', '', regex=True).astype(float)\n    \n    # Fix Quantity: Convert to integer (already numeric but may be float due to NaN)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # Fix Revenue: Recompute based on Quantity * Price to fix any inconsistencies\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Fix negative Quantity and Revenue: Set negative quantities to NaN (invalid)\n    df.loc[df['Quantity'] < 0, 'Quantity'] = pd.NA\n    df.loc[df['Quantity'].isna(), 'Revenue'] = pd.NA  # If quantity is invalid, revenue is also invalid\n    \n    # Drop rows where Quantity is invalid (optional, but ensures clean data)\n    df = df.dropna(subset=['Quantity'])\n    \n    # Ensure Category and other categorical columns are clean (no variants)\n    # According to profile, no label variants detected, so no action needed\n    \n    return df\n\ndef answer(df):\n    # Group by Category and compute average unit price\n    result = df.groupby('Category')['Price'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 28.9286,
+    "Electronics": 410.8333,
+    "Furniture": 226.875,
+    "Office Supplies": 14.1818
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,103 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 19,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 50.9,
+  "tokens": 100484,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 2313.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 6438.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "final_summary": "The data has several issues that affect the analysis:\n\n1. The 'Category' column contains label variants (e.g., 'electronics', 'Accesories', 'Electornics', 'Office Suplies') that do not match the allowed values. These were not fixed because the user rejected the proposed normalization.\n\n2. The 'Date' column contains one invalid value 'TBD' (row 15), which cannot be parsed as a date. The user rejected the suggestion to set this to missing.\n\n3. The 'Revenue' column has two incorrect values (rows 13 and 29) that do not match the formula 'Quantity * Price'. The user rejected the proposed fix to recompute these values.\n\nDespite these issues, the analysis was run on 40 of the 41 rows. The total revenue per month is:\n\n- 2026-01: $3,138.00\n- 2026-02: $2,313.00\n- 2026-03: $1,050.00\n- 2026-04: $10,290.00\n- 2026-05: $6,438.00\n- 2026-06: $2,688.00\n\nThe results are based on the data as-is, with the noted problems. The user should review and fix the label variants, invalid date, and incorrect revenue values for full accuracy.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " North": "North",
+            "East ": "East",
+            "North ": "North"
+          },
+          "reason": "merge case and space variants into the allowed labels"
+        },
+        "reason": "merge case and space variants into the allowed labels",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: merged 3 label variant(s), 3 cells",
+        "code": "df['Region'] = df['Region'].replace({' North': 'North', 'East ': 'East', 'North ': 'North'})"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "summary": "Category: merged 5 label variant(s), 5 cells"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "summary": "Date: set 1 value(s) to missing"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)"
+      }
+    ],
+    "oracle_decisions": [],
+    "coverage_refusals": 0,
+    "model_turns": 19
+  },
+  "corrections": 3,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-reject",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

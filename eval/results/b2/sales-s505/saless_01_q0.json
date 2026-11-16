@@ -1,0 +1,69 @@
+{
+  "task_id": "saless_01_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 26.45,
+  "tokens": 2518,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 19.0,
+    "Furniture": 15.0,
+    "Office Supplies": 15.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Category label variants\n    category_mapping = {'Office Suplies': 'Office Supplies', 'Furnture': 'Furniture'}\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Fix Region label variants (strip whitespace)\n    df['Region'] = df['Region'].str.strip()\n    \n    # Convert Price from text to numeric, removing non-numeric characters like '$' and '.00'\n    df['Price'] = df['Price'].astype(str).str.replace(r'[^\\d.]', '', regex=True).astype(float)\n    \n    # Convert Quantity to numeric (it's currently string with negatives)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # Fix negative Quantity and recalculate Revenue\n    df.loc[df['Quantity'] < 1, 'Quantity'] = 1  # Minimum quantity is 1\n    \n    # Recalculate Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Group by Category and count number of orders\n    result = df.groupby('Category').size().reset_index(name='count')\n    # Convert to dictionary with Category as key\n    return dict(zip(result['Category'], result['count']))"
+  },
+  "corrections": 11,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 15.0,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

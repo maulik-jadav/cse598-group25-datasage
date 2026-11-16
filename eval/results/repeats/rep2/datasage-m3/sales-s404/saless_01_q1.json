@@ -1,0 +1,170 @@
+{
+  "task_id": "saless_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 31.87,
+  "tokens": 62525,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 5030.0,
+    "North": 840.0,
+    "South": 4720.0,
+    "West": 4200.0
+  },
+  "extra": {
+    "final_summary": "The total revenue by region for Electronics is: East $5,030, North $840, South $4,720, West $4,200.\n\nProblems found and fixed:\n- 2 duplicate rows (row 3 and 32) were removed.\n- 'east' and 'north' in the Region column were normalized to 'East' and 'North'.\n- 3 rows with negative Quantity (12, 19, 68) were excluded as they violate the rule that Quantity \u2265 1.\n- 3 rows where Revenue did not equal Quantity \u00d7 Price were corrected.\n\nCaveats: The original data had 2 missing Region values (rows 11, 34), but they were not filled as the rules do not specify how to impute them, and they were not in the Electronics category, so they did not affect the final result.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found 2 exact duplicate rows (row 3 and row 32), likely data entry errors. Removing duplicates to avoid double-counting."
+        },
+        "reason": "Found 2 exact duplicate rows (row 3 and row 32), likely data entry errors. Removing duplicates to avoid double-counting.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          3,
+          32
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "north": "North"
+          },
+          "reason": "Merge case and space variants into the allowed labels: 'east' \u2192 'East', 'north' \u2192 'North'."
+        },
+        "reason": "Merge case and space variants into the allowed labels: 'east' \u2192 'East', 'north' \u2192 'North'.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'north': 'North'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            12,
+            19,
+            68
+          ],
+          "reason": "Quantity is negative (rows 12, 19, 68), but rules require Quantity \u2265 1. These are invalid sales records and must be excluded."
+        },
+        "reason": "Quantity is negative (rows 12, 19, 68), but rules require Quantity \u2265 1. These are invalid sales records and must be excluded.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          12,
+          19,
+          68
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [12, 19, 68]",
+        "code": "df = df.drop(index=[12, 19, 68])"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            9,
+            55,
+            65
+          ],
+          "reason": "Revenue does not match Quantity * Price in 3 rows (9, 55, 65). Recompute using the correct formula."
+        },
+        "reason": "Revenue does not match Quantity * Price in 3 rows (9, 55, 65). Recompute using the correct formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[9, 55, 65], 'Revenue'] = [135.0, 60.0, 2100.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 13
+  },
+  "corrections": 12,
+  "planted": 14,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-s404",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 5030.0,
+    "North": 840.0,
+    "South": 4720.0,
+    "West": 4200.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

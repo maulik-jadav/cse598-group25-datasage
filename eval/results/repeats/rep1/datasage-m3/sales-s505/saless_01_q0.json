@@ -1,0 +1,158 @@
+{
+  "task_id": "saless_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 35.48,
+  "tokens": 64933,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 15.0,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the question 'How many orders are there in each category?':\n\n1. Two exact duplicate rows (35, 59) were removed to avoid double-counting.\n2. Two label variants in 'Category' were corrected: 'Furnture' \u2192 'Furniture' and 'Office Suplies' \u2192 'Office Supplies'.\n3. Two rows with negative 'Quantity' (-7, -2) were excluded, as Quantity must be \u2265 1 per the rules.\n4. One 'Price' value with a dollar sign ('$450.00') was converted to a number.\n\nAfter these fixes, the analysis shows:\n- Accessories: 21 orders\n- Electronics: 18 orders\n- Furniture: 15 orders\n- Office Supplies: 14 orders\n\nAll fixes were approved, and the final data is clean for the requested aggregation.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found 2 exact duplicate rows (35, 59) that are identical to earlier rows; keeping only the first occurrence."
+        },
+        "reason": "Found 2 exact duplicate rows (35, 59) that are identical to earlier rows; keeping only the first occurrence.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          35,
+          59
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Merge misspelled variants into correct labels: 'Furnture' \u2192 'Furniture', 'Office Suplies' \u2192 'Office Supplies'."
+        },
+        "reason": "Merge misspelled variants into correct labels: 'Furnture' \u2192 'Furniture', 'Office Suplies' \u2192 'Office Supplies'.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 2 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            4,
+            38
+          ],
+          "reason": "Quantity is negative (-7, -2), but rules require Quantity \u2265 1 (positive whole number). These rows violate the data rule."
+        },
+        "reason": "Quantity is negative (-7, -2), but rules require Quantity \u2265 1 (positive whole number). These rows violate the data rule.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          4,
+          38
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [4, 38]",
+        "code": "df = df.drop(index=[4, 38])"
+      },
+      {
+        "version": 4,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains one value with a dollar sign: '$450.00' (row 45). Convert to numeric by removing the symbol."
+        },
+        "reason": "Price contains one value with a dollar sign: '$450.00' (row 45). Convert to numeric by removing the symbol.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (68 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 13
+  },
+  "corrections": 10,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-s505",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 15.0,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

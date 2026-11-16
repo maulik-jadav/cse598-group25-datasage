@@ -1,0 +1,65 @@
+{
+  "task_id": "saless_08_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 51.61,
+  "tokens": 2534,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 12.0,
+    "Electronics": 11.0,
+    "Furniture": 17.0,
+    "Office Supplies": 10.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Date: invalid date 'TBD'\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Fix Category: lowercase 'furniture' -> 'Furniture'\n    df['Category'] = df['Category'].replace({'furniture': 'Furniture'})\n    \n    # Fix Price: remove '$' and '.00', convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'\\$|\\\\.00', '', regex=True)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Fix Quantity: negative values are invalid, set to NaN\n    df.loc[df['Quantity'] < 1, 'Quantity'] = pd.NA\n    \n    # Recompute Revenue = Quantity * Price (only where both are valid)\n    df['Revenue'] = pd.NA\n    valid_mask = df['Quantity'].notna() & df['Price'].notna()\n    df.loc[valid_mask, 'Revenue'] = df.loc[valid_mask, 'Quantity'] * df.loc[valid_mask, 'Price']\n    \n    # Ensure all relevant columns are correct type\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    return df\n\ndef answer(df):\n    # Count orders per category, drop missing\n    result = df.groupby('Category').size().dropna()\n    return result.to_dict()"
+  },
+  "corrections": 6,
+  "planted": 15,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 11.0,
+    "Electronics": 9.0,
+    "Furniture": 17.0,
+    "Office Supplies": 10.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

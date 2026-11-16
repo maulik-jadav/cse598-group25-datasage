@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_00_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 18.96,
+  "tokens": 2376,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 55.0,
+    "North": 100.0,
+    "South": 81.0,
+    "West": 56.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Clean Price: remove $ and .00, convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '').str.replace('.00', '').astype(float)\n    \n    # Fix negative Quantity and Revenue by taking absolute value (assuming typo)\n    df['Quantity'] = df['Quantity'].abs()\n    df['Revenue'] = df['Revenue'].abs()\n    \n    # Clean Region: strip whitespace and standardize case to capitalized\n    df['Region'] = df['Region'].astype(str).str.strip().str.capitalize()\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('Region')['Quantity'].sum().round().astype(int).to_dict()\n    return result"
+  },
+  "corrections": 9,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s404",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 54.0,
+    "North": 100.0,
+    "South": 81.0,
+    "West": 56.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

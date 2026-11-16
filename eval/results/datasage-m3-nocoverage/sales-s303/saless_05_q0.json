@@ -1,0 +1,185 @@
+{
+  "task_id": "saless_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 39.11,
+  "tokens": 61470,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 33.0,
+    "North": 42.0,
+    "South": 47.0,
+    "West": 48.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues: 2 invalid dates in the 'Date' column were set to missing; 'Category' labels had case and space variants ('Electronics ' and ' Furniture') which were normalized; 3 rows had negative 'Quantity' values (violating the rule that Quantity must be at least 1), so they were excluded; one 'Revenue' value was incorrect and was recomputed as Quantity * Price; and 2 exact duplicate rows were removed. After these fixes, the analysis shows that 33 units were sold in the East, 42 in the North, 47 in the South, and 48 in the West.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "2 rows have invalid dates that cannot be parsed as YYYY-MM-DD"
+        },
+        "reason": "2 rows have invalid dates that cannot be parsed as YYYY-MM-DD",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Date: 2 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Electronics ": "Electronics",
+            " Furniture": "Furniture"
+          },
+          "reason": "case and space variants of Category labels are low risk to merge"
+        },
+        "reason": "case and space variants of Category labels are low risk to merge",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 2 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({'Electronics ': 'Electronics', ' Furniture': 'Furniture'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            9,
+            30,
+            36
+          ],
+          "reason": "Quantity is negative, but rules say Quantity must be at least 1 (units sold)"
+        },
+        "reason": "Quantity is negative, but rules say Quantity must be at least 1 (units sold)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          9,
+          30,
+          36
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [9, 30, 36]",
+        "code": "df = df.drop(index=[9, 30, 36])"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            15
+          ],
+          "reason": "Revenue does not match Quantity * Price; recompute from source values"
+        },
+        "reason": "Revenue does not match Quantity * Price; recompute from source values",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[15], 'Revenue'] = [1500.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 5,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "2 exact duplicate rows found; keep first occurrence"
+        },
+        "reason": "2 exact duplicate rows found; keep first occurrence",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          27,
+          29
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 13
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-nocoverage",
+  "dataset": "sales-s303",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 33.0,
+    "North": 42.0,
+    "South": 47.0,
+    "West": 48.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

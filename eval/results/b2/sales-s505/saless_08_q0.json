@@ -1,0 +1,76 @@
+{
+  "task_id": "saless_08_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 4,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 65.94,
+  "tokens": 2584,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 6340.0,
+    "North": 5700.0,
+    "South": 7280.0,
+    "West": 450.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Order_ID: convert to numeric\n    df['Order_ID'] = pd.to_numeric(df['Order_ID'], errors='coerce')\n    \n    # Fix Date: invalid date 'TBD' -> NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Fix Category: standardize case\n    df['Category'] = df['Category'].str.strip().str.title()\n    \n    # Fix Quantity: convert to numeric, ensure positive\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df.loc[df['Quantity'] <= 0, 'Quantity'] = 1  # minimum 1\n    \n    # Fix Price: remove $ and convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace('$', '').str.replace('.00', '', regex=False)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Fix Region: strip whitespace and correct obvious typo 'Nort' -> 'North'\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Nort': 'North'})\n    \n    # Recompute Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = df[df['Category'] == 'Electronics']\n    result = df.groupby('Region')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 12,
+  "planted": 15,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 6260.0,
+    "North": 5700.0,
+    "South": 7280.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Order_ID"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "values_with_extra_spaces",
+      "Region"
+    ]
+  ]
+}

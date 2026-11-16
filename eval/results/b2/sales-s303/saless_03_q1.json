@@ -1,0 +1,57 @@
+{
+  "task_id": "saless_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 21.96,
+  "tokens": 2323,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 38.0,
+    "North": 60.0,
+    "South": 105.0,
+    "West": 92.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Price: remove non-numeric characters and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'[^0-9.]', '', regex=True).astype(float)\n    \n    # Fix Revenue: recalculate as Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Fix Date: coerce invalid dates (like 2026-02-30) using pd.to_datetime with errors='coerce'\n    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce')\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    # Group by Region and sum Quantity\n    result = df_clean.groupby('Region')['Quantity'].sum().astype(int).to_dict()\n    return result"
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s303",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 38.0,
+    "North": 60.0,
+    "South": 105.0,
+    "West": 92.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

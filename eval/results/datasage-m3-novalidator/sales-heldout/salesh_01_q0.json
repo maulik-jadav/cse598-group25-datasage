@@ -1,0 +1,123 @@
+{
+  "task_id": "salesh_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 12,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 28.93,
+  "tokens": 56901,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues: 1) The 'Category' column had case, space, and spelling variants (e.g., 'Furniture ', 'Accesories') that were merged into the allowed labels using normalize_labels. 2) Two exact duplicate rows were removed. 3) One row had a missing 'Region' value, which was excluded from analysis but rejected by the user; this row is still present and may affect results. 4) All other checks (missing values in Region, out-of-range Quantity, and Revenue formula) passed. The final analysis shows total units sold by region: East (60), North (83), South (64), West (104).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            " Office Supplies": "Office Supplies",
+            "Furniture ": "Furniture",
+            "Accesories": "Accessories",
+            "Furnture": "Furniture"
+          },
+          "reason": "merge case and space variants and correct misspellings into allowed labels"
+        },
+        "reason": "merge case and space variants and correct misspellings into allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Category: merged 5 label variant(s), 6 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', ' Office Supplies': 'Office Supplies', 'Furniture ': 'Furniture', 'Accesories': 'Accessories', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "remove exact duplicate rows, keeping the first occurrence"
+        },
+        "reason": "remove exact duplicate rows, keeping the first occurrence",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          60
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "summary": "excluded 1 row(s): [39]"
+      }
+    ],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": false,
+        "why": "removes row 39 (id 2039) that should be kept"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 12
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-novalidator",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

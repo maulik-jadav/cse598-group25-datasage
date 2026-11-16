@@ -1,0 +1,69 @@
+{
+  "task_id": "saless_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 25.21,
+  "tokens": 2496,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 76.0,
+    "North": 72.0,
+    "South": 78.0,
+    "West": 69.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix Category label variants\n    category_mapping = {'Office Suplies': 'Office Supplies', 'Furnture': 'Furniture'}\n    df['Category'] = df['Category'].map(lambda x: category_mapping.get(x, x))\n    \n    # Fix Region label variants (strip whitespace)\n    df['Region'] = df['Region'].astype(str).str.strip()\n    \n    # Convert Price from text to numeric, removing non-numeric characters\n    df['Price'] = df['Price'].astype(str).str.replace(r'[^0-9.]', '', regex=True).astype(float)\n    \n    # Fix Quantity: ensure it's positive (absolute value) and integer\n    df['Quantity'] = df['Quantity'].abs().astype(int)\n    \n    # Recompute Revenue = Quantity * Price to fix negative or incorrect values\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    # Drop rows where Region is missing\n    df_clean = df_clean.dropna(subset=['Region'])\n    # Group by Region and sum Quantity\n    result = df_clean.groupby('Region')['Quantity'].sum().astype(int).to_dict()\n    return result"
+  },
+  "corrections": 11,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 69.0,
+    "North": 72.0,
+    "South": 78.0,
+    "West": 67.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

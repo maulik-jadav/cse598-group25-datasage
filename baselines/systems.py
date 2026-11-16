@@ -196,19 +196,23 @@ def run_b2(bundle: Bundle, task: dict, model: str = LARGE_MODEL, client=None) ->
 
 def run_datasage(bundle: Bundle, task: dict, model: str = LARGE_MODEL, approver: str = "oracle",
                  use_validator: bool = True, client=None, trace_path=None, prompt_fix: bool = False,
-                 m3: bool = False, memory: str = "full") -> SystemOutput:
+                 m3: bool = False, memory: str = "full", coverage: bool | None = None,
+                 prompt: str | None = None) -> SystemOutput:
     """m3=False reproduces the Milestone 2 systems (full history, no coverage check). m3=True is the
     Milestone 3 agent: coverage check before analyze and spelling merges (prompt V3); memory is
-    "full" (default) or "compact"."""
+    "full" (default) or "compact". `coverage` and `prompt` ("v1", "v2", "v3") override what m3 picks;
+    they exist for the ablations of the final system."""
     from datasage.agent import SYSTEM_PROMPT, SYSTEM_PROMPT_V2, SYSTEM_PROMPT_V3
     from datasage.approval import AutoApprover, RejectApprover
 
+    prompts = {"v1": SYSTEM_PROMPT, "v2": SYSTEM_PROMPT_V2, "v3": SYSTEM_PROMPT_V3}
+    system_prompt = prompts[prompt] if prompt else SYSTEM_PROMPT_V3 if m3 else SYSTEM_PROMPT_V2 if prompt_fix else SYSTEM_PROMPT
     chosen = {"oracle": lambda: OracleApprover(bundle), "oracle-strict": lambda: OracleApprover(bundle, strict_exclusion=True),
               "reject": RejectApprover, "auto": AutoApprover}[approver]()
     result = run_agent(bundle.messy_path, task["question"], chosen, rules_path=bundle.rules_path, model=model,
                        client=client, use_validator=use_validator, trace_path=trace_path,
-                       system_prompt=SYSTEM_PROMPT_V3 if m3 else SYSTEM_PROMPT_V2 if prompt_fix else SYSTEM_PROMPT,
-                       memory=memory if m3 else "full", coverage=m3)
+                       system_prompt=system_prompt, memory=memory if m3 else "full",
+                       coverage=m3 if coverage is None else coverage)
     return SystemOutput(answer=result.answer, cleaned=result.session.current,
                         issues=set(result.session.issues.keys()), completed=result.finished,
                         tool_calls=result.tool_calls, tool_errors=result.tool_errors,

@@ -1,0 +1,65 @@
+{
+  "task_id": "saless_05_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 44.83,
+  "tokens": 2535,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 29.67,
+    "Electronics": 313.33,
+    "Furniture": 190.5,
+    "Office Supplies": 11.14
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix Category label variants\n    category_mapping = {\n        'Accesories': 'Accessories',\n        'Office Supplies ': 'Office Supplies',\n        'Furnture': 'Furniture',\n        'Office Suplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Clean Price: remove $ and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '').str.replace('.00', '', regex=False).astype(float)\n    \n    # Fix invalid dates: one entry has '2026-14-01' which is invalid (month=14)\n    # We'll parse dates and set invalid ones to NaT, but since we don't group by date, we can leave as is for now\n    # However, we should ensure date column is handled properly\n    # But the question doesn't require date, so we can just leave it as object\n    \n    # We note that Quantity has negative values, but since the question is about average unit price per category,\n    # and unit price is independent of quantity, we can keep negative quantities for now\n    # However, negative revenue may indicate data issues, but again, not used directly\n    \n    return df\n\ndef answer(df):\n    # Group by Category and compute average of Price\n    result = df.groupby('Category')['Price'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 8,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s404",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 29.6667,
+    "Electronics": 303.5714,
+    "Furniture": 190.5,
+    "Office Supplies": 10.6154
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

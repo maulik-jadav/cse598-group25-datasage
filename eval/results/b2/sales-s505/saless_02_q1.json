@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_02_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 3,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 28.25,
+  "tokens": 2140,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 37.81,
+    "Electronics": 460.0,
+    "Furniture": 156.5,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix trailing space in Category\n    df['Category'] = df['Category'].str.strip()\n    \n    # Fix negative Quantity and Revenue: since Revenue = Quantity * Price,\n    # and Price is always positive, we can correct by taking absolute value of Quantity\n    # and then recalculate Revenue to ensure consistency\n    df['Quantity'] = df['Quantity'].abs()\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('Category')['Price'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 40.3571,
+    "Electronics": 460.0,
+    "Furniture": 156.5,
+    "Office Supplies": 11.5385
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Category"
+    ]
+  ]
+}

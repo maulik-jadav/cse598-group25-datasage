@@ -1,0 +1,168 @@
+{
+  "task_id": "saless_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 31.12,
+  "tokens": 61976,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 5030.0,
+    "North": 840.0,
+    "South": 4720.0,
+    "West": 4200.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the question: (1) 2 missing Region values (rows 11, 34) were set to missing; (2) 2 duplicate rows (3, 32) were removed; (3) 2 label variants in Region ('east', 'north') were normalized to 'East' and 'North'; (4) 3 rows with negative Quantity (12, 19, 68) were excluded because Quantity must be \u22651 and Revenue was inconsistent with Quantity * Price. After fixes, the total revenue by region for Electronics is: East $5,030, North $840, South $4,720, West $4,200.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "north": "North"
+          },
+          "reason": "merge case and space variants into allowed labels"
+        },
+        "reason": "merge case and space variants into allowed labels",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'north': 'North'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            12,
+            19,
+            68
+          ],
+          "reason": "Quantity is negative, but rules say Quantity must be at least 1; also Revenue is inconsistent with Quantity * Price"
+        },
+        "reason": "Quantity is negative, but rules say Quantity must be at least 1; also Revenue is inconsistent with Quantity * Price",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          12,
+          19,
+          68
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [12, 19, 68]",
+        "code": "df = df.drop(index=[12, 19, 68])"
+      },
+      {
+        "version": 3,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            11,
+            34
+          ],
+          "reason": "missing Region values; no other data to infer from"
+        },
+        "reason": "missing Region values; no other data to infer from",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 2 value(s) to missing",
+        "code": "df.loc[[11, 34], 'Region'] = pd.NA"
+      },
+      {
+        "version": 4,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "exact duplicate rows found; keep only first occurrence"
+        },
+        "reason": "exact duplicate rows found; keep only first occurrence",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          3,
+          32
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 13
+  },
+  "corrections": 9,
+  "planted": 14,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-s404",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 5030.0,
+    "North": 840.0,
+    "South": 4720.0,
+    "West": 4200.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

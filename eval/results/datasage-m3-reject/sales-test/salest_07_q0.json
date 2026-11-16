@@ -1,0 +1,102 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 12,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 32.74,
+  "tokens": 56932,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 11.0,
+    "Electronics": 25.0,
+    "Furniture": 20.0,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "final_summary": "The question asks for the number of orders in each category. The data had several issues: (1) 2 duplicate rows (rejected for removal), (2) label variants in 'Category' (fixed by normalizing ' Electronics' to 'Electronics' and 'Office Supplies ' to 'Office Supplies'), (3) one row with invalid negative Quantity (-4, rejected for exclusion), and (4) 3 rows with inconsistent Revenue (rejected for recomputation). Despite these unresolved issues, the analysis was run on the full dataset. The result is: Accessories: 11 orders, Electronics: 25 orders, Furniture: 20 orders, Office Supplies: 14 orders. The main caveat is that the data contains invalid and inconsistent records that were not corrected, which may affect accuracy.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Electronics": "Electronics",
+            "Office Supplies ": "Office Supplies"
+          },
+          "reason": "Merge case and space variants into the allowed labels: ' Electronics' \u2192 'Electronics', 'Office Supplies ' \u2192 'Office Supplies'."
+        },
+        "reason": "Merge case and space variants into the allowed labels: ' Electronics' \u2192 'Electronics', 'Office Supplies ' \u2192 'Office Supplies'.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({' Electronics': 'Electronics', 'Office Supplies ': 'Office Supplies'})"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "summary": "removed 2 exact duplicate row(s)"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "summary": "excluded 1 row(s): [41]"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)"
+      }
+    ],
+    "oracle_decisions": [],
+    "coverage_refusals": 0,
+    "model_turns": 12
+  },
+  "corrections": 3,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-reject",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

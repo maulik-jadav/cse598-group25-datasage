@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 25.31,
+  "tokens": 2420,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Office Supplies": 15.0,
+    "Electronics": 14.0,
+    "Furniture": 9.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Category label variants\n    category_mapping = {\n        'Furnture': 'Furniture',\n        'Accesories': 'Accessories',\n        'Office Suplies': 'Office Supplies',\n        'office supplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Convert Price from text to numeric, removing non-numeric characters\n    df['Price'] = df['Price'].replace('[^\\\\d.]', '', regex=True).astype(float)\n    \n    # Convert Quantity to integer (it's currently string)\n    df['Quantity'] = df['Quantity'].astype(int)\n    \n    # Fix negative Quantity\n    df.loc[df['Quantity'] < 1, 'Quantity'] = 1\n    \n    # Recompute Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    result = df['Category'].value_counts().to_dict()\n    return result"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s303",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 20.0,
+    "Electronics": 12.0,
+    "Furniture": 9.0,
+    "Office Supplies": 15.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}
