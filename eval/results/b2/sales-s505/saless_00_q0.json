@@ -1,0 +1,57 @@
+{
+  "task_id": "saless_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 30.27,
+  "tokens": 2213,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1720.0,
+    "North": 11160.0,
+    "South": 7500.0,
+    "West": 6300.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix category label variant\n    df['Category'] = df['Category'].str.strip().str.title()\n    \n    # Fix region with extra spaces\n    df['Region'] = df['Region'].str.strip()\n    \n    # Correct the Revenue value in row 5: it should be Quantity * Price = 4 * 12 = 48, not 4800\n    df.loc[5, 'Revenue'] = df.loc[5, 'Quantity'] * df.loc[5, 'Price']\n    \n    # Drop rows where Region is missing (only one row)\n    df = df.dropna(subset=['Region'])\n    \n    return df\n\ndef answer(df):\n    df = df[df['Category'] == 'Electronics']\n    result = df.groupby('Region')['Revenue'].sum().round(2)\n    return {k: v for k, v in result.items()}\n"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1720.0,
+    "North": 11160.0,
+    "South": 7500.0,
+    "West": 6300.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

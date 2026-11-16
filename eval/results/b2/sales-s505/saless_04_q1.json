@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_04_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 56.94,
+  "tokens": 2193,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Furniture": 15.0,
+    "Office Supplies": 12.0,
+    "Accessories": 10.0,
+    "Electronics": 9.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix invalid date: '13/45/2026' is not a valid date; set to NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Fix label variants in Region: 'Suoth' -> 'South', 'east' -> 'East'\n    region_mapping = {'Suoth': 'South', 'east': 'East'}\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Fix cross-column: Recompute Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Count orders per category\n    result = df['Category'].value_counts().to_dict()\n    return result"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 9.0,
+    "Furniture": 15.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

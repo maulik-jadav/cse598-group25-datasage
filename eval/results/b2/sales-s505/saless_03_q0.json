@@ -1,0 +1,57 @@
+{
+  "task_id": "saless_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 28.43,
+  "tokens": 2387,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.0,
+    "Electronics": 295.0,
+    "Furniture": 175.0,
+    "Office Supplies": 13.85
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Category label variants\n    category_mapping = {\n        'Electornics': 'Electronics',\n        'accessories': 'Accessories',\n        'Furnture': 'Furniture',\n        'Office Suplies': 'Office Supplies',\n        'electronics': 'Electronics'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Clean Price: remove $ and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'\\$|\\\\', '', regex=True).astype(float)\n    \n    # Fix Region label variant (trim whitespace)\n    df['Region'] = df['Region'].astype(str).str.strip()\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('Category')['Price'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.0,
+    "Electronics": 295.0,
+    "Furniture": 175.0,
+    "Office Supplies": 13.8462
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

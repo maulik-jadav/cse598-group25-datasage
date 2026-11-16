@@ -1,0 +1,57 @@
+{
+  "task_id": "saless_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 17.87,
+  "tokens": 2406,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 26.25,
+    "Electronics": 362.5,
+    "Furniture": 239.09,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Clean Price: remove $ and convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace(r'\\$|\\.00', '', regex=True).astype(float)\n    \n    # Clean Category: fix label variants\n    category_mapping = {\n        'Furnture': 'Furniture',\n        ' Office Supplies': 'Office Supplies',\n        'Electornics': 'Electronics',\n        'Office Supplies ': 'Office Supplies',\n        'Accessories ': 'Accessories'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Clean Region: fix case variant and missing values\n    df['Region'] = df['Region'].astype(str).str.capitalize()\n    df.loc[df['Region'] == 'Nan', 'Region'] = None\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('Category')['Price'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 12,
+  "planted": 14,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s404",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 26.25,
+    "Electronics": 362.5,
+    "Furniture": 239.0909,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

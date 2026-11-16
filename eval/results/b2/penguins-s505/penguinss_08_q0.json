@@ -1,0 +1,49 @@
+{
+  "task_id": "penguinss_08_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 24.72,
+  "tokens": 2476,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3727.08,
+    "male": 4600.93
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix label variant for island: 'dream' -> 'Dream'\n    df['island'] = df['island'].replace({'dream': 'Dream'})\n    \n    # Fix out-of-range body_mass_g: 5800000 is way above max 6500, likely a typo (extra zeros)\n    # Assuming it should be 5800 (within 2500-6500 range)\n    df['body_mass_g'] = df['body_mass_g'].apply(lambda x: x if x <= 6500 else x / 1000)\n    \n    return df\n\ndef answer(df):\n    # After cleaning, compute average body mass for each sex\n    result = df.groupby('sex')['body_mass_g'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "penguins-s505",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3730.4348,
+    "male": 4529.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

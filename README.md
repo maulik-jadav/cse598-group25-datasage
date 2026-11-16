@@ -141,6 +141,20 @@ python -m eval.summarize                              # writes eval/results/summ
 python -m eval.failures --system datasage             # likely cause of each wrong task, from its trace
 ```
 
+Scale and ablation study of the final system (`docs/final/findings_scale_and_ablations.md`):
+
+```bash
+python -m eval.generate --tables 10 --seed 303 --split s303      # also 404 and 505: sales-s303, penguins-s303, ...
+python -m eval.run_eval --system datasage-m3 --dataset sales-s303 --workers 6
+python -m eval.run_eval --system datasage-m3 --dataset sales-test --results eval/results/repeats/rep1   # repeat runs
+python -m eval.run_eval --system datasage-m3-nocoverage --dataset sales-s303   # ablations, see below
+python -m eval.study      # CIs, paired tests, root causes -> eval/results/study_scale_ablations.json
+```
+
+Ablations of `datasage-m3`: `datasage-m3-nocoverage` (no coverage check), `datasage-m3-novalidator`,
+`datasage-m3-nomerge` (prompt without the merge rule), `datasage-m3-compact` (compact memory) and
+`datasage-m3-reject` (every risky fix rejected).
+
 Table 3 (rows, tasks and planted errors) is counted from the generated files: rows in each table's
 `messy.csv`, tasks in `tasks.json`, and planted errors in the `errors` list of `planted.json`, under
 `eval/datasets/<dataset>/`. Table 8's ordinary 235B rows are the same first 10 task files from

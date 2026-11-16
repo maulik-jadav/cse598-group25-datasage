@@ -1,0 +1,170 @@
+{
+  "task_id": "saless_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 39.86,
+  "tokens": 70557,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 6978.0,
+    "2026-02": 7492.0,
+    "2026-03": 5551.0,
+    "2026-04": 4884.0,
+    "2026-05": 6350.0,
+    "2026-06": 2102.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the question: 2 duplicate rows (rows 3 and 32) were removed; 3 rows with negative Quantity (12, 19, 68) were excluded as they violate the rule that Quantity must be at least 1; case variants in Region ('north', 'east') were normalized to 'North' and 'East'; and 3 rows had incorrect Revenue values that did not match Quantity * Price and were recomputed. After fixes, the total revenue per month was calculated. The total revenue for January 2026 was $6,978, February $7,492, March $5,551, April $4,884, May $6,350, and June $2,102.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found 2 exact duplicate rows (row 3 and row 32), likely data entry error. Keeping only the first occurrence."
+        },
+        "reason": "Found 2 exact duplicate rows (row 3 and row 32), likely data entry error. Keeping only the first occurrence.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          3,
+          32
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            12,
+            19,
+            68
+          ],
+          "reason": "Quantity is negative (rows 12, 19, 68), but rules require Quantity >= 1. These are likely data entry errors."
+        },
+        "reason": "Quantity is negative (rows 12, 19, 68), but rules require Quantity >= 1. These are likely data entry errors.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          12,
+          19,
+          68
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [12, 19, 68]",
+        "code": "df = df.drop(index=[12, 19, 68])"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "north": "North",
+            "east": "East"
+          },
+          "reason": "Case and space variants found: 'north' and 'east' should be standardized to 'North' and 'East'."
+        },
+        "reason": "Case and space variants found: 'north' and 'east' should be standardized to 'North' and 'East'.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'north': 'North', 'east': 'East'})"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            9,
+            55,
+            65
+          ],
+          "reason": "Revenue does not match Quantity * Price in rows 9, 55, 65. Recomputing from formula."
+        },
+        "reason": "Revenue does not match Quantity * Price in rows 9, 55, 65. Recomputing from formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[9, 55, 65], 'Revenue'] = [135.0, 60.0, 2100.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 14
+  },
+  "corrections": 12,
+  "planted": 14,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-nocoverage",
+  "dataset": "sales-s404",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6978.0,
+    "2026-02": 7492.0,
+    "2026-03": 5551.0,
+    "2026-04": 4884.0,
+    "2026-05": 6350.0,
+    "2026-06": 2102.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_01_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 37.71,
+  "tokens": 2389,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 1510.0,
+    "Electronics": 29300.0,
+    "Furniture": 5290.0,
+    "Office Supplies": 600.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix label variant in Category: remove leading/trailing spaces\n    df['Category'] = df['Category'].str.strip()\n    \n    # Convert Price from text to numeric, removing non-numeric characters like '$' and converting to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'[^\\d.-]', '', regex=True).astype(float)\n    \n    # Fix Quantity: ensure it's integer and correct negative values (if valid, but here likely error)\n    # Since Quantity should be >= 1, negative is invalid. We'll take absolute value only if magnitude makes sense.\n    # But -5 in sample has Revenue = -900, which suggests error in sign.\n    # We'll assume negative sign is a data entry error and correct to positive.\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recompute Revenue = Quantity * Price to fix any inconsistencies\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    result = df.groupby('Category')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 4,
+  "planted": 5,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s303",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 1510.0,
+    "Electronics": 29300.0,
+    "Furniture": 4390.0,
+    "Office Supplies": 600.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

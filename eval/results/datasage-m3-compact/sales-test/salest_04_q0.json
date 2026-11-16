@@ -1,0 +1,145 @@
+{
+  "task_id": "salest_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 102.52,
+  "tokens": 70719,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "extra": {
+    "final_summary": "The data had two duplicate rows (25, 56) and one incorrect Revenue value (row 61) that did not match Quantity * Price. These were fixed: duplicates were removed, and Revenue was recomputed. Rows with missing Region (29, 44, 67) were not excluded but are naturally omitted in the group-by. The total revenue by region for Electronics is: East $1,680.00, North $4,600.00, South $19,590.00, West $1,380.00.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            61
+          ],
+          "reason": "Revenue must equal Quantity * Price according to the rules"
+        },
+        "reason": "Revenue must equal Quantity * Price according to the rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[61], 'Revenue'] = [90.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate rows (25 and 56) to avoid skewing the revenue-by-region aggregation for Electronics"
+        },
+        "reason": "Remove exact duplicate rows (25 and 56) to avoid skewing the revenue-by-region aggregation for Electronics",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          25,
+          56
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            61
+          ],
+          "reason": "Revenue value does not match Quantity * Price; correct the value for accurate aggregation"
+        },
+        "reason": "Revenue value does not match Quantity * Price; correct the value for accurate aggregation",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[61], 'Revenue'] = [90.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "summary": "excluded 2 row(s): [29, 67]"
+      }
+    ],
+    "oracle_decisions": [
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": false,
+        "why": "removes row 29 (id 2029) that should be kept"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 1,
+    "model_turns": 14
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-compact",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

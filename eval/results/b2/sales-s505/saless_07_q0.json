@@ -1,0 +1,65 @@
+{
+  "task_id": "saless_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 49.76,
+  "tokens": 2472,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 5917.0,
+    "2026-02": 1670.0,
+    "2026-03": 12869.0,
+    "2026-04": 7180.0,
+    "2026-05": 580.0,
+    "2026-06": 2055.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Price from text to numeric, removing non-numeric characters\n    df['Price'] = df['Price'].replace('[^\\\\d.]', '', regex=True).astype(float)\n    \n    # Convert Date to datetime, invalid dates become NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Convert Quantity to integer (it's currently text)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # Fix Revenue: recalculate as Quantity * Price\n    # But only where Quantity and Price are valid\n    valid_mask = df['Quantity'].notna() & (df['Quantity'] > 0) & df['Price'].notna()\n    df.loc[valid_mask, 'Revenue'] = df.loc[valid_mask, 'Quantity'] * df.loc[valid_mask, 'Price']\n    \n    # Remove rows where Quantity is negative or zero\n    df = df[df['Quantity'] > 0]\n    \n    # Drop rows with invalid dates\n    df = df[df['Date'].notna()]\n    \n    # Extract month in YYYY-MM format\n    df['YearMonth'] = df['Date'].dt.to_period('M').astype(str)\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('YearMonth')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5917.0,
+    "2026-02": 1670.0,
+    "2026-03": 12869.0,
+    "2026-04": 7180.0,
+    "2026-05": 580.0,
+    "2026-06": 2055.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

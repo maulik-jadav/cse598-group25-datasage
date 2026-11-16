@@ -1,0 +1,157 @@
+{
+  "task_id": "saless_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 3,
+  "detect_fn": 0,
+  "tool_calls": 16,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 28.28,
+  "tokens": 78192,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 5703.0,
+    "2026-02": 3849.0,
+    "2026-03": 922.0,
+    "2026-04": 5443.0,
+    "2026-05": 8185.0,
+    "2026-06": 3654.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the question: (1) 3 rows with negative Quantity and Revenue (violating rules), which were excluded; (2) 5 label variants in Region (e.g., 'east', ' East', 'north', 'Wst') were normalized to canonical labels; (3) 1 invalid date (2026-02-30) was set to missing. After fixes, the total revenue per month was calculated. The sum of Revenue by month is: 2026-01: $5,703, 2026-02: $3,849, 2026-03: $922, 2026-04: $5,443, 2026-05: $8,185, 2026-06: $3,654.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            " East": "East",
+            "north": "North",
+            "Wst": "West"
+          },
+          "reason": "merge case and space variants into canonical labels"
+        },
+        "reason": "merge case and space variants into canonical labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Region: merged 4 label variant(s), 5 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', ' East': 'East', 'north': 'North', 'Wst': 'West'})"
+      },
+      {
+        "version": 2,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "2026-02-30 is invalid; set to missing"
+        },
+        "reason": "2026-02-30 is invalid; set to missing",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Date: 1 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            11,
+            30,
+            40
+          ],
+          "reason": "Quantity and Revenue are negative, violating rules (Quantity >= 1, Revenue >= 0)"
+        },
+        "reason": "Quantity and Revenue are negative, violating rules (Quantity >= 1, Revenue >= 0)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          11,
+          30,
+          40
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [11, 30, 40]",
+        "code": "df = df.drop(index=[11, 30, 40])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 16
+  },
+  "corrections": 11,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-nocoverage",
+  "dataset": "sales-s505",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5703.0,
+    "2026-02": 3849.0,
+    "2026-03": 922.0,
+    "2026-04": 5443.0,
+    "2026-05": 8185.0,
+    "2026-06": 3654.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Revenue"
+    ]
+  ]
+}

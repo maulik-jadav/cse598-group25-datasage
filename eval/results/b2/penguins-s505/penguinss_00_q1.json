@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinss_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 40.78,
+  "tokens": 2567,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3514.06,
+    "Chinstrap": 3775.0,
+    "Gentoo": 5078.12
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix case/space variants in 'island' and 'sex'\n    df = df.copy()\n    df['island'] = df['island'].str.strip().str.capitalize()\n    df['sex'] = df['sex'].str.strip()\n    \n    # Fix flipper_length_mm negatives (likely data entry error, assume absolute value)\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    \n    # Fix body_mass_g out of range: 5550000 is way too high, likely extra zeros\n    # Assume it should be 5550 (within 2500-6500 range)\n    df['body_mass_g'] = df['body_mass_g'].apply(lambda x: x if x <= 6500 else x / 1000)\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('species')['body_mass_g'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 6,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "penguins-s505",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3516.0714,
+    "Chinstrap": 3775.0,
+    "Gentoo": 5097.9167
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

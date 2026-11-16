@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 33.16,
+  "tokens": 2329,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 2730.0,
+    "2026-02": 17983.0,
+    "2026-03": 2545.0,
+    "2026-04": 8216.0,
+    "2026-05": 7903.0,
+    "2026-06": 16748.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Convert Date to datetime, invalid dates will become NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Clean Price: remove non-numeric characters and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'[^0-9.]', '', regex=True).astype(float)\n    \n    # Recalculate Revenue = Quantity * Price to fix any incorrect values\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    df = df.dropna(subset=['Date'])  # Remove rows with invalid dates\n    df['YearMonth'] = df['Date'].dt.to_period('M').astype(str)\n    result = df.groupby('YearMonth')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s303",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2730.0,
+    "2026-02": 17983.0,
+    "2026-03": 2545.0,
+    "2026-04": 8216.0,
+    "2026-05": 7903.0,
+    "2026-06": 16748.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

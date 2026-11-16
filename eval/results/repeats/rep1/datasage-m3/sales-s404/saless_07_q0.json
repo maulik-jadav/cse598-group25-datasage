@@ -1,0 +1,148 @@
+{
+  "task_id": "saless_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 15,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 29.3,
+  "tokens": 75443,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 1536.0,
+    "2026-02": 5714.0,
+    "2026-03": 5421.0,
+    "2026-04": 696.0,
+    "2026-05": 9622.0,
+    "2026-06": 2299.0
+  },
+  "extra": {
+    "final_summary": "The data had one exact duplicate row (row 3), which was removed. The 'Region' column had multiple label variants (e.g., 'North ', 'east', 'Eats', 'Suoth', 'Wst') that were normalized to the allowed values using normalize_labels. Three rows had incorrect 'Revenue' values that were inconsistent with the formula 'Quantity * Price'; these were corrected using recompute_column. All other checks (dates, numeric types, ranges) passed. The total revenue per month was successfully computed.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found one exact duplicate row (row 3), which is a copy of row 2. Removing the duplicate to avoid double-counting."
+        },
+        "reason": "Found one exact duplicate row (row 3), which is a copy of row 2. Removing the duplicate to avoid double-counting.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          3
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " South": "South",
+            "North ": "North",
+            "east": "East",
+            "south": "South",
+            "west": "West",
+            "Eats": "East",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "Standardize region labels to match the allowed values in the rules file, including fixing misspellings like 'Eats' \u2192 'East' and 'Suoth' \u2192 'South'."
+        },
+        "reason": "Standardize region labels to match the allowed values in the rules file, including fixing misspellings like 'Eats' \u2192 'East' and 'Suoth' \u2192 'South'.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 9,
+        "summary": "Region: merged 8 label variant(s), 9 cells",
+        "code": "df['Region'] = df['Region'].replace({' South': 'South', 'North ': 'North', 'east': 'East', 'south': 'South', 'west': 'West', 'Eats': 'East', 'Suoth': 'South', 'Wst': 'West'})"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            9,
+            30,
+            40
+          ],
+          "reason": "Revenue values are inconsistent with Quantity * Price. Correcting them to match the formula."
+        },
+        "reason": "Revenue values are inconsistent with Quantity * Price. Correcting them to match the formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[9, 30, 40], 'Revenue'] = [120.0, 1400.0, 180.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 15
+  },
+  "corrections": 15,
+  "planted": 15,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-s404",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 1536.0,
+    "2026-02": 5714.0,
+    "2026-03": 5421.0,
+    "2026-04": 696.0,
+    "2026-05": 9622.0,
+    "2026-06": 2299.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

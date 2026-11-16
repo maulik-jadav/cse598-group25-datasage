@@ -1,0 +1,65 @@
+{
+  "task_id": "saless_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 30.9,
+  "tokens": 2454,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 3075.0,
+    "Electronics": 31700.0,
+    "Furniture": 20470.0,
+    "Office Supplies": 996.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Price: convert text to numeric, remove $ and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Fix Region: standardize label variants\n    region_mapping = {\n        'Nort': 'North',\n        ' South': 'South',\n        'West ': 'West',\n        'Eats': 'East'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Fix Quantity: take absolute value to correct negative quantities (assuming data entry error)\n    # But we'll recalculate Revenue anyway, so we can make Quantity positive\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recalculate Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('Category')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s404",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3075.0,
+    "Electronics": 31700.0,
+    "Furniture": 18720.0,
+    "Office Supplies": 948.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}
