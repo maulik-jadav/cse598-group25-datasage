@@ -28,6 +28,7 @@ def acc(s):
     return f"{100 * a['accuracy']:.1f}% ({a['correct']} of {a['tasks']})"
 
 
+SATURATED = ("qwen3-vl-32b-think", "mistral-large-4")
 full = [s for s in M if A(s) and A(s)["tasks"] == 80 and not s.endswith("-original")]
 partial = [s for s in M if A(s) and A(s)["tasks"] < 80]
 tool_ok = [s for s in full if (A(s)["tool_error_rate"] or 0) < 0.05 and A(s)["completion"] >= 0.9]
@@ -60,7 +61,15 @@ vals = {
     "N_MODELS": len(M) - 1, "N_FULL": len(full), "N_NEAR_PERFECT": len(S["models_with_80_tasks_at_least_39_of_40_on_other_tasks"]),
     "N_LISTED": probe["listed_models"], "N_NOT_CHAT": len(probe["not_chat"]), "N_PROBED": len(probe["probes"]),
     "N_PASS": sum(p["real_pass"] for p in probe["probes"]),
-    "PARTIAL_NOTE": partial_note or "none",
+    "SAT_NOTE": "; ".join(f"`{M[x]['model']}` {A(x)['tasks']} of 80" for x in SATURATED),
+    "OTHER_PARTIAL": ("Also partial when the study ended: " + "; ".join(
+        f"`{M[x]['model']}` {A(x)['tasks']} of 80" for x in partial if x not in SATURATED) + ".")
+    if any(x not in SATURATED for x in partial) else "",
+    "X235": f"{A('qwen3-235b')['seconds_median'] / A('qwen3-30b')['seconds_median']:.0f}",
+    "XINK": f"{A('inkling-small')['seconds_median'] / A('qwen3-30b')['seconds_median']:.1f}",
+    "SCOUT_GAP": f"{100 * (A('qwen3-30b')['accuracy'] - A('llama4-scout')['accuracy']):.1f}",
+    "INK_GAP": f"{100 * (A('inkling-small')['accuracy'] - A('qwen3-30b')['accuracy']):.1f}",
+    "Q235_ACC": acc("qwen3-235b"),
     "OUT_TOP": f"{outs[-1]}/40", "OUT_LOW": f"{outs[0]}/40",
     "N_SPEARMAN": S["spearman_accuracy_vs_checking_outside_question_columns"]["models"],
     "RHO": f"{S['spearman_accuracy_vs_checking_outside_question_columns']['rho']:.2f}",
@@ -88,6 +97,62 @@ vals = {
                       "are not a random sample (the earlier, mostly sales, splits finished first).") if partial else
                      "Every model in the tables ran all 80 questions.",
 }
+# shared failures on penguins-heldout (Finding 1)
+COMMON = ["glm-5-3", "glm-5-3-flash", "glm-5-2", "deepseek-v4-1-flash", "mimo-v2-6-pro", "mimo-v2-6-flash",
+          "muse-spark-open", "granite41-30b", "hemmingway-1-5", "ornith-1-5-35b", "qwen3-30b-think", "gemma4-31b"]
+
+
+def wrong(system, split="penguins-heldout"):
+    return {Path(p).stem for p in glob.glob(f"eval/results/{system}/{split}/*.json") if not json.load(open(p))["analysis_correct"]}
+
+
+from pathlib import Path  # noqa: E402
+common = set.intersection(*(wrong(f"datasage-m3-{m}") for m in COMMON))
+outside = set(d["tasks_needing_exclusion_outside_question_columns"])
+right_on = lambda m: f"{len(common - wrong(f'datasage-m3-{m}'))} of {len(common)}"
+neg = [(g, s) for g, s in gains if g < 0]
+high = [s for s in full if A(s)["accuracy"] >= 0.9]
+fastest_high = min(high, key=lambda s: A(s)["seconds_median"])
+assert fastest_high == "qwen3-30b", fastest_high
+above = [s for s in full + partial if A(s)["accuracy"] > A("qwen3-30b")["accuracy"]]
+
+
+def per_task(system):
+    return {Path(p).stem: json.load(open(p))["analysis_correct"]
+            for split in ("sales-heldout", "penguins-heldout", "sales-test", "penguins-test")
+            for p in glob.glob(f"eval/results/{system}/{split}/*.json")}
+
+
+def mcnemar(x, y):
+    """Exact two-sided McNemar test on the questions both systems answered."""
+    from math import comb
+    a, b = per_task(x), per_task(y)
+    shared = a.keys() & b.keys()
+    only_x = sum(a[t] and not b[t] for t in shared)
+    only_y = sum(b[t] and not a[t] for t in shared)
+    n = only_x + only_y
+    p = min(1.0, 2 * sum(comb(n, i) for i in range(min(only_x, only_y) + 1)) / 2 ** n) if n else 1.0
+    return only_x, only_y, p
+
+
+paired = [(s, *mcnemar("datasage-m3-qwen3-30b", M[s]["agent_system"])) for s in above]
+damages = [A(s)["damaged_cells_rows"] for s in M if A(s)]
+complete_b2 = [s for s in M if B(s) and B(s)["tasks"] == 80]
+best_b2 = max(complete_b2, key=lambda s: B(s)["accuracy"])
+assert B(best_b2)["accuracy"] < A("qwen3-30b")["accuracy"]
+vals.update({
+    "COMMON_N": len(COMMON), "COMMON_MODELS": ", ".join(f"`{M[m]['model']}`" for m in COMMON),
+    "COMMON_TASKS": len(common), "COMMON_OUT": len(common & outside),
+    "COMMON_Q30": right_on("qwen3-30b"), "COMMON_INK": right_on("inkling-small"), "COMMON_Q235": right_on("qwen3-235b"),
+    "GLM_SPEC_S": f"{A('glm-5-3-spec')['seconds_median']:.0f}", "GLM_S": f"{A('glm-5-3')['seconds_median']:.0f}",
+    "DAMAGE_SENTENCE": ("Damage is 0 in every agent row" if not any(damages) else f"total agent damage {sum(damages)}"),
+    "NEG_GAIN": ", ".join(f"`{M[s]['model']}` ({100 * g:+.1f} points)" for g, s in sorted(neg)) or "none",
+    "SCOUT_B2": f"{B('llama4-scout')['correct']} of {B('llama4-scout')['tasks']}", "SCOUT_ACC": acc("llama4-scout"),
+    "N_HIGH": len(high),
+    "PAIRED": "; ".join(f"`{M[s]['model']}` got {oy} questions right that Qwen3-30B missed and missed {ox} that it got "
+                        f"right (exact McNemar p = {pv:.2f})" for s, ox, oy, pv in paired),
+    "BEST_B2": f"`{M[best_b2]['model']}` with {100 * B(best_b2)['accuracy']:.1f}%",
+})
 out = tmpl
 for key, value in vals.items():
     out = out.replace("{" + key + "}", str(value))

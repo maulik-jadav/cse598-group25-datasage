@@ -3,7 +3,7 @@
 Short answer: keep `qwen3-30b-a3b-instruct-2507` as the default. Across the 43 models that can call tools on
 the API, it is one of four models that no other model beats on both accuracy and speed, and it finishes a question in
 about half a minute even under heavy load. `qwen3-235b-a22b-instruct-2507` was the only model to answer all 80 questions
-correctly, but it took about seven times as long per question. The biggest surprise is why the other models lose: on the
+correctly, but it took about 7 times as long per question. The biggest surprise is why the other models lose: on the
 40 questions where the question's own columns are the whole story, 28 of the 38 fully run models
 score 39 or 40 out of 40. Almost all of the spread comes from one habit (whether the model also cleans rows that break
 the rules in columns the question does not use), plus a few models that cannot produce valid tool calls at all.
@@ -43,8 +43,9 @@ Passing the probe did not mean a model could finish the task: `llama4-maverick-1
 runs it mostly wrote its tool calls as plain text (see failure modes).
 
 Two models could not be run to the end because their servers were saturated: during the study a one-line "Say hi"
-request to `qwen3-vl-32b-thinking` and to `mistral-large-4` timed out after 120 s. As agreed, we stopped them where they
-were and report them as partial (`qwen3-235b-a22b-thinking-2507` 55 of 80; `qwen3-vl-32b-thinking` 23 of 80; `qwen-agentworld-35b-a3b` 77 of 80; `olmo3-32b-think` 76 of 80; `mistral-large-4` 54 of 80). Their single-call rows are missing for the same reason.
+request to `qwen3-vl-32b-thinking` and to `mistral-large-4` timed out after 120 s. We stopped them where they were and
+report them as partial (`qwen3-vl-32b-thinking` 23 of 80; `mistral-large-4` 54 of 80). Every single-call attempt for them timed out, so they have no single-call
+result. Also partial when the study ended: `qwen3-235b-a22b-thinking-2507` 55 of 80; `qwen-agentworld-35b-a3b` 77 of 80; `olmo3-32b-think` 76 of 80.
 
 ## Results
 
@@ -164,9 +165,10 @@ looks at the question's columns. Models differ in how literally they read that l
 - On the 40 that do, scores range from 40/40 down to 15/40 for models that call tools reliably (under 5% tool errors, at least 90% of questions completed).
 - Across those 32 models, accuracy and "share of questions where the agent ran a check
   on a column the question does not use" have a Spearman correlation of 0.70.
-- On `penguins-heldout`, 12 models (all GLM and MiMo variants, DeepSeek, Muse Spark, Granite, Hemmingway, Ornith,
-  Gemma and Qwen3-30B thinking) got the same 13 questions wrong, and every one of those 13 needs rows excluded because
-  of `flipper_length_mm` or `body_mass_g` while the question uses neither.
+- On `penguins-heldout`, 12 models (`glm-5-3`, `glm-5-3-flash`, `glm-5-2`, `deepseek-v4-1-flash`, `mimo-v2-6-pro`, `mimo-v2-6-flash`, `muse-spark-open`, `granite41-30b`, `hemmingway-1-5`, `ornith-1-5-35b-a3b`, `qwen3-30b-a3b-thinking-2507`, `gemma4-31b-it`) got the same 13 questions wrong, and
+  13 of those 13 need rows excluded because of `flipper_length_mm` or `body_mass_g` while the
+  question uses neither. On those same questions `qwen3-30b-a3b-instruct-2507` got 10 of 13, `inkling-small`
+  12 of 13 and `qwen3-235b-a22b-instruct-2507` 13 of 13 right.
 
 Trace evidence, `penguinsh_01_q0` ("How many penguins were measured on each island?", reference Biscoe 38, Dream 12,
 Torgersen 7). `glm-5-3` read the rules, fixed the island spellings, dropped the 2 duplicates, called `analyze` and got
@@ -200,26 +202,26 @@ never says so. The Qwen3 instruct models (which the Milestone 3 prompt was tuned
 
 The scaffold absorbs most of these errors. Every bad call comes back to the model as a readable error, and the
 "Recovered" column shows how often the next call succeeded. Only models that loop on the same mistake (OLMo3 7B) or
-never produce a parsable call (Llama 4 Maverick) fail outright. No model damaged a single clean cell (Damage is 0 for
-every row): the dry run, validator and approval gate held for every model, however badly it planned.
+never produce a parsable call (Llama 4 Maverick) fail outright. No model damaged a single clean cell (Damage is 0 in every agent row): the dry run, validator and approval gate held for every model, however badly it planned.
 
 ## Accuracy against latency and tokens
 
-Latency was measured while up to about 300 requests from this study (and the other studies sharing the key) were in
-flight, so absolute seconds are inflated and depend on how busy each model's server was; the same 30B agent took a
+Latency was measured while a few hundred requests from this study (and from the other studies sharing the key) were
+in flight, so absolute seconds are inflated and depend on how busy each model's server was; the same 30B agent took a
 median of 16 s in the original Milestone 3 run and 30 s here. Use the seconds to compare models within this
 table, not against earlier runs.
 
 - **Speed.** The models that no other model beats on both accuracy and median seconds are: `llama4-scout-17b` (80.0%, 15 s), `qwen3-30b-a3b-instruct-2507` (93.8%, 30 s), `inkling-small` (98.8%, 45 s), `qwen3-235b-a22b-instruct-2507` (100.0%, 216 s). Llama 4 Scout
-  is fastest but loses about 14 points; Qwen3-30B is about as fast and near the top; Inkling-Small adds a few points
-  for about 1.5 times the time; Qwen3-235B is perfect but slow. Across all fully run models, accuracy and median
+  is fastest but 13.7 points behind Qwen3-30B; Qwen3-30B is near the top; Inkling-Small gains 5.0 points
+  for about 1.5 times the time; Qwen3-235B is perfect but about 7 times slower than Qwen3-30B. Across all fully run models, accuracy and median
   seconds have a Spearman correlation of only 0.07: slower, bigger and reasoning models are not more accurate here.
 - **Tokens.** The token front is `glm-5-3-flash` (77.5%, 18,559 tokens), `beam-1-0` (80.0%, 27,796 tokens), `qwen36-35b-a3b` (82.5%, 42,626 tokens), `gpt-oss-120b` (83.8%, 42,975 tokens), `inkling-small` (98.8%, 46,814 tokens), `qwen3-235b-a22b-instruct-2507` (100.0%, 56,402 tokens). Because the agent resends the whole conversation on every turn, tokens
   depend mostly on the number of turns. Reasoning models put several tool calls in one turn, so they use fewer turns
   and fewer tokens (medians per question: `glm-5-3` 8 calls in 5 turns, 24,272 tokens; `mimo-v2-6-pro` 9 calls in 5 turns, 23,939 tokens; `qwen3-30b-a3b-instruct-2507` 12 calls in 12 turns, 59,941 tokens; `qwen3-235b-a22b-instruct-2507` 11 calls in 11 turns, 56,402 tokens), but they are on the wrong side of the scope habit, so the saving
   does not buy accuracy.
 - **Speculative decoding.** `glm-5-3-spec` (GLM-5.3 checking drafts from a small model) gave the same accuracy as
-  `glm-5-3` (76.2% (61 of 80) against 76.2% (61 of 80)) at about the same median latency under load, so it neither helps nor hurts here.
+  `glm-5-3` (76.2% (61 of 80) against 76.2% (61 of 80)) with a median of 32 s against 33 s under load, so it neither
+  helps nor hurts here.
 
 ## What DataSage adds over a single call
 
@@ -227,23 +229,25 @@ The "Agent minus B2" column compares each model's agent with the same model's si
 For the 30 fully run models with a complete single-call run, the agent is better for 28, by a median of 22.5 points (from -26.2 to +80.0). The single call also damages clean data: the B2 rows above do not show it, but summing
 `damaged_rows + damaged_cells` gives 353 for `qwen3-30b-a3b-instruct-2507`, 70 for `qwen3-235b-a22b-instruct-2507`, 174 for `glm-5-3`, 24 for `gpt-oss-120b`, while every agent row has 0.
 
-Two models do worse as agents than as a single call: `llama4-maverick-17b` (its tool calls are not parsed, so the agent
-cannot act; as a single call it simply writes code) and `devstral2-123b`, a coding model that is good at writing one
-pandas script but cleans narrowly when it has to plan with tools. `llama4-scout-17b` is the opposite case: as a single
-call it scores 0 of 80 because its JSON is never valid (unescaped code inside the JSON string), while as an agent it
-reaches 80%. Structured tool calls remove a whole class of formatting failure.
+Models that do worse as agents than as a single call: `llama4-maverick-17b` (-26.2 points), `devstral2-123b` (-3.7 points). Maverick's tool calls are not parsed, so the agent
+cannot act, while as a single call it simply writes code. Devstral is a coding model that is good at writing one pandas
+script but cleans narrowly when it has to plan with tools. `llama4-scout-17b` is the opposite case: as a single
+call it scores 0 of 80 because its reply never parses as JSON (for example "Expecting ',' delimiter"), while as an
+agent it reaches 80.0% (64 of 80). Structured tool calls remove a whole class of formatting failure.
 
 ## Which model should be the default
 
 Keep `qwen3-30b-a3b-instruct-2507`.
 
 1. It is on the accuracy against latency front and near the top in accuracy (93.8% (75 of 80) in this run, 92.5% (74 of 80) in the
-   original Milestone 3 run; the intervals of the top eight models overlap).
+   original Milestone 3 run). Paired on the same questions, the models above it are not clearly better on 80
+   questions: `qwen3-235b-a22b-instruct-2507` got 5 questions right that Qwen3-30B missed and missed 0 that it got right (exact McNemar p = 0.06); `qwen3-vl-32b-instruct` got 4 questions right that Qwen3-30B missed and missed 2 that it got right (exact McNemar p = 0.69); `inkling-small` got 4 questions right that Qwen3-30B missed and missed 0 that it got right (exact McNemar p = 0.12).
 2. It had zero tool errors in 973 calls and finished every question with `finish`.
-3. It is the fastest of the high-accuracy models, which matters for an interactive tool where the user approves fixes.
+3. It has the lowest median latency of the 9 fully run models at 90% or above, which matters for an interactive
+   tool where the user approves fixes.
 
-Alternatives: `qwen3-235b-a22b-instruct-2507` when accuracy matters more than waiting (80 of 80 here, about 7 times
-slower), and `inkling-small` as the best non-Qwen model (98.8% (79 of 80) at about 1.5 times the latency). We would not pick a
+Alternatives: `qwen3-235b-a22b-instruct-2507` when accuracy matters more than waiting (100.0% (80 of 80) here, about 7
+times slower), and `inkling-small` as the best non-Qwen model (98.8% (79 of 80) at about 1.5 times the latency). We would not pick a
 thinking model: they are slower and, with the current prompt, less accurate.
 
 Caveat on fairness: the Milestone 3 prompt changes were made by reading the 30B model's failures on the dev split, so
@@ -253,8 +257,8 @@ change the ranking of many models.
 ## What this says about agent design
 
 - **The scaffolding makes small models competitive.** A 3B-active model with tools, checks, a validator and a coverage
-  check beats every model's single call and matches 100B to 1T parameter models that run the same scaffold. The
-  single call of the same 30B model gets 43.8% (35 of 80).
+  check beats the single call of every model (the best complete single-call run is `qwen35-397b-a17b` with 71.2%) and matches 100B to
+  1T parameter models that run the same scaffold. The single call of the same 30B model gets 43.8% (35 of 80).
 - **Scaffolding cannot fix a model that cannot speak the tool format.** Tool-call validity is the first thing to
   check when choosing a model; the probe found two broken endpoints, but the full runs found one more (Maverick) and
   two that are unusable in practice (OLMo3 7B, both thinking and instruct).
