@@ -41,6 +41,7 @@ LABELS = {
     "parse_dates": "Reading dates in {column}",
     "cast_numeric": "Turning text into numbers in {column}",
     "exclude_rows": "Dropping rows that break a rule",
+    "exclude_where": "Dropping rows outside the range in {column}",
     "recompute_column": "Recomputing {column}",
     "set_missing": "Blanking unreadable values in {column}",
     "fill_missing": "Filling blanks in {column}",
@@ -50,6 +51,7 @@ LABELS = {
 QUESTIONS = {
     "drop_duplicates": "Remove the duplicate rows?",
     "exclude_rows": "Drop these rows from the analysis?",
+    "exclude_where": "Drop every row outside the allowed range of {column}?",
     "normalize_labels": "Merge these labels in {column}?",
     "parse_dates": "Convert the dates in {column}?",
     "set_missing": "Blank the unreadable values in {column}?",
@@ -71,6 +73,7 @@ def future(tool: str, args: dict, preview: dict) -> str:
     text = {
         "drop_duplicates": f"Will remove {n} duplicate row(s)",
         "exclude_rows": f"Will drop {n} row(s) from the analysis",
+        "exclude_where": f"Will drop {n} row(s) where {col} is outside the allowed range",
         "normalize_labels": f"Will merge {len(args.get('mapping') or {})} label(s) in {col}, changing {cells} cell(s)",
         "trim_whitespace": f"Will trim spaces in {cells} cell(s) of {col}",
         "parse_dates": f"Will read the dates in {col}, changing {cells} cell(s)",
@@ -358,7 +361,8 @@ class Run:
 FIX_TOOLS = {
     "duplicates": {"drop_duplicates"}, "label_variant": {"normalize_labels", "trim_whitespace"},
     "invalid_date": {"parse_dates", "set_missing"}, "text_number": {"cast_numeric"}, "missing": {"fill_missing"},
-    "negative": {"exclude_rows"}, "out_of_range": {"exclude_rows"}, "cross_column": {"recompute_column", "exclude_rows"},
+    "negative": {"exclude_rows", "exclude_where"}, "out_of_range": {"exclude_rows", "exclude_where"},
+    "cross_column": {"recompute_column", "exclude_rows"},
 }
 NAMES = {"duplicates": "duplicate rows", "label_variant": "label variants", "invalid_date": "unreadable dates",
          "text_number": "numbers stored as text", "missing": "blank cells", "negative": "negative values",
@@ -369,6 +373,8 @@ def _touches(item: dict, kind: str, column: str, rows: set) -> bool:
     if item["tool"] not in FIX_TOOLS.get(kind, set()):
         return False
     args = item["args"]
+    if item["tool"] == "exclude_where":
+        return args.get("column") == column
     if item["tool"] in ("exclude_rows", "drop_duplicates"):
         return column == "*" or not rows or bool(rows & set(args.get("rows") or getattr(item.get("change"), "rows_removed", []) or []))
     return args.get("column") == column
@@ -399,7 +405,8 @@ def health(session, analyze_args: dict | None) -> dict:
         except Exception as err:  # e.g. the metric column was text before cleaning
             raw["error"] = str(err).split(";")[0]
     return {"rows_before": int(len(session.original)), "rows_after": int(len(session.current)),
-            "removed": [{"why": {"drop_duplicates": "duplicates", "exclude_rows": "broke a rule"}.get(k, k), "count": v}
+            "removed": [{"why": {"drop_duplicates": "duplicates", "exclude_rows": "broke a rule",
+                                 "exclude_where": "outside a range"}.get(k, k), "count": v}
                         for k, v in removed.items()],
             "cells_changed": int(sum(c.cells_changed for c in session.changes)), "issues": issues, "raw_answer": raw}
 

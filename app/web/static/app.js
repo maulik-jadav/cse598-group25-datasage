@@ -5,7 +5,7 @@ const $ = (s) => document.querySelector(s);
 const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
 const SVG_OK = '<svg aria-label="Applied" role="img" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#0F766E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 10.5l3.5 3.5 7.5-8"/></svg>';
 const SVG_KEPT = '<svg aria-label="Kept as a caveat" role="img" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="#B45309" stroke-width="2" stroke-linecap="round"><circle cx="10" cy="10" r="7"/><path d="M10 6.5v4M10 13.5v.01"/></svg>';
-const YES = { drop_duplicates: "Remove", exclude_rows: "Drop rows", set_missing: "Blank", normalize_labels: "Merge",
+const YES = { drop_duplicates: "Remove", exclude_rows: "Drop rows", exclude_where: "Drop rows", set_missing: "Blank", normalize_labels: "Merge",
   parse_dates: "Convert", fill_missing: "Fill", cast_numeric: "Convert", recompute_column: "Recompute", trim_whitespace: "Trim" };
 const PHASES = ["rules", "check", "fix", "answer"];
 
