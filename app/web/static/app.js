@@ -304,12 +304,13 @@ function setPhase(p) {
 function showAsk(ev) {
   setPhase("fix");
   if (ev.auto) { toast(ev.summary); return; }
-  setStatus("Waiting for you");
+  setStatus(ev.paused ? "Auto paused for you" : "Waiting for you");
   const wrap = el("div", "ask"); wrap.dataset.id = ev.id;
   const card = el("div", "ask-card"); card.setAttribute("role", "group"); card.setAttribute("aria-label", ev.title);
   const text = el("div", "ask-text");
   text.append(el("span", "ask-title", ev.title));
   text.append(el("span", "ask-sub", `${cap(ev.risk)} risk · ${ev.summary}`));
+  if (ev.paused) text.append(el("span", "ask-paused", ev.paused));
   const ex = examplesBlock(ev.examples);
   if (ev.reason || ex) {
     const more = el("div", "ask-more"); more.id = `more-${ev.id}`;
