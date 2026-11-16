@@ -1,0 +1,277 @@
+{
+  "task_id": "saleshard2_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 7,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 18,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 5,
+  "seconds": 138.97,
+  "tokens": 120101,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 104090.0,
+    "North": 104590.0,
+    "Northeast": 135380.0,
+    "South": 31980.0,
+    "Southeast": 93970.0,
+    "West": 68570.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed: 6 duplicate rows (dropped); 12 Category label variants including misspellings (normalized); 11 Region label variants including misspellings (normalized); 3 Price values in text format (converted to numbers); 17 Revenue values in text format (converted to numbers); 13 negative quantities (excluded as invalid per rules); 4 incorrect Revenue values (recomputed as Quantity * Price). Total revenue by region for Electronics: East: $104,090, North: $104,590, Northeast: $135,380, South: $31,980, Southeast: $93,970, West: $68,570.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "6 exact duplicate rows found; removing to avoid double-counting"
+        },
+        "reason": "6 exact duplicate rows found; removing to avoid double-counting",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          252,
+          355,
+          370,
+          505,
+          655,
+          726
+        ],
+        "cells_changed": 0,
+        "summary": "removed 6 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "  Electricals ": "Electricals",
+            " Electronics": "Electronics",
+            "Accessories ": "Accessories",
+            "Electronics ": "Electronics",
+            "Furniture ": "Furniture",
+            "Office Supplies ": "Office Supplies",
+            "Outdoor Supplies ": "Outdoor Supplies",
+            "Elecrtonics": "Electronics",
+            "Electricls": "Electricals",
+            "Furnniture": "Furniture",
+            "Outdoor upplies": "Outdoor Supplies"
+          },
+          "reason": "12 label variants in Category, including misspellings, corrected to allowed labels per rules"
+        },
+        "reason": "12 label variants in Category, including misspellings, corrected to allowed labels per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 12,
+        "summary": "Category: merged 11 label variant(s), 12 cells",
+        "code": "df['Category'] = df['Category'].replace({'  Electricals ': 'Electricals', ' Electronics': 'Electronics', 'Accessories ': 'Accessories', 'Electronics ': 'Electronics', 'Furniture ': 'Furniture', 'Office Supplies ': 'Office Supplies', 'Outdoor Supplies ': 'Outdoor Supplies', 'Elecrtonics': 'Electronics', 'Electricls': 'Electricals', 'Furnniture': 'Furniture', 'Outdoor upplies': 'Outdoor Supplies'})"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " North": "North",
+            " West": "West",
+            "South ": "South",
+            "eAST": "East",
+            "east": "East",
+            "sOUTH": "South",
+            "EEast": "East",
+            "Notheast": "Northeast",
+            "Wesst": "West",
+            "Wets": "West"
+          },
+          "reason": "11 label variants in Region, including misspellings, corrected to allowed labels per rules"
+        },
+        "reason": "11 label variants in Region, including misspellings, corrected to allowed labels per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 11,
+        "summary": "Region: merged 10 label variant(s), 11 cells",
+        "code": "df['Region'] = df['Region'].replace({' North': 'North', ' West': 'West', 'South ': 'South', 'eAST': 'East', 'east': 'East', 'sOUTH': 'South', 'EEast': 'East', 'Notheast': 'Northeast', 'Wesst': 'West', 'Wets': 'West'})"
+      },
+      {
+        "version": 4,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "3 prices stored as text with $ and commas (e.g. $1,100.00); converting to numbers"
+        },
+        "reason": "3 prices stored as text with $ and commas (e.g. $1,100.00); converting to numbers",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (731 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 5,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Revenue",
+          "reason": "17 revenue values stored as text with $ or commas (e.g. $3,300.00); converting to numbers"
+        },
+        "reason": "17 revenue values stored as text with $ or commas (e.g. $3,300.00); converting to numbers",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Revenue: converted to numbers (731 text values, 0 became missing)",
+        "code": "df['Revenue'] = pd.to_numeric(df['Revenue'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 6,
+        "tool": "exclude_where",
+        "args": {
+          "column": "Quantity",
+          "minimum": 1.0,
+          "maximum": null,
+          "reason": "13 negative quantities found; rules state quantity must be positive, so these rows are invalid"
+        },
+        "reason": "13 negative quantities found; rules state quantity must be positive, so these rows are invalid",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          3,
+          85,
+          147,
+          217,
+          288,
+          334,
+          336,
+          389,
+          397,
+          536,
+          565,
+          578,
+          632
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 13 row(s) where Quantity is below 1",
+        "code": "v = pd.to_numeric(df['Quantity'], errors='coerce')\ndf = df[~((v < 1.0))]"
+      },
+      {
+        "version": 7,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            181,
+            601,
+            639,
+            666
+          ],
+          "reason": "4 revenue values do not match Quantity * Price; recomputing to correct"
+        },
+        "reason": "4 revenue values do not match Quantity * Price; recomputing to correct",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Revenue: recomputed as Quantity * Price on 4 row(s)",
+        "code": "df.loc[[181, 601, 639, 666], 'Revenue'] = [10000.0, 9600.0, 175.0, 440.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_where",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 18
+  },
+  "corrections": 71,
+  "planted": 81,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-large",
+  "dataset": "sales-hard2",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 104090.0,
+    "North": 104590.0,
+    "Northeast": 135380.0,
+    "South": 31980.0,
+    "Southeast": 93970.0,
+    "West": 68570.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

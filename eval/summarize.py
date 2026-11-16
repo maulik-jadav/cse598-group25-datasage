@@ -15,7 +15,7 @@ RESULTS = ROOT / "results"
 ORDER = ["b0", "b1", "b2", "datasage", "datasage-small", "datasage-reject", "datasage-novalidator",
          "datasage-fix", "datasage-fix-strict", "datasage-small-fix", "datasage-small-fix-strict",
          "datasage-m3", "datasage-m3-compact", "datasage-m3-large", "datasage-m3-auto",
-         "datasage-m3-nocoverage", "datasage-m3-novalidator", "datasage-m3-nomerge", "datasage-m3-reject"]
+         "datasage-m3-nocoverage", "datasage-m3-novalidator", "datasage-m3-nomerge", "datasage-m3-reject", "datasage-m3-gptoss"]
 LABELS = {
     "b0": "B0 stakeholder baseline", "b1": "B1 fixed script", "b2": "B2 single LLM call",
     "datasage": "DataSage (235B)", "datasage-small": "DataSage (30B)",
@@ -27,9 +27,11 @@ LABELS = {
     "datasage-m3-auto": "DataSage M3 (30B), Auto: every risky fix approved",
     "datasage-m3-nocoverage": "M3 without coverage check", "datasage-m3-novalidator": "M3 without validator",
     "datasage-m3-nomerge": "M3 without merge rule in prompt", "datasage-m3-reject": "M3, all risky fixes rejected",
+    "datasage-m3-gptoss": "DataSage M3 (gpt-oss-120b)",
 }
 DATASETS = ["sales", "penguins", "sales-heldout", "penguins-heldout", "sales-test", "penguins-test",
-            "sales-s303", "penguins-s303", "sales-s404", "penguins-s404", "sales-s505", "penguins-s505"]
+            "sales-s303", "penguins-s303", "sales-s404", "penguins-s404", "sales-s505", "penguins-s505",
+            "sales-hard", "penguins-hard", "sales-hard2", "penguins-hard2"]
 
 
 def load(system: str, dataset: str) -> list[dict]:

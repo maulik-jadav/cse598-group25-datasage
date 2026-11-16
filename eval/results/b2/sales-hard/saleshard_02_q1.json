@@ -1,0 +1,70 @@
+{
+  "task_id": "saleshard_02_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 6,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 112.43,
+  "tokens": 2871,
+  "stop_reason": "code_error",
+  "note": "AttributeError: 'float' object has no attribute 'lower'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean Price: remove $, commas, and extra spaces; convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'[^0-9.-]', '', regex=True).astype(float)\n    \n    # Fix Category label variants\n    category_mapping = {\n        'utdoor Supplies': 'Outdoor Supplies',\n        'Office Supplie': 'Office Supplies',\n        'Furnniture': 'Furniture',\n        '  Outdoor Supplies ': 'Outdoor Supplies',\n        ' Accessories': 'Accessories',\n        'Elecrtonics': 'Electronics',\n        'Electricalss': 'Electricals'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Fix Region label variants: strip spaces and standardize case\n    df['Region'] = df['Region'].astype(str).str.strip().str.capitalize()\n    # Fix remaining case variants (e.g., 'sOUTH' -> 'South', 'eAST' -> 'East')\n    allowed_regions = {'North', 'South', 'East', 'West', 'Northeast', 'Southeast'}\n    df['Region'] = df['Region'].apply(lambda x: x if x in allowed_regions else x.title() if x.lower() in [r.lower() for r in allowed_regions] else x)\n    # Manually fix known variants\n    region_mapping = {\n        'sOUTH': 'South', 'eAST': 'East', 'wEST': 'West', 'southeast': 'Southeast',\n        'south': 'South', 'southeast ': 'Southeast', 'east': 'East', 'west': 'West',\n        'northeast': 'Northeast', 'north': 'North'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Recompute Revenue to fix negative and incorrect values\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('Category')['Price'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 0,
+  "planted": 63,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2",
+  "dataset": "sales-hard",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 34.3421,
+    "Electricals": 276.2353,
+    "Electronics": 820.8219,
+    "Furniture": 479.4545,
+    "Office Supplies": 12.0,
+    "Outdoor Supplies": 464.5775
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Price"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

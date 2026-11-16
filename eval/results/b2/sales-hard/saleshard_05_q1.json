@@ -1,0 +1,73 @@
+{
+  "task_id": "saleshard_05_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 4,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 37.84,
+  "tokens": 2987,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 997.0,
+    "North": 896.0,
+    "Northeast": 1014.0,
+    "South": 1163.0,
+    "Southeast": 876.0,
+    "West": 933.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean Category: standardize case, strip whitespace, fix typos\n    category_mapping = {\n        ' Office Supplies': 'Office Supplies',\n        'furniture': 'Furniture',\n        'Offic Supplies': 'Office Supplies',\n        'electricals': 'Electricals',\n        'electronics': 'Electronics',\n        'OUTDOOR SUPPLIES': 'Outdoor Supplies',\n        ' Furniture': 'Furniture',\n        ' Electricals': 'Electricals',\n        'Funriture': 'Furniture',\n        'aCCESSORIES': 'Accessories',\n        'Accessroies': 'Accessories',\n        'office supplies': 'Office Supplies',\n        '  Electricals ': 'Electricals',\n        'ELECTRONICS': 'Electronics'\n    }\n    df['Category'] = df['Category'].replace(category_mapping).str.strip()\n    \n    # Clean Region: standardize case, strip whitespace, fix typos\n    region_mapping = {\n        '  Northeast ': 'Northeast',\n        'Eaast': 'East',\n        'Eastt': 'East',\n        ' West': 'West',\n        'oSuth': 'South',\n        'west': 'West',\n        ' Northeast': 'Northeast',\n        'SSouth': 'South',\n        'Eats': 'East',\n        'SOUTH': 'South',\n        ' South': 'South',\n        ' North': 'North',\n        'NORTH': 'North'\n    }\n    df['Region'] = df['Region'].replace(region_mapping).str.strip()\n    \n    # Clean Price: remove $ and commas, convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)\n    \n    # Fix negative Quantity and Revenue\n    df['Quantity'] = df['Quantity'].abs()\n    df['Revenue'] = df['Revenue'].abs()\n    \n    # Recompute Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    result = df.groupby('Region')['Quantity'].sum().round().astype(int).to_dict()\n    return result"
+  },
+  "corrections": 47,
+  "planted": 61,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-hard",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 997.0,
+    "North": 896.0,
+    "Northeast": 1006.0,
+    "South": 1160.0,
+    "Southeast": 876.0,
+    "West": 932.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

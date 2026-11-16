@@ -1,0 +1,212 @@
+{
+  "task_id": "saleshard2_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 118.13,
+  "tokens": 78625,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 220.0,
+    "North": 222.0,
+    "Northeast": 259.0,
+    "South": 216.0,
+    "Southeast": 221.0,
+    "West": 225.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed: 3 duplicate rows (dropped), 14 Region label variants (normalized), 15 Category label variants (normalized), 9 text-formatted prices (converted to numbers), and 4 incorrect Revenue values (recomputed as Quantity * Price). The final count of orders per region is: East: 220, North: 222, Northeast: 259, South: 216, Southeast: 221, West: 225.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "3 exact duplicate rows found; keeping the first occurrence"
+        },
+        "reason": "3 exact duplicate rows found; keeping the first occurrence",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          713,
+          832,
+          1149
+        ],
+        "cells_changed": 0,
+        "summary": "removed 3 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "  Northeast ": "Northeast",
+            "  South ": "South",
+            "North ": "North",
+            "WEST": "West",
+            "West ": "West",
+            "northeast": "Northeast",
+            "Eaast": "East",
+            "Easst": "East",
+            "Eats": "East",
+            "Northest": "Northeast",
+            "Northheast": "Northeast",
+            "Notrheast": "Northeast",
+            "Sotheast": "Southeast",
+            "Sotuheast": "Southeast"
+          },
+          "reason": "14 label variants in Region, including misspellings, corrected to allowed labels"
+        },
+        "reason": "14 label variants in Region, including misspellings, corrected to allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 14,
+        "summary": "Region: merged 14 label variant(s), 14 cells",
+        "code": "df['Region'] = df['Region'].replace({'  Northeast ': 'Northeast', '  South ': 'South', 'North ': 'North', 'WEST': 'West', 'West ': 'West', 'northeast': 'Northeast', 'Eaast': 'East', 'Easst': 'East', 'Eats': 'East', 'Northest': 'Northeast', 'Northheast': 'Northeast', 'Notrheast': 'Northeast', 'Sotheast': 'Southeast', 'Sotuheast': 'Southeast'})"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "  Accessories ": "Accessories",
+            "  Electronics ": "Electronics",
+            "  Furniture ": "Furniture",
+            "  Office Supplies ": "Office Supplies",
+            " Furniture": "Furniture",
+            "ACCESSORIES": "Accessories",
+            "Accessories ": "Accessories",
+            "OUTDOOR SUPPLIES": "Outdoor Supplies",
+            "electricals": "Electricals",
+            "electronics": "Electronics",
+            "furniture": "Furniture",
+            "Eelctricals": "Electricals",
+            "lEectricals": "Electricals"
+          },
+          "reason": "15 label variants in Category, including misspellings, corrected to allowed labels"
+        },
+        "reason": "15 label variants in Category, including misspellings, corrected to allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 15,
+        "summary": "Category: merged 13 label variant(s), 15 cells",
+        "code": "df['Category'] = df['Category'].replace({'  Accessories ': 'Accessories', '  Electronics ': 'Electronics', '  Furniture ': 'Furniture', '  Office Supplies ': 'Office Supplies', ' Furniture': 'Furniture', 'ACCESSORIES': 'Accessories', 'Accessories ': 'Accessories', 'OUTDOOR SUPPLIES': 'Outdoor Supplies', 'electricals': 'Electricals', 'electronics': 'Electronics', 'furniture': 'Furniture', 'Eelctricals': 'Electricals', 'lEectricals': 'Electricals'})"
+      },
+      {
+        "version": 4,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "9 prices stored as text (e.g. '$1,100.00') converted to numbers"
+        },
+        "reason": "9 prices stored as text (e.g. '$1,100.00') converted to numbers",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (1363 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 5,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            75,
+            114,
+            970,
+            1150
+          ],
+          "reason": "4 rows have Revenue not equal to Quantity * Price; recomputing Revenue"
+        },
+        "reason": "4 rows have Revenue not equal to Quantity * Price; recomputing Revenue",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Revenue: recomputed as Quantity * Price on 4 row(s)",
+        "code": "df.loc[[75, 114, 970, 1150], 'Revenue'] = [95.0, 760.0, 2200.0, 350.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 13
+  },
+  "corrections": 47,
+  "planted": 56,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-large",
+  "dataset": "sales-hard2",
+  "question": "How many orders are there in each region?",
+  "reference_answer": {
+    "East": 220.0,
+    "North": 222.0,
+    "Northeast": 259.0,
+    "South": 216.0,
+    "Southeast": 221.0,
+    "West": 225.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -10,6 +10,7 @@ Systems: b0, b1, b2, datasage, datasage-small, datasage-reject, datasage-novalid
          and the ablations of datasage-m3: datasage-m3-nocoverage, datasage-m3-novalidator,
          datasage-m3-nomerge (prompt without the merge rule), datasage-m3-reject (every risky fix rejected)
 Datasets: sales, penguins (dev), sales-heldout, penguins-heldout, sales-test, penguins-test (seed 202),
+          sales-hard, penguins-hard, sales-hard2, penguins-hard2 (eval/generate_hard.py; extra system datasage-m3-gptoss),
           and sales-s303, penguins-s303, sales-s404, penguins-s404, sales-s505, penguins-s505
 """
 
@@ -50,6 +51,11 @@ SYSTEMS = {
     "datasage-m3-large": lambda b, t, c, trace: systems.run_datasage(b, t, m3=True, client=c, trace_path=trace),
 }
 
+# Hard split study: one extra planner model of a different family (same DataSage M3 setup as datasage-m3).
+EXTRA_MODEL = "gpt-oss-120b"
+SYSTEMS["datasage-m3-gptoss"] = lambda b, t, c, trace: systems.run_datasage(b, t, model=EXTRA_MODEL, m3=True, client=c,
+                                                                           trace_path=trace)
+
 # The browser app's Auto mode: the same agent as datasage-m3, but every risky fix is approved without a check.
 SYSTEMS["datasage-m3-auto"] = lambda b, t, c, trace: systems.run_datasage(b, t, model=SMALL_MODEL, m3=True, approver="auto",
                                                                           client=c, trace_path=trace)
@@ -66,7 +72,9 @@ SYSTEMS.update({
 
 DATASETS = ["sales", "penguins", "sales-heldout", "penguins-heldout", "sales-test", "penguins-test",
             # scale-up splits made with the same generator and new seeds (303, 404, 505)
-            "sales-s303", "penguins-s303", "sales-s404", "penguins-s404", "sales-s505", "penguins-s505"]
+            "sales-s303", "penguins-s303", "sales-s404", "penguins-s404", "sales-s505", "penguins-s505",
+            # hard split (eval/generate_hard.py): bigger tables, mass rule breaks, distractors; hard2 is a second seed
+            "sales-hard", "penguins-hard", "sales-hard2", "penguins-hard2"]
 
 
 def run(system: str, dataset: str, workers: int, limit: int | None, results_dir: Path, only: set[str] | None = None) -> None:

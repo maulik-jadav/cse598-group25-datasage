@@ -1,0 +1,73 @@
+{
+  "task_id": "saleshard_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 41.78,
+  "tokens": 2849,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 56.0,
+    "Electricals": 55.0,
+    "Electronics": 74.0,
+    "Furniture": 67.0,
+    "Office Supplies": 53.0,
+    "Outdoor Supplies": 44.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean Category: strip whitespace, correct case, fix typos\n    category_mapping = {\n        'electricals': 'Electricals',\n        'Elctricals': 'Electricals',\n        'electronics': 'Electronics',\n        'Accessorise': 'Accessories',\n        'Outdoor upplies': 'Outdoor Supplies',\n        'Office Suppplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].str.strip().replace(category_mapping)\n    \n    # Clean Region: strip whitespace, correct case, fix typos\n    region_mapping = {\n        'southeast': 'Southeast',\n        'Souht': 'South',\n        'Suth': 'South',\n        'north': 'North',\n        ' West': 'West',\n        'sOUTHEAST': 'Southeast',\n        'oSutheast': 'Southeast',\n        'oSuth': 'South',\n        'Noorth': 'North',\n        'SOUTHEAST': 'Southeast',\n        '  Northeast ': 'Northeast'\n    }\n    df['Region'] = df['Region'].str.strip().replace(region_mapping)\n    \n    # Convert Price from text to numeric (it may have been stored as string)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Convert Quantity to numeric (it's currently string with negative values)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # Fix negative quantities: take absolute value (assuming error in sign)\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recompute Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Filter for South region\n    south_df = df[df['Region'] == 'South']\n    # Group by Category and sum Quantity\n    result = south_df.groupby('Category')['Quantity'].sum().astype(int).to_dict()\n    return result"
+  },
+  "corrections": 28,
+  "planted": 64,
+  "damaged_rows": 0,
+  "damaged_cells": 9,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-hard",
+  "question": "How many units were sold in each category in the South region?",
+  "reference_answer": {
+    "Accessories": 56.0,
+    "Electricals": 55.0,
+    "Electronics": 67.0,
+    "Furniture": 67.0,
+    "Office Supplies": 48.0,
+    "Outdoor Supplies": 40.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "task_id": "saleshard_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 34.06,
+  "tokens": 2930,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1150.0,
+    "North": 900.0,
+    "Northeast": 900.0,
+    "South": 900.0,
+    "Southeast": 900.0,
+    "West": 900.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean Category: strip whitespace and correct spelling variants\n    category_mapping = {\n        '  Electronics ': 'Electronics',\n        'Eletcronics': 'Electronics',\n        '  Electricals ': 'Electricals',\n        'Elctricals': 'Electricals',\n        '  Furniture ': 'Furniture',\n        'Furnitre': 'Furniture',\n        'Accessorries': 'Accessories',\n        'Acecssories': 'Accessories',\n        'Accessores': 'Accessories',\n        'Outdoor Supplies ': 'Outdoor Supplies',\n        'Outdoor Suppiles': 'Outdoor Supplies'\n    }\n    df['Category'] = df['Category'].str.strip().replace(category_mapping)\n    \n    # Clean Region: strip whitespace and correct spelling variants\n    region_mapping = {\n        'eAST': 'East',\n        'EAST': 'East',\n        '  East ': 'East',\n        'Nroth': 'North',\n        'Northeas': 'Northeast',\n        'Sotuheast': 'Southeast',\n        'Souh': 'South',\n        'South ': 'South',\n        ' South': 'South',\n        ' West': 'West',\n        'West ': 'West'\n    }\n    df['Region'] = df['Region'].str.strip().replace(region_mapping)\n    \n    # Clean Price: remove $ and commas, convert to numeric\n    df['Price'] = df['Price'].str.replace('$', '').str.replace(',', '').astype(float)\n    \n    # Fix negative prices and revenues by taking absolute value (assuming data entry error)\n    df['Price'] = df['Price'].abs()\n    df['Revenue'] = df['Revenue'].abs()\n    \n    # Recalculate Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Drop rows where Region is missing\n    df = df.dropna(subset=['Region'])\n    \n    return df\n\ndef answer(df):\n    df = df[df['Category'] == 'Electronics']\n    result = df.groupby('Region')['Price'].median().round(2).to_dict()\n    return result"
+  },
+  "corrections": 46,
+  "planted": 80,
+  "damaged_rows": 4,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-hard",
+  "question": "What is the median unit price in each region for Electronics?",
+  "reference_answer": {
+    "East": 1150.0,
+    "North": 900.0,
+    "Northeast": 900.0,
+    "South": 1025.0,
+    "Southeast": 900.0,
+    "West": 900.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Price"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

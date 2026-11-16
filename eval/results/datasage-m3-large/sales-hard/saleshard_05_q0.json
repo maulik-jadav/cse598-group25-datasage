@@ -1,0 +1,247 @@
+{
+  "task_id": "saleshard_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 7,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 17,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 5,
+  "seconds": 195.36,
+  "tokens": 106772,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 205.0,
+    "Electricals": 170.0,
+    "Electronics": 168.0,
+    "Furniture": 201.0,
+    "Office Supplies": 206.0,
+    "Outdoor Supplies": 210.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed: 2 duplicate rows (dropped); 16 Category label variants and 13 Region label variants (normalized to allowed labels); 11 prices in text format (converted to numbers); 2 incorrect Revenue values (recomputed as Quantity * Price); 6 rows with Quantity < 1 (excluded per rules). Answer: In the South region, the units sold by category are: Accessories: 205, Electricals: 170, Electronics: 168, Furniture: 201, Office Supplies: 206, Outdoor Supplies: 210.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Convert text-formatted prices (e.g. $1,450.00) to numbers so they can be used in calculations"
+        },
+        "reason": "Convert text-formatted prices (e.g. $1,450.00) to numbers so they can be used in calculations",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (1329 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 2,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            654,
+            1210
+          ],
+          "reason": "Fix Revenue values that do not match Quantity * Price"
+        },
+        "reason": "Fix Revenue values that do not match Quantity * Price",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[654, 1210], 'Revenue'] = [12.0, 40.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "  Electricals ": "Electricals",
+            " Electricals": "Electricals",
+            " Furniture": "Furniture",
+            " Office Supplies": "Office Supplies",
+            "ELECTRONICS": "Electronics",
+            "OUTDOOR SUPPLIES": "Outdoor Supplies",
+            "aCCESSORIES": "Accessories",
+            "electricals": "Electricals",
+            "electronics": "Electronics",
+            "furniture": "Furniture",
+            "office supplies": "Office Supplies",
+            "Accessroies": "Accessories",
+            "Funriture": "Furniture",
+            "Offic Supplies": "Office Supplies"
+          },
+          "reason": "Merge case, space, and spelling variants into allowed Category labels"
+        },
+        "reason": "Merge case, space, and spelling variants into allowed Category labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 16,
+        "summary": "Category: merged 14 label variant(s), 16 cells",
+        "code": "df['Category'] = df['Category'].replace({'  Electricals ': 'Electricals', ' Electricals': 'Electricals', ' Furniture': 'Furniture', ' Office Supplies': 'Office Supplies', 'ELECTRONICS': 'Electronics', 'OUTDOOR SUPPLIES': 'Outdoor Supplies', 'aCCESSORIES': 'Accessories', 'electricals': 'Electricals', 'electronics': 'Electronics', 'furniture': 'Furniture', 'office supplies': 'Office Supplies', 'Accessroies': 'Accessories', 'Funriture': 'Furniture', 'Offic Supplies': 'Office Supplies'})"
+      },
+      {
+        "version": 4,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "  Northeast ": "Northeast",
+            " North": "North",
+            " Northeast": "Northeast",
+            " South": "South",
+            " West": "West",
+            "NORTH": "North",
+            "SOUTH": "South",
+            "west": "West",
+            "Eaast": "East",
+            "Eastt": "East",
+            "Eats": "East",
+            "SSouth": "South",
+            "oSuth": "South"
+          },
+          "reason": "Merge case, space, and spelling variants into allowed Region labels"
+        },
+        "reason": "Merge case, space, and spelling variants into allowed Region labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 13,
+        "summary": "Region: merged 13 label variant(s), 13 cells",
+        "code": "df['Region'] = df['Region'].replace({'  Northeast ': 'Northeast', ' North': 'North', ' Northeast': 'Northeast', ' South': 'South', ' West': 'West', 'NORTH': 'North', 'SOUTH': 'South', 'west': 'West', 'Eaast': 'East', 'Eastt': 'East', 'Eats': 'East', 'SSouth': 'South', 'oSuth': 'South'})"
+      },
+      {
+        "version": 5,
+        "tool": "exclude_where",
+        "args": {
+          "column": "Quantity",
+          "minimum": 1.0,
+          "maximum": null,
+          "reason": "Exclude rows with Quantity < 1 (invalid or return orders), as per rules"
+        },
+        "reason": "Exclude rows with Quantity < 1 (invalid or return orders), as per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          802,
+          846,
+          920,
+          964,
+          1003,
+          1050
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 6 row(s) where Quantity is below 1",
+        "code": "v = pd.to_numeric(df['Quantity'], errors='coerce')\ndf = df[~((v < 1.0))]"
+      },
+      {
+        "version": 6,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove 2 exact duplicate rows"
+        },
+        "reason": "Remove 2 exact duplicate rows",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          848,
+          1235
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_where",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 17
+  },
+  "corrections": 53,
+  "planted": 61,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-large",
+  "dataset": "sales-hard",
+  "question": "How many units were sold in each category in the South region?",
+  "reference_answer": {
+    "Accessories": 205.0,
+    "Electricals": 170.0,
+    "Electronics": 168.0,
+    "Furniture": 201.0,
+    "Office Supplies": 206.0,
+    "Outdoor Supplies": 210.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

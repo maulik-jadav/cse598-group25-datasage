@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinshard_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 41.98,
+  "tokens": 3137,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 188.54,
+    "Dream": 188.3653846153846,
+    "Torgersen": 190.26315789473685
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean species: strip whitespace and correct obvious typos\n    df['species'] = df['species'].str.strip()\n    df['species'] = df['species'].replace({\n        'Aedlie': 'Adelie',\n        'Genntoo': 'Gentoo',\n        'Gntoo': 'Gentoo',\n        'Gento': 'Gentoo',\n        'GGentoo': 'Gentoo',\n        'eGntoo': 'Gentoo'\n    })\n    \n    # Clean island: strip whitespace and correct typos\n    df['island'] = df['island'].str.strip()\n    df['island'] = df['island'].replace({\n        'Bisscoe': 'Biscoe',\n        'biscoe': 'Biscoe',\n        'bISCOE': 'Biscoe',\n        'BISCOE': 'Biscoe',\n        'Bisoe': 'Biscoe',\n        'Torgersn': 'Torgersen',\n        'TORGERSEN': 'Torgersen'\n    })\n    \n    # Clean sex: strip and standardize\n    df['sex'] = df['sex'].str.strip() if df['sex'].dtype == 'object' else df['sex']\n    df['sex'] = df['sex'].str.capitalize()  # 'male' -> 'Male', 'female' -> 'Female', etc.\n    df['sex'] = df['sex'].replace({'Male': 'male', 'Female': 'female'})\n    \n    # Clean body_mass_g: remove commas and convert to numeric\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '').str.replace('.0', '', regex=False)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    \n    # Fix negative flipper_length_mm\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    \n    # Ensure flipper_length_mm is in valid range\n    df.loc[df['flipper_length_mm'] < 170, 'flipper_length_mm'] = pd.NA\n    df.loc[df['flipper_length_mm'] > 235, 'flipper_length_mm'] = pd.NA\n    \n    # Filter only Adelie penguins\n    df = df[df['species'] == 'Adelie']\n    \n    return df\n\ndef answer(df):\n    # Group by island and compute average flipper length\n    result = df.groupby('island')['flipper_length_mm'].mean().dropna().to_dict()\n    return result\n"
+  },
+  "corrections": 27,
+  "planted": 55,
+  "damaged_rows": 176,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "penguins-hard",
+  "question": "What is the average flipper length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 188.551,
+    "Dream": 188.3654,
+    "Torgersen": 190.2632
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}
