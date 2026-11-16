@@ -127,3 +127,34 @@ def test_server_serves_the_page_and_checks_input(tmp_path, monkeypatch):
 def test_labels_name_the_column():
     assert runner.label("check_dates", {"column": "Date"}) == "Checking dates in Date"
     assert runner.label("unknown_tool", {}) == "unknown_tool"
+
+
+def test_approval_wording_and_row_previews():
+    from app.web.runner import examples, future
+    d = Dispatcher(_session(), AutoApprover())
+    before = d.session.current
+    after = before.drop(index=[2])
+    preview = {"summary": "excluded 1 row(s): [2]", "rows_removed": [2], "cells_changed": 0, "before": before, "after": after}
+    assert future("exclude_rows", {"rows": [2]}, preview) == "Will drop 1 row from the analysis"
+    ex = examples(preview)
+    assert ex["kind"] == "remove" and ex["rows"][0]["id"] == 2 and ex["rows"][0]["cells"]["Quantity"] == "-1"
+    after = before.copy()
+    after.loc[1, "Category"] = "Electronics"
+    preview = {"summary": "", "rows_removed": [], "cells_changed": 1, "before": before, "after": after}
+    assert future("normalize_labels", {"column": "Category", "mapping": {"electronics": "Electronics"}}, preview) == \
+        "Will merge 1 label in Category, changing 1 cell"
+    assert examples(preview)["rows"] == [{"id": 1, "changes": [{"column": "Category", "before": "electronics", "after": "Electronics"}]}]
+
+
+def test_health_reports_outcomes_and_the_answer_before_cleaning():
+    from app.web.runner import health
+    d = Dispatcher(_session(), RejectApprover())
+    _call(d, "check_label_variants", column="Category")
+    _call(d, "check_out_of_range", column="Quantity", minimum=1)
+    _call(d, "normalize_labels", column="Category", mapping={"electronics": "Electronics"}, reason="case")  # low risk, applied
+    _call(d, "exclude_rows", rows=[2, 3], reason="Quantity below 1")  # rejected
+    h = health(d.session, {"group_by": ["Category"], "metric": "Quantity", "agg": "sum", "filters": []})
+    status = {(i["type"], i["column"]): i["status"] for i in h["issues"]}
+    assert status[("label_variant", "Category")] == "fixed" and status[("out_of_range", "Quantity")] == "kept"
+    assert h["rows_before"] == 4 and h["rows_after"] == 4 and h["cells_changed"] == 1
+    assert h["raw_answer"]["result"] == {"Electronics": 2.0, "electronics": 3.0, "Furniture": -2.0}

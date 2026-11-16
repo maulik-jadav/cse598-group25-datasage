@@ -24,8 +24,12 @@ from .runner import Run
 ROOT = Path(__file__).resolve().parents[2]
 STATIC = Path(__file__).resolve().parent / "static"
 OUT = ROOT / "outputs" / "web"
-SAMPLE = {"input": ROOT / "baseline" / "examples" / "messy_sales.csv", "rules": ROOT / "examples" / "messy_sales_rules.json",
-          "question": "What was total revenue by category?"}
+SAMPLES = {
+    "small": {"input": ROOT / "baseline" / "examples" / "messy_sales.csv", "rules": ROOT / "examples" / "messy_sales_rules.json",
+              "question": "What was total revenue by category?"},
+    "large": {"input": ROOT / "examples" / "large_sales.csv", "rules": ROOT / "examples" / "messy_sales_rules.json",
+              "question": "What was total revenue by category?"},
+}
 MAX_UPLOAD = 20 * 1024 * 1024
 FILES = {"cleaned.csv": "text/csv", "report.md": "text/markdown", "replay.py": "text/x-python",
          "trace.jsonl": "application/json"}
@@ -75,7 +79,8 @@ class Handler(BaseHTTPRequestHandler):
         if parts[0] == "static" and len(parts) == 2:
             return self._static(parts[1])
         if parts == ["api", "sample"]:
-            return self._json({"question": SAMPLE["question"], "input": SAMPLE["input"].name, "rules": SAMPLE["rules"].name})
+            s = SAMPLES.get(parse_qs(url.query).get("size", ["small"])[0], SAMPLES["small"])
+            return self._json({"question": s["question"], "input": s["input"].name, "rules": s["rules"].name})
         if len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "events":
             run = self._run(parts[2])
             return self._events(run, int(parse_qs(url.query).get("from", ["0"])[0])) if run else self._error(404, "no such run")
@@ -122,7 +127,8 @@ class Handler(BaseHTTPRequestHandler):
         folder = OUT / run_id
         folder.mkdir(parents=True, exist_ok=True)
         if body.get("sample"):
-            input_path, rules_path = SAMPLE["input"], SAMPLE["rules"]
+            s = SAMPLES.get(str(body["sample"]), SAMPLES["small"])
+            input_path, rules_path = s["input"], s["rules"]
         else:
             name = Path(str(body.get("file_name") or "")).name
             suffix = Path(name).suffix.lower()

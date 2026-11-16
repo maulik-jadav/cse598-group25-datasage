@@ -7,6 +7,7 @@ page) and an `on_event` callback (it turns each tool call into an event with the
 from __future__ import annotations
 
 import math
+import re
 import threading
 import time
 import uuid
@@ -15,11 +16,13 @@ from pathlib import Path
 import pandas as pd
 
 from datasage.agent import run_agent
+from datasage.analyze import run_analysis
 from datasage.approval import Approver
 from datasage.report import write_outputs
 from datasage.session import load_table
 
-MAX_ROWS = 200          # rows shown in the page
+FIRST_ROWS = 40         # rows shown when a run starts; rows with problems anywhere in the file are added as found
+MAX_ROWS = 400          # most rows the page shows at once
 APPROVAL_TIMEOUT = 600  # seconds; an unanswered approval (page closed) counts as rejected
 
 LABELS = {
@@ -57,6 +60,47 @@ QUESTIONS = {
 }
 
 
+def plural(text: str) -> str:
+    """'1 row(s)' -> '1 row', '3 row(s)' -> '3 rows'."""
+    return re.sub(r"\b(\d+) ([\w ]*?)\(s\)", lambda m: f"{m.group(1)} {m.group(2)}{'' if m.group(1) == '1' else 's'}", text)
+
+
+def future(tool: str, args: dict, preview: dict) -> str:
+    """What a fix will do, said before it is approved ('Will remove 1 duplicate row')."""
+    col, cells, n = args.get("column", "the column"), int(preview.get("cells_changed") or 0), len(preview.get("rows_removed") or [])
+    text = {
+        "drop_duplicates": f"Will remove {n} duplicate row(s)",
+        "exclude_rows": f"Will drop {n} row(s) from the analysis",
+        "normalize_labels": f"Will merge {len(args.get('mapping') or {})} label(s) in {col}, changing {cells} cell(s)",
+        "trim_whitespace": f"Will trim spaces in {cells} cell(s) of {col}",
+        "parse_dates": f"Will read the dates in {col}, changing {cells} cell(s)",
+        "set_missing": f"Will blank {cells} cell(s) in {col}",
+        "fill_missing": f"Will fill {cells} blank cell(s) in {col}",
+        "cast_numeric": f"Will turn {col} into numbers, changing {cells} cell(s)",
+        "recompute_column": f"Will recompute {col} on {cells} row(s)",
+    }.get(tool, preview.get("summary", ""))
+    return plural(text)
+
+
+def examples(preview: dict, limit: int = 5) -> dict:
+    """The exact rows a fix touches, for the approval card: removed rows in full, or each changed cell old -> new."""
+    before, after = preview.get("before"), preview.get("after")
+    if before is None or after is None:
+        return {"kind": "none", "rows": [], "more": 0}
+    removed = [int(r) for r in (preview.get("rows_removed") or []) if r in before.index]
+    if removed:
+        rows = [{"id": r, "cells": {str(c): _text(before.at[r, c]) for c in before.columns}} for r in removed[:limit]]
+        return {"kind": "remove", "columns": [str(c) for c in before.columns], "rows": rows, "more": max(0, len(removed) - limit)}
+    common = after.index.intersection(before.index)
+    changed = sorted(_changed_rows(before.loc[common], after.loc[common, list(before.columns)]))
+    rows = []
+    for r in changed[:limit]:
+        diffs = [{"column": str(c), "before": _text(before.at[r, c]), "after": _text(after.at[r, c])}
+                 for c in before.columns if not _same(before.at[r, c], after.at[r, c])]
+        rows.append({"id": r, "changes": diffs})
+    return {"kind": "change", "rows": rows, "more": max(0, len(changed) - limit)}
+
+
 def label(tool: str, args: dict) -> str:
     return LABELS.get(tool, tool).format(column=args.get("column", "a column"))
 
@@ -84,6 +128,17 @@ def _text(v) -> str:
     return str(v)
 
 
+def _changed_rows(before: pd.DataFrame, after: pd.DataFrame) -> set[int]:
+    """Rows where any cell differs; "640" and 640.0 count as the same (a whole column cast to numbers)."""
+    diff = pd.Series(False, index=before.index)
+    for col in before.columns:
+        x, y = before[col], after[col]
+        xn, yn = pd.to_numeric(x, errors="coerce"), pd.to_numeric(y, errors="coerce")
+        same = (x.isna() & y.isna()) | (xn.notna() & yn.notna() & (xn == yn)) | (x.astype(str) == y.astype(str))
+        diff |= ~same.fillna(False).astype(bool)
+    return set(int(r) for r in before.index[diff])
+
+
 def table_state(session) -> dict:
     """Per shown row: removed or not, and per cell its current text and state.
 
@@ -91,7 +146,6 @@ def table_state(session) -> dict:
     "kept" (a fix for it was rejected, so it stays as a caveat). A row can be "removed", "flag" or "kept".
     """
     original, current = session.original, session.current
-    shown = list(original.index[:MAX_ROWS])
     flagged: dict[int, set] = {}
     for (kind, column), issue in session.issues.items():
         for r in issue.get("rows", []):
@@ -108,6 +162,12 @@ def table_state(session) -> dict:
             for r, cols in flagged.items():
                 if col in cols and (not rows or r in rows):
                     kept.setdefault(r, set()).add(col)
+    removed = set(int(r) for r in original.index.difference(current.index))
+    common = current.index.intersection(original.index)
+    changed = _changed_rows(original.loc[common], current.loc[common, list(original.columns)])
+    extra = sorted((set(flagged) | set(kept) | removed | changed) - set(range(FIRST_ROWS)))
+    shown = [int(r) for r in original.index[:FIRST_ROWS]] + [r for r in extra if r in original.index]
+    shown = shown[:MAX_ROWS]
     rows_out = {}
     for r in shown:
         r = int(r)
@@ -126,7 +186,7 @@ def table_state(session) -> dict:
             cells[str(col)] = {"text": _text(now), "state": state}
         row_state = "removed" if removed else "kept" if "*" in kept.get(r, ()) else "flag" if "*" in flagged.get(r, ()) else ""
         rows_out[r] = {"state": row_state, "cells": cells}
-    return {"rows": rows_out, "version": session.version}
+    return {"rows": rows_out, "version": session.version, "total_rows": len(original)}
 
 
 class BrowserApprover(Approver):
@@ -143,8 +203,8 @@ class BrowserApprover(Approver):
         self.run.emit({
             "type": "approval", "id": approval_id, "tool": tool, "risk": risk,
             "title": QUESTIONS.get(tool, f"Apply {tool}?").format(column=args.get("column", "this column")),
-            "summary": preview.get("summary", ""), "reason": args.get("reason", ""),
-            "rows": [int(r) for r in rows][:20], "column": args.get("column"),
+            "summary": future(tool, args, preview), "reason": args.get("reason", ""),
+            "rows": [int(r) for r in rows][:20], "column": args.get("column"), "examples": examples(preview),
         })
         answered = waiter.wait(APPROVAL_TIMEOUT) and not self.run.cancelled
         answer = bool(self.run.pending.pop(approval_id)["answer"]) if answered else False
@@ -162,6 +222,7 @@ class Run:
         self.cancelled = False
         self.done = False
         self.counts = {"checks": 0, "fixes": 0}
+        self.analyze_args: dict | None = None
 
     def emit(self, event: dict) -> None:
         with self.cond:
@@ -197,6 +258,8 @@ class Run:
         phase = "rules" if name in ("lookup_rules", "profile_dataset") else "check" if name.startswith("check_") \
             else "answer" if name in ("analyze", "finish") else "fix"
         refused = bool(output.get("analyze_refused"))
+        if name == "analyze" and event.get("ok") and not refused and "result" in output:
+            self.analyze_args = args
         self.emit({"type": "step", "tool": name, "label": label(name, args), "phase": phase, "ok": event.get("ok"),
                    "refused": refused, "counts": dict(self.counts), "table": table_state(session)})
 
@@ -211,9 +274,9 @@ class Run:
                                on_event=self._on_event, **kwargs)
             write_outputs(result, self.out_dir)
             analysis = result.session.analyses[-1] if result.session.analyses else None
-            changes = [{"applied": True, "text": f"{c.tool}: {c.summary}", "approval": c.approval}
+            changes = [{"applied": True, "text": plural(c.summary), "approval": c.approval}
                        for c in result.session.changes]
-            changes += [{"applied": False, "text": f"{r['tool']}: {r['summary']} (rejected, kept as a caveat)",
+            changes += [{"applied": False, "text": plural(f"Not applied: {r['summary']} (kept as a caveat)"),
                          "approval": "rejected"} for r in result.session.rejected]
             self.emit({
                 "type": "done", "finished": result.finished, "stop_reason": result.stop_reason,
@@ -222,6 +285,7 @@ class Run:
                 "summary": result.final_summary, "changes": changes, "seconds": round(time.time() - start, 1),
                 "tool_calls": result.tool_calls, "approvals": result.approvals_asked, "model": result.model,
                 "files": ["cleaned.csv", "report.md", "replay.py", "trace.jsonl"], "table": table_state(result.session),
+                "health": health(result.session, self.analyze_args),
             })
         except Exception as err:  # shown in the page; the server keeps running
             self.emit({"type": "error", "message": f"{type(err).__name__}: {err}"})
@@ -231,6 +295,55 @@ class Run:
                 self.cond.notify_all()
 
 
+FIX_TOOLS = {
+    "duplicates": {"drop_duplicates"}, "label_variant": {"normalize_labels", "trim_whitespace"},
+    "invalid_date": {"parse_dates", "set_missing"}, "text_number": {"cast_numeric"}, "missing": {"fill_missing"},
+    "negative": {"exclude_rows"}, "out_of_range": {"exclude_rows"}, "cross_column": {"recompute_column", "exclude_rows"},
+}
+NAMES = {"duplicates": "duplicate rows", "label_variant": "label variants", "invalid_date": "unreadable dates",
+         "text_number": "numbers stored as text", "missing": "blank cells", "negative": "negative values",
+         "out_of_range": "values outside the rules", "cross_column": "formula mismatches", "not_number": "values that are not numbers"}
+
+
+def _touches(item: dict, kind: str, column: str, rows: set) -> bool:
+    if item["tool"] not in FIX_TOOLS.get(kind, set()):
+        return False
+    args = item["args"]
+    if item["tool"] in ("exclude_rows", "drop_duplicates"):
+        return column == "*" or not rows or bool(rows & set(args.get("rows") or getattr(item.get("change"), "rows_removed", []) or []))
+    return args.get("column") == column
+
+
+def health(session, analyze_args: dict | None) -> dict:
+    """What the run found and did, column by column, and the answer before and after cleaning."""
+    applied = [{"tool": c.tool, "args": c.args, "change": c} for c in session.changes]
+    for item in applied:
+        if item["tool"] in ("exclude_rows", "drop_duplicates"):
+            item["args"] = {**item["args"], "rows": item["change"].rows_removed}
+    issues = []
+    for (kind, column), issue in sorted(session.issues.items(), key=lambda kv: (kv[0][1], kv[0][0])):
+        rows = set(issue.get("rows", []))
+        status = "fixed" if any(_touches(i, kind, column, rows) for i in applied) else \
+            "kept" if any(_touches(r, kind, column, rows) for r in session.rejected) else "not needed"
+        issues.append({"type": kind, "name": NAMES.get(kind, kind.replace("_", " ")), "column": column,
+                       "count": int(issue["count"]), "status": status})
+    removed = {}
+    for c in session.changes:
+        if c.rows_removed:
+            removed[c.tool] = removed.get(c.tool, 0) + len(c.rows_removed)
+    raw = {"result": None, "error": None}
+    if analyze_args:
+        try:
+            raw["result"] = run_analysis(session.original, analyze_args.get("group_by"), analyze_args.get("metric"),
+                                         analyze_args.get("agg", "sum"), analyze_args.get("filters") or [])["result"]
+        except Exception as err:  # e.g. the metric column was text before cleaning
+            raw["error"] = str(err).split(";")[0]
+    return {"rows_before": int(len(session.original)), "rows_after": int(len(session.current)),
+            "removed": [{"why": {"drop_duplicates": "duplicates", "exclude_rows": "broke a rule"}.get(k, k), "count": v}
+                        for k, v in removed.items()],
+            "cells_changed": int(sum(c.cells_changed for c in session.changes)), "issues": issues, "raw_answer": raw}
+
+
 def initial_rows(path: Path) -> list[dict]:
     df = load_table(path)
-    return [{"id": int(r), "cells": {str(c): _text(df.at[r, c]) for c in df.columns}} for r in df.index[:MAX_ROWS]]
+    return [{"id": int(r), "cells": {str(c): _text(df.at[r, c]) for c in df.columns}} for r in df.index[:FIRST_ROWS]]
