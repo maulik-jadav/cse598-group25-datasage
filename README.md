@@ -6,6 +6,27 @@ DataSage is an agent that takes a messy CSV or Excel file and a question about i
 
 **Stakeholder:** Vyshanth Buddani ([@VB914](https://github.com/VB914)). Original proposal and baseline: https://github.com/VB914/DataSage
 
+## Results at a glance
+
+| | Right answers | Damaged cells |
+|---|---|---|
+| **DataSage (Qwen3-30B, the default)** on 200 unseen questions | **95.5%** (95% range 92.0 to 98.5; 4 runs: 94.0 to 96.0) | **0** |
+| One LLM call, no tools | 46.5% | 119 |
+| A fixed cleaning script | 49.0% | 0 |
+| The stakeholder's rule-based script | 6.0% | 0 |
+| DataSage on the hard split (343 to 1,935 rows) | 90.0% (235B model: 97.5%) | 0 |
+
+- Turning parts off on the same 200 questions: no approvals 12.0%, short memory 86.0%, no coverage check 91.5%;
+  the validator and the prompt's merge rule showed no measurable effect.
+- Almost every remaining miss is a row that breaks a rule in a column the question does not use (the
+  question-columns-only scope chosen with the stakeholder).
+- *Auto* approval mode costs about one question in 120 against a careful approver.
+<!--MODELS-README-->
+
+Write-ups: [scale, variance and ablations](docs/final/findings_scale_and_ablations.md) ·
+[hard benchmark](docs/final/findings_hard.md) · [Auto mode](docs/final/findings_auto_mode.md)<!--MODELS-LINK-->.
+The browser app's **Results** page (`/results`) shows the same numbers as charts.
+
 ## Team (Group 25)
 
 | Name | GitHub |
@@ -134,6 +155,8 @@ python -m eval.generate --tables 10 --seed 7          # dev split: 20 sales + 20
 python -m eval.generate --tables 10 --seed 101 --split heldout   # held-out split (sales-heldout, penguins-heldout)
 python -m eval.generate --tables 10 --seed 202 --split test      # test split made for Milestone 3 (sales-test, penguins-test)
 python -m eval.generate_hard --tables 10 --seed 303   # hard split: sales-hard, penguins-hard (300-2,000 rows, see docs/final/findings_hard.md)
+python -m eval.generate_hard --tables 10 --seed 404 --split hard2   # second hard seed: sales-hard2, penguins-hard2
+python -m eval.analyze_hard                           # hard split aggregates -> eval/results/hard_analysis.json
 python -m eval.run_eval --system b0 --dataset sales   # repeat for each system and dataset
 python -m eval.run_eval --system datasage --dataset penguins --workers 4
 python -m eval.run_eval --system datasage-reject --dataset sales --limit 10   # Table 8 ablations: first 10 tasks;
@@ -165,8 +188,11 @@ Systems: `b0`, `b1`, `b2`, `datasage`, `datasage-small`, `datasage-reject`, `dat
 Milestone 2 fix variants `datasage-fix`, `datasage-small-fix`, `datasage-small-fix-strict` (exclusion rule in the
 prompt; `-strict` also uses a stricter approval oracle). Milestone 3: `datasage-m3` is the default agent (30B,
 coverage check before `analyze`, spelling merges into the rules' allowed labels); `datasage-m3-compact` is the
-same with compact memory, and `datasage-m3-large` uses the 235B model. Datasets: `sales`, `penguins`,
-`sales-heldout`, `penguins-heldout`, `sales-test`, `penguins-test`. Results are cached per task, so an
+same with compact memory, and `datasage-m3-large` uses the 235B model. Later studies added `datasage-m3-auto`
+(every risky fix approved, like the app's Auto mode), `datasage-m3-gptoss` (gpt-oss-120b as the planner) and
+the ablations above. Datasets: `sales`, `penguins`, `sales-heldout`, `penguins-heldout`, `sales-test`,
+`penguins-test`, `sales-s303` / `-s404` / `-s505` and the penguin twins, `sales-hard`, `penguins-hard`,
+`sales-hard2`, `penguins-hard2`. Results are cached per task, so an
 interrupted run can be restarted.
 
 ## Run the stakeholder baseline on its own
