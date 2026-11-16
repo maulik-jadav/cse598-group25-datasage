@@ -274,6 +274,22 @@ def test_event_stream_ends_when_the_run_is_done(tmp_path, monkeypatch):
         httpd.shutdown()
 
 
+def test_change_log_says_why_a_fix_was_not_applied(tmp_path):
+    """In Auto mode a fix is only refused when Stop is pressed; the log must not claim the person chose Keep."""
+    from app.web.runner import change_log
+    run = Run(Path("x.csv"), "q", None, tmp_path, None, mode="auto")
+    d = Dispatcher(_session(), BrowserApprover(run))
+    _call(d, "drop_duplicates", reason="dup")  # nothing to remove, but still asks: approved at once in Auto
+    run.cancel()
+    _call(d, "exclude_rows", rows=[2], reason="Quantity below 1")  # Stop landed: refused without asking
+    assert run.refusals == ["stopped"]
+    log = change_log(d.session, run.mode, run.refusals)
+    assert [c["how"] for c in log] == ["approved automatically", "not applied because the run was stopped"]
+    ask = Run(Path("x.csv"), "q", None, tmp_path, None)
+    assert change_log(d.session, ask.mode, ["keep"])[-1]["how"] == "you chose Keep, so it is listed as a caveat"
+    assert change_log(d.session, ask.mode, ["timeout"])[-1]["how"].startswith("no answer within 10 minutes")
+
+
 def test_auto_mode_approves_without_waiting_and_says_so(tmp_path):
     run = Run(Path("x.csv"), "q", None, tmp_path, None, mode="auto")
     assert BrowserApprover(run).decide("drop_duplicates", {}, "medium", {"summary": "", "rows_removed": [1]}) is True
