@@ -5,8 +5,11 @@ Usage:
   python -m eval.run_eval --system b2 --dataset penguins
 Systems: b0, b1, b2, datasage, datasage-small, datasage-reject, datasage-novalidator,
          datasage-fix, datasage-fix-strict, datasage-small-fix, datasage-small-fix-strict,
-         datasage-m3 (small model, the default agent), datasage-m3-compact, datasage-m3-large
-Datasets: sales, penguins (dev), sales-heldout, penguins-heldout, and sales-test, penguins-test (seed 202)
+         datasage-m3 (small model, the default agent), datasage-m3-compact, datasage-m3-large,
+         and the ablations of datasage-m3: datasage-m3-nocoverage, datasage-m3-novalidator,
+         datasage-m3-nomerge (prompt without the merge rule), datasage-m3-reject (every risky fix rejected)
+Datasets: sales, penguins (dev), sales-heldout, penguins-heldout, sales-test, penguins-test (seed 202),
+          and sales-s303, penguins-s303, sales-s404, penguins-s404, sales-s505, penguins-s505
 """
 
 from __future__ import annotations
@@ -46,6 +49,20 @@ SYSTEMS = {
     "datasage-m3-large": lambda b, t, c, trace: systems.run_datasage(b, t, m3=True, client=c, trace_path=trace),
 }
 
+# Ablations of the final system (datasage-m3): each switches off one mechanism and keeps the rest.
+_M3 = dict(model=SMALL_MODEL, m3=True)
+SYSTEMS.update({
+    "datasage-m3-nocoverage": lambda b, t, c, trace: systems.run_datasage(b, t, coverage=False, client=c, trace_path=trace, **_M3),
+    "datasage-m3-novalidator": lambda b, t, c, trace: systems.run_datasage(b, t, use_validator=False, client=c,
+                                                                         trace_path=trace, **_M3),
+    "datasage-m3-nomerge": lambda b, t, c, trace: systems.run_datasage(b, t, prompt="v2", client=c, trace_path=trace, **_M3),
+    "datasage-m3-reject": lambda b, t, c, trace: systems.run_datasage(b, t, approver="reject", client=c, trace_path=trace, **_M3),
+})
+
+DATASETS = ["sales", "penguins", "sales-heldout", "penguins-heldout", "sales-test", "penguins-test",
+            # scale-up splits made with the same generator and new seeds (303, 404, 505)
+            "sales-s303", "penguins-s303", "sales-s404", "penguins-s404", "sales-s505", "penguins-s505"]
+
 
 def run(system: str, dataset: str, workers: int, limit: int | None, results_dir: Path, only: set[str] | None = None) -> None:
     out_dir = results_dir / system / dataset
@@ -80,7 +97,7 @@ def run(system: str, dataset: str, workers: int, limit: int | None, results_dir:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--system", required=True, choices=list(SYSTEMS))
-    parser.add_argument("--dataset", required=True, choices=["sales", "penguins", "sales-heldout", "penguins-heldout", "sales-test", "penguins-test"])
+    parser.add_argument("--dataset", required=True, choices=DATASETS)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--only", default="", help="comma list of task ids to run")
