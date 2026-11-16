@@ -21,6 +21,7 @@ Team tasks, setup and how to open a pull request: [docs/TEAM_HANDOFF.md](docs/TE
 ## Repository layout
 
 ```text
+app/web/      the browser app (python -m app.web.server)
 datasage/     the agent: session state, profiler, checks, fixes, approval gate, validator,
               analysis, tool schemas and dispatcher, agent loop, report and replay script
 baselines/    B0 (stakeholder baseline wrapper), B1 (fixed cleaning script), B2 (single model call),
@@ -30,7 +31,7 @@ eval/         benchmark generator, scoring, approval oracle, evaluation runner, 
   sources/    public source data (Palmer Penguins, CC0) and its license note
   datasets/   generated tables: messy.csv, clean.csv, reference.csv, planted.json, rules.json, tasks.json
   results/    one JSON per task per system, traces, and summary.md / summary.csv
-examples/     rules file for the stakeholder's messy_sales.csv
+examples/     rules file for the stakeholder's messy_sales.csv, and a 1,208-row demo table with its generator
 tests/        unit tests for the deterministic parts (no model calls)
 docs/         milestone reports; docs/milestone2/demo/ holds the recorded demo run
 ```
@@ -72,13 +73,25 @@ modes: `--approve auto`, `--approve reject`, and `--approve tools --allow drop_d
 python -m app.web.server          # then open http://127.0.0.1:8501
 ```
 
-Drop a CSV or Excel file (and optionally a JSON rules file), type a question and press Run, or press
-"Try the sample sales file". The table shows each problem as the agent finds it; risky fixes appear as a
-card under the affected row and wait for Keep or Apply; the answer, the change log and the four output
-files appear on the right. It needs the same `.env` key as the command line and nothing else (standard
-library only). Uploads and outputs go to `outputs/web/<run id>/`. Options: `--port`, `--model`, `--host`
-(default 127.0.0.1, so only your machine can open it). An approval left unanswered for 10 minutes, or a
-run replaced by a new one, counts as rejected.
+Drop a CSV or Excel file (and optionally a JSON rules file), type a question and press Run, or pick one
+of the two samples: Vyshanth's 8-row `messy_sales.csv`, or `examples/large_sales.csv` (1,208 rows, about 50
+planted problems; rebuild it with `python examples/make_large_sales.py`). Both use
+`examples/messy_sales_rules.json` and the question "What was total revenue by category?".
+
+- **Live table.** The first 40 rows show at once; any row with a problem, anywhere in the file, slides in
+  as the agent finds it. Problem cells are amber, fixed cells green, removed rows fold away, and rejected
+  fixes stay marked as caveats.
+- **Approvals on the row.** Each risky fix opens a card under the affected row, saying what it will do and
+  showing the exact rows: removed rows in full, or each changed cell as old → new. Click a row number to
+  jump to it. Keep or Apply decides it.
+- **Answer.** The result counts up on the right, with the change log and the four output files.
+- **Data health.** After the run: rows before and after, every problem found by column (fixed, kept as a
+  caveat, or not needed for the question), and the answer before cleaning next to the answer after.
+
+It needs the same `.env` key as the command line and nothing else (standard library only). Uploads and
+outputs go to `outputs/web/<run id>/`. Options: `--port`, `--model`, `--host` (default 127.0.0.1, so only
+your machine can open it). An approval left unanswered for 10 minutes, or a run replaced by a new one,
+counts as rejected.
 
 ## Reproduce the evaluation
 

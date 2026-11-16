@@ -10,7 +10,7 @@ const YES = { drop_duplicates: "Remove", exclude_rows: "Drop rows", set_missing:
 const PHASES = ["rules", "check", "fix", "answer"];
 
 const S = { file: null, rules: null, sample: false, runId: null, es: null, lastSeq: -1, columns: [], rowEls: new Map(),
-  cellEls: new Map(), numeric: new Set(), asks: new Map(), phase: null, running: false };
+  cellEls: new Map(), numeric: new Set(), asks: new Map(), phase: null, running: false, ids: [], total: 0, sampleSize: "small" };
 
 // ---------- inputs ----------
 function setFile(file) {
@@ -35,14 +35,15 @@ drop.addEventListener("drop", (e) => {
     else if (/\.(csv|xlsx)$/i.test(f.name)) setFile(f);
   }
 });
-$("#sampleBtn").addEventListener("click", async () => {
-  const s = await (await fetch("/api/sample")).json();
-  S.sample = true; S.file = null;
+document.querySelectorAll("[data-sample]").forEach((b) => b.addEventListener("click", async () => {
+  const size = b.dataset.sample;
+  const s = await (await fetch(`/api/sample?size=${size}`)).json();
+  S.sample = size; S.file = null;
   $("#fileName").textContent = s.input; $("#fileChip").classList.add("set");
   $("#rulesName").textContent = s.rules; $("#rulesChip").classList.add("set");
   $("#question").value = s.question;
   start();
-});
+}));
 $("#askForm").addEventListener("submit", (e) => { e.preventDefault(); start(); });
 
 const toB64 = (file) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = rej; r.readAsDataURL(file); });
@@ -52,7 +53,7 @@ async function start() {
   const question = $("#question").value.trim();
   if (!S.sample && !S.file) { $("#fileChip").animate([{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(0)" }], { duration: 260 }); $("#fileInput").click(); return; }
   if (!question) { $("#question").focus(); return; }
-  const body = S.sample ? { sample: true, question } : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules };
+  const body = S.sample ? { sample: S.sample, question } : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules };
   setRunning(true); setStatus("Uploading");
   let res;
   try { res = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
@@ -87,9 +88,9 @@ function handle(ev) {
 }
 
 function reset() {
-  S.lastSeq = -1; S.rowEls.clear(); S.cellEls.clear(); S.asks.clear(); S.phase = null;
+  S.lastSeq = -1; S.rowEls.clear(); S.cellEls.clear(); S.asks.clear(); S.phase = null; S.ids = []; S.total = 0;
   $("#table").textContent = ""; $("#banner").hidden = true; $("#banner").textContent = "";
-  $("#answer").hidden = true; $("#waiting").hidden = false; $("#counts").textContent = ""; $("#more").hidden = true;
+  $("#answer").hidden = true; $("#waiting").hidden = false; $("#health").hidden = true; $("#counts").textContent = ""; $("#more").hidden = true;
   document.querySelectorAll(".rail li").forEach((li) => li.classList.remove("active", "done"));
 }
 
@@ -103,6 +104,45 @@ function setStatus(t) { $("#status").textContent = t; $("#status").classList.rem
 function fail(msg) { setRunning(false); setStatus(msg); $("#status").classList.add("error"); if (S.es) S.es.close(); }
 
 // ---------- table ----------
+function makeRow(id, cells) {
+  const row = el("div", "row"); row.setAttribute("role", "row"); row.dataset.id = id;
+  row.append(el("div", "cell idx", String(id)));
+  S.columns.forEach((c) => {
+    const v = cells[c] && typeof cells[c] === "object" ? cells[c].text : (cells[c] ?? "");
+    const cell = el("div", "cell" + (S.numeric.has(c) ? " num" : "") + (v === "" ? " blank" : ""));
+    cell.setAttribute("role", "cell");
+    cell.append(el("span", null, v === "" ? "—" : v));
+    cell.dataset.text = v; cell.dataset.state = "";
+    row.append(cell); S.cellEls.set(`${id}|${c}`, cell);
+  });
+  S.rowEls.set(id, row);
+  return row;
+}
+
+function insertRow(id, cells) {
+  const row = makeRow(id, cells);
+  row.classList.add("arrive");
+  const next = S.ids.find((x) => x > id);
+  if (next !== undefined) S.rowEls.get(next).before(row); else $("#table").append(row);
+  S.ids.push(id); S.ids.sort((a, b) => a - b);
+}
+
+function refreshGaps() {
+  const table = $("#table");
+  table.querySelectorAll(".gap").forEach((g) => g.remove());
+  let prev = -1;
+  for (const id of S.ids) {
+    if (id - prev > 1) S.rowEls.get(id).before(gap(id - prev - 1));
+    prev = id;
+  }
+  if (S.total - 1 > prev) table.append(gap(S.total - 1 - prev, true));
+}
+function gap(n, end) {
+  const g = el("div", "gap", `⋯ ${n.toLocaleString("en-US")} ${end ? "more " : ""}row${n === 1 ? "" : "s"}`);
+  g.setAttribute("aria-hidden", "true");
+  return g;
+}
+
 function buildTable(ev) {
   S.columns = ev.columns;
   S.numeric = new Set(ev.columns.filter((c) => ev.rows.length && ev.rows.every((r) => r.cells[c] === "" || !isNaN(Number(r.cells[c])))));
@@ -111,31 +151,26 @@ function buildTable(ev) {
     const longest = Math.max(...ev.rows.map((r) => String(r.cells[c]).length), 1);
     return Math.round(Math.min(280, Math.max(64, longest * 8.6 + 36, c.length * 7.4 + 36)));
   });
-  table.style.setProperty("--cols", "44px " + widths.map((w) => `minmax(${w}px, 1fr)`).join(" "));
-  table.style.minWidth = `${44 + widths.reduce((a, b) => a + b, 0)}px`;
+  table.style.setProperty("--cols", "64px " + widths.map((w) => `minmax(${w}px, 1fr)`).join(" "));
+  table.style.minWidth = `${64 + widths.reduce((a, b) => a + b, 0)}px`;
   const head = el("div", "row head"); head.setAttribute("role", "row");
   head.append(el("div", "cell idx", "#"));
   ev.columns.forEach((c) => { const h = el("div", "cell" + (S.numeric.has(c) ? " num" : ""), c); h.setAttribute("role", "columnheader"); head.append(h); });
   table.append(head);
-  ev.rows.forEach((r) => {
-    const row = el("div", "row"); row.setAttribute("role", "row"); row.dataset.id = r.id;
-    row.append(el("div", "cell idx", String(r.id)));
-    ev.columns.forEach((c) => {
-      const v = r.cells[c];
-      const cell = el("div", "cell" + (S.numeric.has(c) ? " num" : "") + (v === "" ? " blank" : ""));
-      cell.setAttribute("role", "cell");
-      const span = el("span", null, v === "" ? "—" : v); cell.append(span);
-      cell.dataset.text = v; cell.dataset.state = "";
-      row.append(cell); S.cellEls.set(`${r.id}|${c}`, cell);
-    });
-    table.append(row); S.rowEls.set(r.id, row);
-  });
-  if (ev.total_rows > ev.rows.length) { $("#more").hidden = false; $("#more").textContent = `Showing the first ${ev.rows.length} of ${ev.total_rows} rows. The agent works on all of them.`; }
+  ev.rows.forEach((r) => { const row = makeRow(r.id, r.cells); table.append(row); S.ids.push(r.id); });
+  S.total = ev.total_rows;
+  refreshGaps();
+  if (ev.total_rows > ev.rows.length) { $("#more").hidden = false; $("#more").textContent = `Showing the first ${ev.rows.length} rows, plus every row with a problem as it is found. The agent works on all ${ev.total_rows.toLocaleString("en-US")}.`; }
   setStatus("Reading the table");
 }
 
 function applyTable(t) {
   if (!t) return;
+  let added = false;
+  for (const [id, r] of Object.entries(t.rows)) {
+    if (!S.rowEls.has(Number(id))) { insertRow(Number(id), r.cells); added = true; }
+  }
+  if (added) refreshGaps();
   for (const [id, r] of Object.entries(t.rows)) {
     const row = S.rowEls.get(Number(id));
     if (!row) continue;
@@ -186,6 +221,8 @@ function showAsk(ev) {
   text.append(el("span", "ask-title", ev.title));
   text.append(el("span", "ask-sub", `${cap(ev.risk)} risk · ${ev.summary}`));
   if (ev.reason) text.append(el("span", "ask-reason", ev.reason));
+  const ex = examplesBlock(ev.examples);
+  if (ex) text.append(ex);
   const no = el("button", "ghost", "Keep as is"); no.type = "button";
   const yes = el("button", "btn primary", YES[ev.tool] || "Apply"); yes.type = "button";
   no.onclick = () => answer(ev.id, false, wrap); yes.onclick = () => answer(ev.id, true, wrap);
@@ -199,6 +236,38 @@ function showAsk(ev) {
   wrap.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   yes.focus({ preventScroll: true });
 }
+function examplesBlock(ex) {
+  if (!ex || !ex.rows || !ex.rows.length) return null;
+  const box = el("div", "ex");
+  ex.rows.forEach((r) => {
+    const line = el("div", "ex-row");
+    const chip = el("button", "ex-id", `#${r.id}`); chip.type = "button"; chip.title = "Show this row in the table";
+    chip.onclick = () => jumpTo(r.id);
+    line.append(chip);
+    if (ex.kind === "remove") {
+      line.append(el("span", "ex-gone", ex.columns.map((c) => r.cells[c] || "—").join("  ·  ")));
+    } else {
+      const parts = el("span", "ex-changes");
+      r.changes.forEach((c) => {
+        const item = el("span", "ex-change");
+        item.append(el("span", "ex-col", c.column), el("span", "ex-before", c.before || "—"), el("span", "ex-arrow", "→"), el("span", "ex-after", c.after || "—"));
+        parts.append(item);
+      });
+      line.append(parts);
+    }
+    box.append(line);
+  });
+  if (ex.more) box.append(el("div", "ex-more", `+ ${ex.more} more row${ex.more === 1 ? "" : "s"}`));
+  return box;
+}
+function jumpTo(id) {
+  const row = S.rowEls.get(id);
+  if (!row) return;
+  row.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  row.classList.remove("spot"); void row.offsetWidth; row.classList.add("spot");
+  setTimeout(() => row.classList.remove("spot"), 1600);
+}
+
 function firstFlagged(column) {
   if (!column) return null;
   for (const [key, cell] of S.cellEls) if (key.endsWith(`|${column}`) && cell.classList.contains("flag")) return cell.parentElement;
@@ -230,7 +299,7 @@ function finish(ev) {
   box.style.animation = "none"; void box.offsetWidth; box.style.animation = "";
   const a = ev.analysis;
   $("#aTitle").textContent = a ? `${cap(a.agg)} of ${a.metric}${a.group_by && a.group_by.length ? " by " + a.group_by.join(", ") : ""}` : "No answer";
-  $("#aMeta").textContent = a && a.rows_used != null ? `${a.rows_used} rows used` : "";
+  $("#aMeta").textContent = a && a.rows_used != null ? `${Number(a.rows_used).toLocaleString("en-US")} rows used` : "";
   renderGroups(ev.answer);
   const log = $("#aLog"); log.textContent = "";
   ev.changes.forEach((c, i) => {
@@ -243,7 +312,91 @@ function finish(ev) {
   $("#aSummary").textContent = ev.summary || "";
   const files = $("#aFiles"); files.textContent = "";
   ev.files.forEach((f) => { const link = el("a", "ghost", f); link.href = `/api/runs/${S.runId}/files/${f}`; link.setAttribute("download", f); files.append(link); });
+  renderHealth(ev.health, ev.answer);
   $("#aStats").textContent = `${ev.tool_calls} tool calls · ${ev.approvals} question${ev.approvals === 1 ? "" : "s"} to you · ${ev.model}`;
+}
+
+function renderHealth(h, after) {
+  const box = $("#health"); box.textContent = "";
+  if (!h) { box.hidden = true; return; }
+  box.hidden = false;
+  box.append(el("h2", "h-title", "Data health"));
+  const grid = el("div", "h-grid");
+
+  const rows = el("div", "h-card");
+  rows.append(el("span", "h-label", "Rows"));
+  const big = el("div", "h-big");
+  big.append(el("span", null, h.rows_before.toLocaleString("en-US")), el("span", "h-arrow", "→"), el("span", null, h.rows_after.toLocaleString("en-US")));
+  rows.append(big);
+  const why = h.removed.map((r) => `${r.count} ${r.count === 1 && r.why === "duplicates" ? "duplicate" : r.why}`).join(" · ");
+  rows.append(el("span", "h-sub", why ? `Removed: ${why}` : "No rows removed"));
+  rows.append(el("span", "h-sub", `${h.cells_changed.toLocaleString("en-US")} cell${h.cells_changed === 1 ? "" : "s"} changed`));
+  grid.append(rows);
+
+  const tally = { fixed: 0, kept: 0, "not needed": 0 };
+  h.issues.forEach((i) => { tally[i.status] = (tally[i.status] || 0) + 1; });
+  const out = el("div", "h-card");
+  out.append(el("span", "h-label", "Outcome"));
+  const nums = el("div", "h-tally");
+  [["fixed", "fixed"], ["kept", "kept as caveat"], ["not needed", "not needed"]].forEach(([k, txt]) => {
+    const cell = el("div", "h-t");
+    cell.append(el("span", `h-tn ${k.replace(" ", "-")}`, String(tally[k] || 0)), el("span", "h-sub", txt));
+    nums.append(cell);
+  });
+  out.append(nums);
+  out.append(el("span", "h-sub", "Problems in columns the question doesn't use are left alone."));
+  grid.append(out);
+
+  const probs = el("div", "h-card h-wide");
+  probs.append(el("span", "h-label", "Problems found"));
+  const list = el("ul", "h-list");
+  const maxCount = Math.max(1, ...h.issues.map((i) => i.count));
+  h.issues.forEach((i, k) => {
+    const li = el("li", "h-item"); li.style.animationDelay = `${0.1 + k * 0.05}s`;
+    li.append(el("span", `h-dot ${i.status.replace(" ", "-")}`));
+    const name = el("span", "h-name");
+    if (i.column === "*") name.append(el("b", null, cap(i.name)));
+    else name.append(el("b", null, i.column), document.createTextNode(` ${i.name}`));
+    li.append(name);
+    const bar = el("span", "h-bar"); const fillEl = el("span", "h-fill"); bar.append(fillEl); li.append(bar);
+    requestAnimationFrame(() => requestAnimationFrame(() => { fillEl.style.width = `${Math.max(6, Math.round((i.count / maxCount) * 100))}%`; }));
+    li.append(el("span", "h-count", String(i.count)));
+    li.append(el("span", `h-status ${i.status.replace(" ", "-")}`, i.status === "kept" ? "kept as caveat" : i.status));
+    list.append(li);
+  });
+  if (!h.issues.length) list.append(el("li", "h-sub", "No problems found."));
+  probs.append(list);
+  grid.append(probs);
+
+  const impact = el("div", "h-card h-wide");
+  impact.append(el("span", "h-label", "Answer before and after cleaning"));
+  const raw = h.raw_answer || {};
+  if (raw.error) {
+    impact.append(el("p", "h-note", `Before cleaning it could not be computed: ${raw.error}.`));
+  }
+  if (after && typeof after === "object") {
+    const tbl = el("div", "h-table");
+    const head = el("div", "h-tr h-th");
+    ["Group", "Before", "After", "Change"].forEach((x, n) => head.append(el("span", n === 0 ? "h-group" : null, x)));
+    tbl.append(head);
+    const before = raw.result || {};
+    const keys = [...new Set([...Object.keys(after), ...Object.keys(before)])];
+    keys.slice(0, 12).forEach((k) => {
+      const tr = el("div", "h-tr");
+      const b = before[k], a = after[k];
+      const fmt = (x) => (typeof x === "number" ? x.toLocaleString("en-US", { maximumFractionDigits: 2 }) : "—");
+      let change = "—", cls = "";
+      if (typeof a === "number" && typeof b === "number" && b !== 0) { const d = ((a - b) / Math.abs(b)) * 100; change = `${d > 0 ? "+" : ""}${d.toFixed(1)}%`; cls = Math.abs(d) >= 0.05 ? "moved" : ""; }
+      else if (typeof a !== "number" && typeof b === "number") { change = "merged away"; cls = "moved"; }
+      else if (typeof a === "number" && raw.result && typeof b !== "number") { change = "new group"; }
+      tr.append(el("span", "h-group", k), el("span", null, raw.error ? "—" : fmt(b)), el("span", null, fmt(a)), el("span", `h-change ${cls}`, raw.error ? "—" : change));
+      tbl.append(tr);
+    });
+    impact.append(tbl);
+  }
+  grid.append(impact);
+  box.append(grid);
+  box.style.animation = "none"; void box.offsetWidth; box.style.animation = "";
 }
 
 function renderGroups(result) {
@@ -274,14 +427,17 @@ function countUp(node, target) {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fmt = (x) => x.toLocaleString("en-US", { maximumFractionDigits: Number.isInteger(target) ? 0 : 2 });
   if (reduce) { node.textContent = fmt(target); return; }
+  let done = false;
   const t0 = performance.now();
-  const tick = (now) => {
-    const t = Math.min(1, Math.max(0, (now - t0) / 1100));
+  const tick = () => {
+    if (done) return;
+    const t = Math.min(1, Math.max(0, (performance.now() - t0) / 1100));
     const k = 1 - Math.pow(1 - t, 3);
     node.textContent = fmt(t < 1 ? Math.round(target * k * 100) / 100 : target);
-    if (t < 1) requestAnimationFrame(tick);
+    if (t < 1) requestAnimationFrame(tick); else done = true;
   };
   requestAnimationFrame(tick);
+  setTimeout(() => { done = true; node.textContent = fmt(target); }, 1300);  // final number even if frames stall
 }
 
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
