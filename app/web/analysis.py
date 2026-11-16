@@ -232,10 +232,14 @@ def _models_story(study: dict) -> dict:
         if not agent or agent.get("tasks") != 80 or short.endswith("-original"):
             continue
         single = (m.get("single_call") or {}).get("heldout_test") or {}
+        # agent_minus_single_call is only set where the single call had no API timeout (a timeout counts as wrong
+        # and would flatter the agent), the same rule as docs/final/findings_models.md
+        fair = "agent_minus_single_call" in m
         rows.append({"id": short, "model": m.get("model", short), "accuracy": agent["accuracy"], "ci95": agent.get("ci95"),
-                     "seconds": agent.get("seconds_median"), "single": single.get("accuracy") if single.get("tasks") == 80 else None})
+                     "seconds": agent.get("seconds_median"), "single": single.get("accuracy") if fair else None,
+                     "lift": m["agent_minus_single_call"] if fair else None})
     rows.sort(key=lambda r: -r["accuracy"])
-    lifts = sorted(r["accuracy"] - r["single"] for r in rows if r["single"] is not None)
+    lifts = sorted(r["lift"] for r in rows if r["lift"] is not None)
     default = next((r for r in rows if r["id"] == "qwen3-30b"), None)
     rank = 1 + sum(r["accuracy"] > default["accuracy"] for r in rows) if default else None
     return {"count": len(rows), "rows": rows, "default": default, "rank": rank,
