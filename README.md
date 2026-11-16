@@ -48,6 +48,8 @@ cp .env.example .env    # then put your ASU RC LLM key in .env
 python -m pytest -q tests
 ```
 
+The tests also run on GitHub for every pull request (`.github/workflows/tests.yml`); they need no API key.
+
 The agent calls an OpenAI-compatible endpoint. We use ASU Research Computing
 (`RC_LLM_BASE_URL=https://openai.rc.asu.edu/v1`) with `qwen3-30b-a3b-instruct-2507` (the default since
 Milestone 3, about 15 s per question) and `qwen3-235b-a22b-instruct-2507` (pass `--model` to use it).
@@ -87,6 +89,8 @@ planted problems; rebuild it with `python examples/make_large_sales.py`). Both u
 - **Answer.** The result counts up on the right, with the change log and the four output files.
 - **Data health.** After the run: rows before and after, every problem found by column (fixed, kept as a
   caveat, or not needed for the question), and the answer before cleaning next to the answer after.
+
+With Docker instead: `docker build -t datasage .` then `docker run --rm -p 8501:8501 --env-file .env datasage`.
 
 It needs the same `.env` key as the command line and nothing else (standard library only). Uploads and
 outputs go to `outputs/web/<run id>/`. Options: `--port`, `--model`, `--host` (default 127.0.0.1, so only
