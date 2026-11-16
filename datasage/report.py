@@ -62,12 +62,25 @@ def ungrounded_numbers(result: RunResult) -> list[str]:
     return bad
 
 
+def _read_line(session) -> str:
+    """The pandas call that reads the input exactly as DataSage did (separator, encoding, sheet)."""
+    read = getattr(session, "read", {}) or {}
+    if str(session.source).lower().endswith(".xlsx"):
+        return f"df = pd.read_excel({session.source!r}, sheet_name={read.get('sheet', 0)!r}, dtype=str, keep_default_na=False)"
+    extra = ""
+    if read.get("sep", ",") != ",":
+        extra += f", sep={read['sep']!r}"
+    if read.get("encoding", "utf-8-sig") not in ("utf-8", "utf-8-sig"):
+        extra += f", encoding={read['encoding']!r}"
+    return f"df = pd.read_csv({session.source!r}, dtype=str, keep_default_na=False{extra})"
+
+
 def replay_script(result: RunResult) -> str:
     session = result.session
     lines = [
         "# Replays the DataSage cleaning steps without the agent.",
         "import pandas as pd",
-        f"df = pd.read_csv({session.source!r}, dtype=str, keep_default_na=False)",
+        _read_line(session),
         "df = df.replace({'': pd.NA, 'NA': pd.NA, 'N/A': pd.NA, 'n/a': pd.NA, 'null': pd.NA, 'None': pd.NA})",
         "for col in df.columns:  # same rule as DataSage: convert only columns that are entirely plain numbers",
         "    as_num = pd.to_numeric(df[col], errors='coerce')",

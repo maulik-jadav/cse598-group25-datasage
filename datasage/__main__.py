@@ -18,6 +18,7 @@ def main() -> None:
                         help="how risky fixes are approved (default: ask at the terminal)")
     parser.add_argument("--answers", default="", help="for --approve script: comma list like y,n,y")
     parser.add_argument("--allow", default="", help="for --approve tools: fix types to approve, e.g. drop_duplicates,parse_dates")
+    parser.add_argument("--sheet", help="for .xlsx: sheet name or 0-based position (default: the first sheet)")
     parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--max-tool-calls", type=int, default=30)
     parser.add_argument("--out", default="outputs/run", help="folder for report.md, cleaned.csv, replay.py, trace.jsonl")
@@ -29,8 +30,9 @@ def main() -> None:
         approver = ScriptedApprover([a.strip().lower() in ("y", "yes") for a in args.answers.split(",") if a.strip()])
     else:
         approver = {"ask": AskApprover, "auto": AutoApprover, "reject": RejectApprover}[args.approve]()
+    sheet = int(args.sheet) if args.sheet and args.sheet.isdigit() else args.sheet
     result = run_agent(args.input, args.request, approver, rules_path=args.rules, model=args.model,
-                       max_tool_calls=args.max_tool_calls, verbose=True)
+                       max_tool_calls=args.max_tool_calls, verbose=True, sheet=sheet)
     out = write_outputs(result, args.out)
     print(f"\nstop: {result.stop_reason} | tool calls: {result.tool_calls} | errors: {result.tool_errors} | "
           f"approvals asked: {result.approvals_asked} | {result.seconds}s | tokens: {result.prompt_tokens}+{result.completion_tokens}")

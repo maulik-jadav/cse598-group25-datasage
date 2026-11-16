@@ -178,3 +178,20 @@ def test_health_reports_outcomes_and_the_answer_before_cleaning():
     assert status[("label_variant", "Category")] == "fixed" and status[("out_of_range", "Quantity")] == "kept"
     assert h["rows_before"] == 4 and h["rows_after"] == 4 and h["cells_changed"] == 1
     assert h["raw_answer"]["result"] == {"Electronics": 2.0, "electronics": 3.0, "Furniture": -2.0}
+
+
+def test_inspect_reports_sheets_and_csv_format(tmp_path, monkeypatch):
+    import io
+    httpd, base = _serve(tmp_path, monkeypatch)
+    try:
+        buf = io.BytesIO()
+        with pd.ExcelWriter(buf) as w:
+            pd.DataFrame({"A": [1]}).to_excel(w, sheet_name="One", index=False)
+            pd.DataFrame({"B": [2]}).to_excel(w, sheet_name="Two", index=False)
+        status, out = _post(base + "/api/inspect", {"file_name": "b.xlsx", "file_b64": base64.b64encode(buf.getvalue()).decode()})
+        assert status == 200 and out == {"kind": "excel", "sheets": ["One", "Two"]}
+        status, out = _post(base + "/api/inspect", {"file_name": "c.csv", "file_b64": base64.b64encode(b"a;b\n1;2\n").decode()})
+        assert status == 200 and out["sep"] == ";"
+        assert _post(base + "/api/inspect", {"file_name": "c.txt", "file_b64": "eA=="})[0] == 400
+    finally:
+        httpd.shutdown()

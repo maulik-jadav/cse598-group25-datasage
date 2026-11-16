@@ -6,6 +6,7 @@ back and every cell in the final table can be traced to a logged change.
 
 from __future__ import annotations
 
+import csv
 import json
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
@@ -15,18 +16,58 @@ import pandas as pd
 from .values import MISSING_TOKENS, plain_number
 
 
-def load_table(path: str | Path) -> pd.DataFrame:
+ENCODINGS = ("utf-8-sig", "cp1252", "latin-1")  # latin-1 accepts any bytes, so it is the last resort
+SEPARATORS = ",;\t|"
+
+
+def detect_csv(path: str | Path) -> dict:
+    """Text encoding and column separator of a CSV file, from its first 64 KB."""
+    raw = Path(path).read_bytes()[:65536]
+    encoding, text = "latin-1", raw.decode("latin-1")
+    for enc in ENCODINGS:
+        try:
+            text = raw.decode(enc)
+            encoding = enc
+            break
+        except UnicodeDecodeError as err:
+            if enc == "utf-8-sig" and err.start >= len(raw) - 3:  # a character cut at the 64 KB boundary
+                text, encoding = raw[:err.start].decode(enc), enc
+                break
+    lines = [ln for ln in text.splitlines()[:50] if ln.strip()]
+    sep = ","
+    if lines:
+        try:
+            sep = csv.Sniffer().sniff("\n".join(lines), delimiters=SEPARATORS).delimiter
+        except csv.Error:
+            counts = {s: lines[0].count(s) for s in SEPARATORS}
+            sep = max(counts, key=counts.get) if max(counts.values()) else ","
+        if sep != "," and lines[0].count(sep) == 0 and lines[0].count(",") > 0:
+            sep = ","
+    return {"encoding": encoding, "sep": sep}
+
+
+def excel_sheets(path: str | Path) -> list[str]:
+    with pd.ExcelFile(path) as book:
+        return [str(s) for s in book.sheet_names]
+
+
+def load_table(path: str | Path, sheet: str | int | None = None) -> pd.DataFrame:
     """Load CSV or XLSX as text, mark missing tokens as NaN, and convert only fully numeric columns.
 
+    CSV: the encoding (UTF-8, Windows-1252 or Latin-1) and the separator (, ; tab |) are detected.
+    XLSX: `sheet` picks a sheet by name or position (default: the first). How the file was read is kept
+    in `df.attrs["read"]`, so the replay script can read it the same way.
     The index is the 0-based row position in the source file and is kept through every change,
     so row ids in checks, fixes and reports always refer to the original rows.
     """
     path = Path(path)
     suffix = path.suffix.lower()
     if suffix == ".csv":
-        df = pd.read_csv(path, dtype=str, keep_default_na=False)
+        read = detect_csv(path)
+        df = pd.read_csv(path, dtype=str, keep_default_na=False, sep=read["sep"], encoding=read["encoding"])
     elif suffix == ".xlsx":
-        df = pd.read_excel(path, dtype=str, keep_default_na=False)
+        read = {"sheet": sheet if sheet is not None else 0}
+        df = pd.read_excel(path, sheet_name=read["sheet"], dtype=str, keep_default_na=False)
     else:
         raise ValueError(f"unsupported file type {suffix}; use .csv or .xlsx")
 
@@ -36,6 +77,7 @@ def load_table(path: str | Path) -> pd.DataFrame:
         if len(values) and all(plain_number(v) is not None for v in values):
             df[column] = pd.to_numeric(df[column])
     df.index = pd.RangeIndex(len(df))
+    df.attrs["read"] = read
     return df
 
 
@@ -67,6 +109,7 @@ class Session:
         self.source = source
         self.request = request
         self.rules = rules or {}
+        self.read = dict(df.attrs.get("read", {}))  # how the file was read (separator, encoding, sheet)
         self.original = df.copy()
         self.versions: list[pd.DataFrame] = [df.copy()]
         self.changes: list[Change] = []

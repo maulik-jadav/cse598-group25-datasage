@@ -63,6 +63,10 @@ python -m datasage --input baseline/examples/messy_sales.csv \
   --request "What was total revenue by category?"
 ```
 
+Input files: CSV (the separator `,` `;` tab or `|` and the encoding UTF-8, Windows-1252 or Latin-1 are
+detected) or Excel `.xlsx` (`--sheet NAME` picks a sheet; default the first). The replay script reads the
+file the same way.
+
 By default each medium or high risk fix is shown at the terminal and needs `y` to be applied. Other
 modes: `--approve auto`, `--approve reject`, and `--approve tools --allow drop_duplicates,parse_dates`
 (approve only those fix types, used for the recorded demo). Outputs go to `outputs/run/`:
