@@ -61,6 +61,13 @@ class RowsArgs(_Args):
     reason: str
 
 
+class ExcludeWhereArgs(_Args):
+    column: str
+    minimum: float | None = None
+    maximum: float | None = None
+    reason: str
+
+
 class RecomputeArgs(_Args):
     column: str
     expression: str
@@ -121,6 +128,9 @@ FIX_TOOLS = {
     "parse_dates": (FixColumnArgs, "Keep valid YYYY-MM-DD dates and set invalid ones to missing. Needs approval if any value becomes missing."),
     "cast_numeric": (FixColumnArgs, "Convert a column to numbers, reading text like '$1,200.00'. Needs approval if any value becomes missing."),
     "exclude_rows": (RowsArgs, "Remove specific rows (by row id) from the analysis copy. Needs approval."),
+    "exclude_where": (ExcludeWhereArgs, "Remove every row whose number in a column is below minimum or above maximum "
+                      "(the rules' range), however many there are. Use it instead of exclude_rows when a check found more "
+                      "rows than it lists. Needs approval."),
     "recompute_column": (RecomputeArgs, "Set a column to an expression on specific rows, e.g. Revenue = Quantity * Price. Needs approval."),
     "set_missing": (SetMissingArgs, "Mark specific cells as missing. Needs approval."),
     "fill_missing": (FillArgs, "Fill missing values in a column with one value. Needs approval; avoid guessing values."),
@@ -153,6 +163,16 @@ def _found(name: str, result: dict) -> str:
     return text
 
 
+def _note_unlisted(result: dict) -> dict:
+    """Checks list at most 10 row ids. Say so when there are more, so the model uses a column-wide fix."""
+    parts = [result] + [result[k] for k in ("text_numbers", "not_numbers", "negatives") if isinstance(result.get(k), dict)]
+    if any(p.get("count", 0) > len(p.get("rows", [])) for p in parts):
+        return {**result, "rows_listed_note": "Only the first row ids are listed; count is the full number. Fix all of "
+                "them with a column-wide fix (exclude_where for a range rule, cast_numeric, parse_dates, normalize_labels), "
+                "not by listing row ids."}
+    return result
+
+
 class Dispatcher:
     def __init__(self, session: Session, approver, use_validator: bool = True, trace=None, coverage: bool = False):
         self.session = session
@@ -161,6 +181,7 @@ class Dispatcher:
         self.trace = trace
         self.coverage = coverage  # Milestone 3: coverage check and unresolved-finding check before analyze
         self.approvals_asked = 0
+        self.failures: dict[tuple[str, str], int] = {}
         self.coverage_refusals = 0
         self.quiet_checks = 0  # checks in a row by the model that found nothing new
         self.flagged: set[tuple[str, str]] = set()
@@ -172,19 +193,37 @@ class Dispatcher:
         if name not in ALL_TOOLS:
             return {"error": f"unknown tool '{name}'; available: {', '.join(ALL_TOOLS)}"}, False
         model, _ = ALL_TOOLS[name]
+        ignored: list[str] = []
         try:
             data = json.loads(raw_args or "{}")
+            if isinstance(data, dict):  # an argument the tool does not take (e.g. a 'reason' on a check) is dropped, not fatal
+                ignored = sorted(k for k in data if k not in model.model_fields)
+                data = {k: v for k, v in data.items() if k in model.model_fields}
             args = model.model_validate(data).model_dump(exclude_none=False)
         except (json.JSONDecodeError, ValidationError) as err:
-            return {"error": f"invalid arguments for {name}: {str(err)[:400]}"}, False
+            return self._failed(name, raw_args, f"invalid arguments for {name}: {str(err)[:400]}")
         try:
             if name in CHECK_TOOLS:
-                return self._check(name, args), True
-            if name in FIX_TOOLS:
-                return self._fix(name, args)
-            return self._other(name, args), True
+                out, ok = self._check(name, args), True
+            elif name in FIX_TOOLS:
+                out, ok = self._fix(name, args)
+            else:
+                out, ok = self._other(name, args), True
         except (ValueError, KeyError, TypeError) as err:
-            return {"error": str(err)}, False
+            return self._failed(name, raw_args, str(err))
+        if ignored:
+            out = {**out, "ignored_arguments": f"{', '.join(ignored)} (not used by {name})"}
+        return out, ok
+
+    def _failed(self, name: str, raw_args: str, message: str) -> tuple[dict, bool]:
+        """An error result; the same failing call made again gets a plain instruction to change it."""
+        key = (name, raw_args)
+        self.failures[key] = self.failures.get(key, 0) + 1
+        out = {"error": message}
+        if self.failures[key] > 1:
+            out["repeat_failure"] = (f"This exact call has failed {self.failures[key]} times with the same error. Do not "
+                                     "send it again: change the arguments as the error says, or use a different tool.")
+        return out, False
 
     def _check(self, name: str, args: dict, by: str = "model") -> dict:
         session = self.session
@@ -210,6 +249,7 @@ class Dispatcher:
         checks.record_findings(session, result)
         session.checks_run.append({"tool": name, "column": column, "version": session.version, "args": args, "by": by,
                                    "found": _found(name, result)})
+        result = _note_unlisted(result)
         if by == "model":
             self.quiet_checks = 0 if (_found(name, result) != "nothing found" and not stale) else self.quiet_checks + 1
         if self.coverage and by == "model" and self.quiet_checks >= 6:
@@ -288,7 +328,8 @@ class Dispatcher:
                 "checks_run_for_you": auto_run,
                 "open_findings": open_findings,
                 "message": "These problems are still in the columns the question uses. Propose a fix for each "
-                           "(use suggested_fix where given; exclude_rows for rows that break a rule), or if one "
+                           "(use suggested_fix where given; exclude_rows for rows that break a rule, or exclude_where "
+                           "when more rows break it than are listed), or if one "
                            "should stay, say why in the summary. Then call analyze again."}
 
     def _fix(self, name: str, args: dict) -> tuple[dict, bool]:

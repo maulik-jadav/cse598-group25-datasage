@@ -80,4 +80,9 @@ def _recheck(before: pd.DataFrame, after: pd.DataFrame, tool: str, args: dict) -
             out["problems"].append(f"{result['count']} recomputed rows still break {column} = {args['expression']}")
     elif tool == "fill_missing":
         out["missing_left"] = int(after[column].isna().sum())
+    elif tool == "exclude_where":
+        left = checks.check_out_of_range(after, column, args.get("minimum"), args.get("maximum"))["count"]
+        out["out_of_range_left"] = left
+        if left:
+            out["problems"].append(f"{left} rows outside the range are still in '{column}'")
     return out
