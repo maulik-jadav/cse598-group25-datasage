@@ -1,0 +1,94 @@
+{
+  "task_id": "salest_04_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 20.42,
+  "tokens": 23451,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 31.7857,
+    "Electronics": 351.4286,
+    "Furniture": 153.25,
+    "Office Supplies": 9.6923
+  },
+  "extra": {
+    "final_summary": "Average unit price by category (68 unique orders): Electronics $351.43, Furniture $153.25, Accessories $31.79, Office Supplies $9.69.\n\nData issues found and fixed:\n- Price stored as text in 2 rows ('$6.00', '$50.00') \u2014 converted to numbers (cast_numeric).\n- 2 exact duplicate rows (25, 56) \u2014 removed with approval so orders weren't double-counted.\n\nChecks that passed: Category labels all match the allowed set with no variants; no missing or out-of-range prices; Region has 3 missing values but isn't used in this question, so it was left alone.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Two prices are stored as text ('$6.00', '$50.00'); converting to numbers so the metric can be computed."
+        },
+        "reason": "Two prices are stored as text ('$6.00', '$50.00'); converting to numbers so the metric can be computed.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (70 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 25 and 56 are exact duplicates of earlier rows; removing them so orders aren't double-counted in the average."
+        },
+        "reason": "Rows 25 and 56 are exact duplicates of earlier rows; removing them so orders aren't double-counted in the average.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          25,
+          56
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3-spec",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 31.7857,
+    "Electronics": 351.4286,
+    "Furniture": 153.25,
+    "Office Supplies": 9.6923
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

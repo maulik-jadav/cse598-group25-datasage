@@ -1,0 +1,57 @@
+{
+  "task_id": "penguinsh_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 66.3,
+  "tokens": 3359,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3788.1944444444443,
+    "male": 4492.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # normalize sex labels (e.g. 'FEMALE' -> 'female'); unknown stays missing\n    s = df['sex'].astype(str).str.strip().str.lower()\n    df['sex'] = s.where(s.isin(['male', 'female']))\n    # body_mass_g written as text (with thousands separators) -> numeric\n    b = pd.to_numeric(df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip(), errors='coerce')\n    # out-of-range masses (e.g. 3700000) are invalid -> missing\n    df['body_mass_g'] = b.where(b.between(2500, 6500))\n    # negative flipper length is a sign error -> use magnitude, then range-check\n    f = pd.to_numeric(df['flipper_length_mm'], errors='coerce').abs()\n    df['flipper_length_mm'] = f.where(f.between(170, 235))\n    return df\n\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['sex', 'body_mass_g'])\n    g = d.groupby('sex')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 3,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3792.8571,
+    "male": 4492.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

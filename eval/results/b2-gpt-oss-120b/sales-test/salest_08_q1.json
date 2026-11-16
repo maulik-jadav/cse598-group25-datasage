@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 30.0,
+  "tokens": 3481,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 1740.0,
+    "Electronics": 13410.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 486.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Strip whitespace in Region and Category\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Category'] = df['Category'].astype(str).str.strip()\n\n    # Standardise Region values (remove stray spaces, keep allowed list)\n    region_allowed = {'North', 'South', 'East', 'West'}\n    df['Region'] = df['Region'].apply(lambda x: x if x in region_allowed else x.strip())\n    df['Region'] = df['Region'].where(df['Region'].isin(region_allowed), None)\n\n    # Standardise Category values (map known misspellings / case variants)\n    cat_map = {\n        'Accessories': 'Accessories',\n        'Accesories': 'Accessories',\n        'Electronics': 'Electronics',\n        'electronics': 'Electronics',\n        'Electornics': 'Electronics',\n        'Furniture': 'Furniture',\n        'Office Supplies': 'Office Supplies',\n        'office supplies': 'Office Supplies',\n        'Office Suplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].map(cat_map).where(df['Category'].isin(cat_map.values()), None)\n\n    # Parse dates, coerce errors to NaT and drop those rows\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n\n    # Ensure numeric types for calculations\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n\n    # Re\u2011calculate Revenue to guarantee consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    return df\n\ndef answer(df):\n    # Group by cleaned Category and sum Revenue\n    result_series = df.groupby('Category', dropna=True)['Revenue'].sum()\n    # Convert to plain Python dict with float values\n    result = {cat: float(val) for cat, val in result_series.items()}\n    return result"
+  },
+  "corrections": 5,
+  "planted": 11,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "task_id": "salesh_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 30.62,
+  "tokens": 2915,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.263157894736842,
+    "Electronics": 277.85714285714283,
+    "Furniture": 201.15384615384616,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # Price: strip currency symbols/commas written as text -> numeric\n    d['Price'] = pd.to_numeric(\n        d['Price'].astype(str).str.replace(r'[^0-9.\\-]', '', regex=True).replace('', None),\n        errors='coerce'\n    )\n    # Quantity: must be a positive whole number -> drop invalid rows\n    d['Quantity'] = pd.to_numeric(d['Quantity'], errors='coerce')\n    d = d[d['Quantity'].notna() & (d['Quantity'] >= 1) & (d['Quantity'] % 1 == 0)].copy()\n    # Date: validate ISO format, invalid -> NaT\n    d['Date'] = pd.to_datetime(d['Date'], format='%Y-%m-%d', errors='coerce')\n    # Region: trim whitespace and fix label variants\n    d['Region'] = d['Region'].astype(str).str.strip().replace({\n        'Wst': 'West', 'Eats': 'East', 'Wset': 'West', 'Noth': 'North', 'Sout': 'South',\n        'nan': None, 'None': None\n    })\n    # Revenue: enforce Revenue = Quantity * Price\n    d['Revenue'] = d['Quantity'] * d['Price']\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['Category'].notna() & d['Price'].notna()]\n    g = d.groupby('Category')['Price'].mean()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 201.1538,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

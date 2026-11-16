@@ -1,0 +1,69 @@
+{
+  "task_id": "salesh_08_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 4,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 110.14,
+  "tokens": 11809,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "01": 6680.0,
+    "02": 4424.0,
+    "03": 7202.0,
+    "04": 4780.0,
+    "05": 14196.0,
+    "06": 3790.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    df = df[df['Revenue'].notna()]\n    df['Date'] = df['Date'].str.strip()\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df[df['Date'].notna()]\n    df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})\n    allowed_categories = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed_categories)]\n    df['Region'] = df['Region'].str.strip()\n    allowed_regions = ['North', 'South', 'East', 'West']\n    df = df[df['Region'].isin(allowed_regions)]\n    df['Quantity'] = df['Quantity'].astype(int).clip(1, 8)\n    df['Price'] = df['Price'].clip(0, 900)\n    return df\n\ndef answer(df):\n    df['Month'] = df['Date'].dt.month.astype(str).str.zfill(2)\n    monthly_revenue = df.groupby('Month')['Revenue'].sum().reset_index()\n    return {month: total for month, total in zip(monthly_revenue['Month'], monthly_revenue['Revenue'])}"
+  },
+  "corrections": 5,
+  "planted": 7,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Price"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

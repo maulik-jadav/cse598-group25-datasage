@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 119.57,
+  "tokens": 2740,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 38.58,
+    "Dream": 39.489999999999995,
+    "Torgersen": 38.3375
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Make a copy of the original dataframe to avoid modifying it directly\n    cleaned_df = df.copy()\n    \n    # Fix label variants in 'island' column\n    cleaned_df['island'] = cleaned_df['island'].replace({'Torgerson': 'Torgersen', 'Bisco': 'Biscoe'})\n    \n    # Fix label variants in 'sex' column\n    cleaned_df['sex'] = cleaned_df['sex'].str.lower()\n    \n    # Convert 'body_mass_g' to numeric, handling commas and invalid values\n    cleaned_df['body_mass_g'] = cleaned_df['body_mass_g'].replace(',', '', regex=True).astype(float)\n    \n    # Filter out rows where body_mass_g is out of range\n    cleaned_df = cleaned_df[(cleaned_df['body_mass_g'] >= 2500) & (cleaned_df['body_mass_g'] <= 6500)]\n    \n    # Filter for Adelie penguins only\n    cleaned_df = cleaned_df[cleaned_df['species'] == 'Adelie']\n    \n    return cleaned_df\n\ndef answer(df):\n    cleaned_df = clean(df)\n    \n    # Group by island and calculate the average bill length\n    result = cleaned_df.groupby('island')['bill_length_mm'].mean().to_dict()\n    \n    return result\n"
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 29,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-devstral2-123b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 38.58,
+    "Dream": 39.49,
+    "Torgersen": 38.3375
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

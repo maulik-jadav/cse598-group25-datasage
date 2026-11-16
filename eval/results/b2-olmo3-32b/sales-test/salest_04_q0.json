@@ -1,0 +1,59 @@
+{
+  "task_id": "salest_04_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 2,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 16.69,
+  "tokens": 2502,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "Unknown": 1090.0,
+    "West": 1380.0,
+    "all": 28340.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    # Fill missing Region with 'Unknown' (or could drop, but keep id as per instructions)\n    df['Region'] = df['Region'].fillna('Unknown')\n    # Standardize Price: remove $ sign and convert to float\n    df['Price'] = df['Price'].str.replace(r'\\$', '', regex=True).astype(float)\n    # Validate Category\n    allowed_category = {'Electronics', 'Accessories', 'Furniture', 'Office Supplies'}\n    df = df[df['Category'].isin(allowed_category)]\n    # Validate Region\n    allowed_region = {'North', 'South', 'East', 'West'}\n    df = df[df['Region'].isin(allowed_region.union({'Unknown'}))]\n    # Validate Quantity and Price ranges\n    mask = (df['Quantity'] >= 1) & (df['Quantity'].astype(int) == df['Quantity'])\n    mask &= (df['Price'] >= 0)\n    df = df[mask]\n    # Compute Revenue if missing or inconsistent\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # Drop rows where Revenue is now NaN (shouldn't happen, but just in case)\n    df = df.dropna(subset=['Revenue'])\n    # Keep id column (Order_ID)\n    return df\n\ndef answer(df):\n    # Group by Region and Category=='Electronics'\n    elec_df = df[df['Category'] == 'Electronics']\n    grouped = elec_df.groupby(['Region']).sum(numeric_only=True)\n    # Revenue is the only numeric column that should be summed per group\n    result = {}\n    for region, row in grouped.iterrows():\n        # Only keep Revenue\n        revenue = row.get('Revenue', 0)\n        if pd.notna(revenue):\n            result[region] = revenue\n    # If all regions combined are needed, add 'all' key\n    if 'all' not in result:\n        total = elec_df['Revenue'].sum()\n        if pd.notna(total):\n            result['all'] = total\n    # Remove any keys with NaN values\n    result = {k: v for k, v in result.items() if pd.notna(v)}\n    return result"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Price"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

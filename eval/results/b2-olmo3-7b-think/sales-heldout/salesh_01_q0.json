@@ -1,0 +1,48 @@
+{
+  "task_id": "salesh_01_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 1,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 530.38,
+  "tokens": 14186,
+  "stop_reason": "code_error",
+  "note": "TypeError: string indices must be integers, not 'str'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    allowed_regions = ['North', 'South', 'East', 'West']\n    # Process Quantity\n    valid_quantity = (df['Quantity'] >= 1) & (df['Quantity'] <= 8) & (df['Quantity'].apply(lambda x: x.is_integer()))\n    df['Quantity'] = np.where(valid_quantity, df['Quantity'], np.nan)\n    # Process Region\n    df['Region'] = df['Region'].apply(lambda x: x if x in allowed_regions else np.nan)\n    return df\n\ndef answer(df):\n    allowed_regions = ['North', 'South', 'East', 'West']\n    valid_rows = df[\n        (df['Region'].notna()) &\n        (df['Region'].isin(allowed_regions)) &\n        (df['Quantity'].notna()) &\n        (df['Quantity'].between(1, 8).astype(int) == df['Quantity'])\n    ]\n    grouped = valid_rows.groupby('Region')['Quantity'].sum().reset_index()\n    result = {row['Region']: row['Quantity'] for row in grouped}\n    return result"
+  },
+  "corrections": 0,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "issues_reported": [
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

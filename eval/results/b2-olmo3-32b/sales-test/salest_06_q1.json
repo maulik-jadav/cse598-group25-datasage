@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 4,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.09,
+  "tokens": 2216,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 46.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix label variant in Region: correct 'Nort' to 'North'\n    df['Region'] = df['Region'].replace('Nort', 'North')\n    # Ensure Date is parsed to datetime and drop rows with invalid dates\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n    # Convert Quantity and Price to numeric, coerce errors to NaN\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Drop rows where Quantity or Price are missing after conversion\n    df = df.dropna(subset=['Quantity', 'Price'])\n    # Remove negative Quantity or Revenue\n    df = df[(df['Quantity'] > 0) & (df['Revenue'] >= 0)]\n    # Recompute Revenue to ensure correctness\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # Keep the id column (Order_ID)\n    return df\n\ndef answer(df):\n    # Group by Region, join multi-column group labels with ' | ' (though only Region here)\n    grouped = df.groupby('Region', as_index=False)['Quantity'].sum()\n    # Drop rows with missing Region\n    grouped = grouped.dropna(subset=['Region'])\n    # Build result dict\n    result = {row['Region']: int(row['Quantity']) for _, row in grouped.iterrows() if pd.notnull(row['Region'])}\n    return result"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

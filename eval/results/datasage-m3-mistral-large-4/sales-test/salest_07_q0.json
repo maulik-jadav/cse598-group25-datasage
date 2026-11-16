@@ -1,0 +1,98 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 176.61,
+  "tokens": 17857,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 11.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "final_summary": "Answer: counting orders (Order_ID) per Category gives Electronics 24, Furniture 20, Office Supplies 13, Accessories 11 (68 orders total). Data problems found and fixed: (1) 2 exact duplicate rows (rows 6 and 49) removed so orders aren't double-counted; (2) 2 Category labels with stray spaces (\" Electronics\", \"Office Supplies \") normalized to the allowed labels from the rules file. Caveats: the table also contains a negative Quantity (-4, row 41) and a negative Revenue (-100) that violate the rules, but they don't affect a per-category order count, so those rows were left in place. Region has 1 missing value, also irrelevant to this count.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Electronics": "Electronics",
+            "Office Supplies ": "Office Supplies"
+          },
+          "reason": "Merge space-variant Category labels into the allowed labels from the rules file so each order is counted in the correct category."
+        },
+        "reason": "Merge space-variant Category labels into the allowed labels from the rules file so each order is counted in the correct category.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({' Electronics': 'Electronics', 'Office Supplies ': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 6 and 49 are exact later copies of earlier rows; removing them prevents double-counting orders in the per-category counts."
+        },
+        "reason": "Rows 6 and 49 are exact later copies of earlier rows; removing them prevents double-counting orders in the per-category counts.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          49
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 5,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mistral-large-4",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

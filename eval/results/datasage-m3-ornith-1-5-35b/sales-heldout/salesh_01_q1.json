@@ -1,0 +1,111 @@
+{
+  "task_id": "salesh_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 11,
+  "tool_errors": 2,
+  "recovered_errors": 2,
+  "approvals_asked": 2,
+  "seconds": 122.88,
+  "tokens": 56890,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "extra": {
+    "final_summary": "Answer: Orders per category (after cleaning):\n\n- Accessories: 21\n- Electronics: 18\n- Office Supplies: 17\n- Furniture: 14\nTotal: 70 orders\n\nProblems found and fixes applied:\n1. Category label variants (6 cells): leading/trailing spaces (\" Furniture\", \" Office Supplies\", \"Furniture \") and misspellings (\"Furntur\u0435\" x2, \"Accesories\") were merged into the 4 allowed labels from the rules file via normalize_labels. Without this, categories would have been split into 9 spurious groups.\n2. Duplicate rows (rows 6 and 60): exact duplicates of existing orders (e.g., Order_ID 2006) were excluded so they wouldn't inflate the order count.\n\nData verified clean: Revenue = Quantity \u00d7 Price holds for all rows (no cross-column issues), no invalid dates, no negatives, and no remaining label variants.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            " Office Supplies": "Office Supplies",
+            "Furniture ": "Furniture",
+            "Accesories": "Accessories",
+            "Furnture": "Furniture"
+          },
+          "reason": "Merge space/case variants and misspellings of Category into the allowed labels defined in the rules file (Electronics, Accessories, Furniture, Office Supplies)."
+        },
+        "reason": "Merge space/case variants and misspellings of Category into the allowed labels defined in the rules file (Electronics, Accessories, Furniture, Office Supplies).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Category: merged 5 label variant(s), 6 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', ' Office Supplies': 'Office Supplies', 'Furniture ': 'Furniture', 'Accesories': 'Accessories', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            6,
+            60
+          ],
+          "reason": "Exact duplicate rows (later copies of earlier identical rows). Order_ID 2006 appears in both row 5 and row 6, and row 60 duplicates another order. Counting these would inflate the order count per category."
+        },
+        "reason": "Exact duplicate rows (later copies of earlier identical rows). Order_ID 2006 appears in both row 5 and row 6, and row 60 duplicates another order. Counting these would inflate the order count per category.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          60
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [6, 60]",
+        "code": "df = df.drop(index=[6, 60])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 10
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-ornith-1-5-35b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

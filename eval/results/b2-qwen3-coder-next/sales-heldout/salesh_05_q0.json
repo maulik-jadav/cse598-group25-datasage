@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 11.92,
+  "tokens": 2478,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix Region: standardize case and variants, drop rows with missing Region\n    region_map = {\n        'east': 'East',\n        'west': 'West',\n        'north': 'North',\n        'south': 'South',\n        'Wst': 'West',\n        'Suoth': 'South'\n    }\n    df['Region'] = df['Region'].map(region_map).fillna(df['Region'])\n    df = df.dropna(subset=['Region'])\n    \n    # Fix Quantity: ensure numeric and positive (drop negative or zero quantities)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df = df[df['Quantity'] > 0]\n    \n    # Fix Price: convert text to numeric (remove $ and .00 if present)\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace('.00', '', regex=False)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    return df\n\ndef answer(df):\n    # Group by Region and sum Quantity (units sold)\n    result = df.groupby('Region')['Quantity'].sum().to_dict()\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

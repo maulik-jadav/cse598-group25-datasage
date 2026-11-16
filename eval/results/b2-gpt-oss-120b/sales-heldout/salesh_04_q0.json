@@ -1,0 +1,58 @@
+{
+  "task_id": "salesh_04_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 23.27,
+  "tokens": 2798,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 33.18,
+    "Electronics": 568.67,
+    "Furniture": 214.29,
+    "Furnture": 45.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # 1. Drop exact duplicate rows, keep the first occurrence\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n\n    # 2. Standardize Category values (label variants)\n    #   Allowed: Electronics, Accessories, Furniture, Office Supplies\n    cat_map = {\n        'electronics': 'Electronics',\n        'accessories': 'Accessories',\n        'furniture': 'Furniture',\n        'office supplies': 'Office Supplies'\n    }\n    # lower\u2011case and strip spaces then map; keep original if not in map\n    df['Category'] = df['Category'].astype(str).str.strip().str.lower().map(cat_map).fillna(df['Category'])\n\n    # 3. Re\u2011calculate Revenue to satisfy the formula Revenue = Quantity * Price\n    # Ensure Quantity and Price are numeric (they already are per profile)\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Clean the data first\n    df_clean = clean(df)\n    # Compute average unit price per Category\n    avg_price = df_clean.groupby('Category')['Price'].mean()\n    # Convert to plain python dict, rounding to 2 decimal places for readability\n    result = {cat: round(val, 2) for cat, val in avg_price.items()}\n    return result"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.1818,
+    "Electronics": 568.6667,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

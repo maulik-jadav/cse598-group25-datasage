@@ -1,0 +1,121 @@
+{
+  "task_id": "salest_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 12,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 60.63,
+  "tokens": 64807,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 37.1429,
+    "Electronics": 369.0,
+    "Furniture": 169.1667,
+    "Office Supplies": 13.6364
+  },
+  "extra": {
+    "final_summary": "Data quality issues found and fixed:\n- Price column contained text values with dollar signs ($350.00, $18.00, $45.00); cast to numeric.\n- Region had label variants: trailing space 'North ' and misspelling 'Suoth'; normalized to 'North' and 'South'.\n- Date column had 3 invalid values (TBD, not-a-date, 13/45/2026); parsed dates and set invalid to missing.\n\nAverage unit price by Category (using cleaned data, 47 rows):\n- Accessories: 37.1429\n- Electronics: 369.0\n- Furniture: 169.1667\n- Office Supplies: 13.6364\n\nNote: Date issues were fixed but do not affect the average unit price calculation. Region normalization was applied for consistency with rules, though Region is not used in this question.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains dollar signs and decimals stored as text; need numeric values for average unit price calculation"
+        },
+        "reason": "Price contains dollar signs and decimals stored as text; need numeric values for average unit price calculation",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (47 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "North ": "North",
+            "Suoth": "South"
+          },
+          "reason": "Region has trailing space and misspelling; normalize to allowed labels per rules"
+        },
+        "reason": "Region has trailing space and misspelling; normalize to allowed labels per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'North ': 'North', 'Suoth': 'South'})"
+      },
+      {
+        "version": 3,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Date column has invalid values TBD, not-a-date, 13/45/2026; parse to set invalid to missing per rules format YYYY-MM-DD"
+        },
+        "reason": "Date column has invalid values TBD, not-a-date, 13/45/2026; parse to set invalid to missing per rules format YYYY-MM-DD",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 12
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 37.1429,
+    "Electronics": 369.0,
+    "Furniture": 169.1667,
+    "Office Supplies": 13.6364
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

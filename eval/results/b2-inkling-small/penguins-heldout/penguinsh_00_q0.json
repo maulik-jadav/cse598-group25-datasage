@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_00_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 61.28,
+  "tokens": 4373,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 38.58,
+    "Dream": 39.489999999999995,
+    "Torgersen": 38.75555555555556
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix island label variants\n    df['island'] = df['island'].replace({'Torgerson': 'Torgersen', 'Bisco': 'Biscoe'})\n    # Fix sex case variants\n    df['sex'] = df['sex'].str.lower()\n    # Fix body_mass_g: remove commas, coerce to numeric, and enforce range\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = float('nan')\n    # Ensure numeric columns are numeric\n    df['bill_length_mm'] = pd.to_numeric(df['bill_length_mm'], errors='coerce')\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['year'] = pd.to_numeric(df['year'], errors='coerce')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    sub = df[(df['species'] == 'Adelie')].copy()\n    sub = sub.dropna(subset=['island', 'bill_length_mm'])\n    result = sub.groupby('island')['bill_length_mm'].mean()\n    return result.to_dict()\n"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "penguins-heldout",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 38.58,
+    "Dream": 39.49,
+    "Torgersen": 38.3375
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 147.13,
+  "tokens": 5156,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3848.913043478261,
+    "Chinstrap": 3721.4285714285716,
+    "Gentoo": 5181.818181818182
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # normalize sex: case variants MALE/FEMALE -> male/female\n    if 'sex' in df.columns:\n        df['sex'] = df['sex'].astype('string').str.strip().str.lower()\n        # keep only allowed values, others become NA (missing means unknown)\n        allowed_sex = {'male', 'female'}\n        df.loc[~df['sex'].isin(allowed_sex), 'sex'] = pd.NA\n    # normalize island: typo variants Torgerson->Torgersen, Bisco->Biscoe\n    if 'island' in df.columns:\n        df['island'] = df['island'].astype('string').str.strip()\n        island_map = {'Torgerson': 'Torgersen', 'Bisco': 'Biscoe'}\n        df['island'] = df['island'].replace(island_map)\n    # body_mass_g is text with commas like \"5,500\" and out-of-range 4000000\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = df['body_mass_g'].astype('string').str.replace(',', '', regex=False).str.strip()\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n        # out_of_range per rules min 2500 max 6500\n        df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # ensure other numeric columns are numeric and within range (defensive)\n    if 'bill_length_mm' in df.columns:\n        df['bill_length_mm'] = pd.to_numeric(df['bill_length_mm'], errors='coerce')\n        df.loc[(df['bill_length_mm'] < 30) | (df['bill_length_mm'] > 60), 'bill_length_mm'] = pd.NA\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n        df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = pd.NA\n    return df\n\ndef answer(df):\n    # ensure cleaned\n    df = clean(df)\n    # drop missing group keys and missing measure\n    df = df.dropna(subset=['species', 'body_mass_g'])\n    if df.empty:\n        return {}\n    grouped = df.groupby('species', dropna=True)['body_mass_g'].mean()\n    # return dict with string keys and float values\n    return {str(k): float(v) for k, v in grouped.items()}\n"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3848.913,
+    "Chinstrap": 3721.4286,
+    "Gentoo": 5181.8182
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

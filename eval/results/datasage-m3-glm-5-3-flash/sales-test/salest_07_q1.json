@@ -1,0 +1,154 @@
+{
+  "task_id": "salest_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 154.54,
+  "tokens": 18520,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "extra": {
+    "final_summary": "**Total revenue by category (after cleaning, 67 rows):**\n- Electronics: $47,580\n- Furniture: $14,685\n- Accessories: $1,780\n- Office Supplies: $444\n\n**Problems found and fixed:**\n1. **2 exact duplicate rows** (rows 6, 49) \u2014 removed, since Order_ID is defined as a unique order number.\n2. **Category label variants** \u2014 \" Electronics\" and \"Office Supplies \" (extra space) merged into the allowed labels \"Electronics\" and \"Office Supplies\" per the rules file.\n3. **Revenue formula violations** (rows 0, 7, 66) \u2014 Revenue did not equal Quantity \u00d7 Price (e.g. row 0: 5 \u00d7 18 = 90 but Revenue was 905; row 66: 120,000 vs 1,200). Recomputed per the rule Revenue = Quantity \u00d7 Price.\n4. **Negative Quantity** (row 41, Quantity = -4) \u2014 rules require Quantity \u2265 1, so that row was excluded from the analysis.\n\n**Caveats:** One row had a missing Region; it was left as-is since Region isn't used in this question. All fixes were applied to a working copy \u2014 the original file is unchanged.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 6 and 49 are exact duplicates of earlier rows (same Order_ID 2006 etc.); rules say Order_ID is a unique order number."
+        },
+        "reason": "Rows 6 and 49 are exact duplicates of earlier rows (same Order_ID 2006 etc.); rules say Order_ID is a unique order number.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          49
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Electronics": "Electronics",
+            "Office Supplies ": "Office Supplies"
+          },
+          "reason": "Merge space/case variants into the allowed Category labels per rules file."
+        },
+        "reason": "Merge space/case variants into the allowed Category labels per rules file.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({' Electronics': 'Electronics', 'Office Supplies ': 'Office Supplies'})"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            0,
+            7,
+            66
+          ],
+          "reason": "Rows 0, 7, 66 violate the rule Revenue = Quantity * Price (e.g. row 0: 5*18=90 but Revenue=905)."
+        },
+        "reason": "Rows 0, 7, 66 violate the rule Revenue = Quantity * Price (e.g. row 0: 5*18=90 but Revenue=905).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[0, 7, 66], 'Revenue'] = [90.0, 24.0, 1200.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            41
+          ],
+          "reason": "Row 41 has Quantity = -4, but rules say Quantity is units sold and must be a positive whole number (min 1)."
+        },
+        "reason": "Row 41 has Quantity = -4, but rules say Quantity is units sold and must be a positive whole number (min 1).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          41
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [41]",
+        "code": "df = df.drop(index=[41])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

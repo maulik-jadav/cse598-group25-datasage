@@ -1,0 +1,63 @@
+{
+  "task_id": "salesh_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 31.07,
+  "tokens": 2569,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Drop exact duplicate rows\n    df = df.drop_duplicates()\n    # Strip whitespace and standardize Region\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    df.loc[df['Region'] == 'Nan', 'Region'] = pd.NA\n    df['Region'] = df['Region'].replace({'Nan': pd.NA})\n    # Fix negative Quantity: set to NaN (invalid per rules min=1)\n    df.loc[df['Quantity'] < 1, 'Quantity'] = pd.NA\n    # Recalculate Revenue = Quantity * Price where Quantity is valid\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Filter to Electronics\n    sub = df[df['Category'] == 'Electronics']\n    # Drop rows with missing Region\n    sub = sub.dropna(subset=['Region'])\n    # Group by Region and sum Revenue\n    grouped = sub.groupby('Region')['Revenue'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-2",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 7,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 69.87,
+  "tokens": 25069,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "extra": {
+    "final_summary": "Units sold per region: West 62, South 53, North 40, East 28 (all 43 rows used).\n\nProblems found and fixes:\n- Region had 9 distinct labels instead of the 4 allowed ones: case variants \"north\" (2 rows) and \"east\" (1 row), plus misspellings \"Nort\" (\u2192North), \"Suoth\" (\u2192South), \"Wst\" (\u2192West). Fixed with one normalize_labels call (approved); no rows were excluded for label spelling.\n- Quantity (the metric) was checked: no missing values, no negatives, nothing below the rules minimum of 1, no numbers stored as text. No fix needed.\n- No exact duplicate rows.\n\nCaveats (not used by this question, so left untouched):\n- Date has ~7% non-ISO values (e.g. row 8 \"2026-14-01\" is an impossible month) \u2014 would need parse_dates if a date-based question comes up.\n- Price is stored as text with 3 values written as currency (\"$6.00\", \"$350.00\") \u2014 would need cast_numeric for revenue/price analysis.\n- Revenue was not verified against Quantity * Price; it isn't needed for a unit count.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "north": "North",
+            "Nort": "North",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "Merge case variants and misspellings into the four allowed regions (North, South, East, West) so the group-by is correct."
+        },
+        "reason": "Merge case variants and misspellings into the four allowed regions (North, South, East, West) so the group-by is correct.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Region: merged 5 label variant(s), 6 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'north': 'North', 'Nort': 'North', 'Suoth': 'South', 'Wst': 'West'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-deepseek-v4-1-flash",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 115.32,
+  "tokens": 3723,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 73.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Convert Price to numeric (remove $ and convert)\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).astype(float)\n    \n    # Fix Quantity negatives - set to 1 (minimum allowed per rules)\n    df.loc[df['Quantity'] < 1, 'Quantity'] = 1\n    \n    # Recalculate Revenue based on Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Fix Region label variants (case and typos)\n    region_map = {\n        'west': 'West',\n        'south': 'South',\n        'Wst': 'West',\n        'Suoth': 'South'\n    }\n    df['Region'] = df['Region'].str.title()\n    df['Region'] = df['Region'].replace(region_map)\n    \n    # Drop rows with missing Region (needed for grouping)\n    df = df.dropna(subset=['Region'])\n    \n    return df\n\ndef answer(df):\n    # Group by Region and sum Quantity\n    result = df.groupby('Region')['Quantity'].sum().to_dict()\n    return result"
+  },
+  "corrections": 6,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-122b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

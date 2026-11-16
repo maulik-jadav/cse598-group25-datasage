@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 16.29,
+  "tokens": 2251,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.65217391304348,
+    "Electronics": 259.2307692307692,
+    "Furniture": 251.94444444444446,
+    "Office Supplies": 9.23076923076923
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates(keep='first')\n    \n    # Fix label variants in Category\n    df['Category'] = df['Category'].replace({'Office Suplies': 'Office Supplies', 'Accesories': 'Accessories'})\n    \n    # Fix label variants in Region\n    df['Region'] = df['Region'].str.strip()\n    \n    # Ensure Date is in correct format (assuming the non-ISO dates are typos and can be parsed)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d')\n    \n    return df\n\ndef answer(df):\n    # Group by Category and calculate average unit price\n    avg_price = df.groupby('Category')['Price'].mean().to_dict()\n    return avg_price\n"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-devstral2-123b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.6522,
+    "Electronics": 259.2308,
+    "Furniture": 251.9444,
+    "Office Supplies": 9.2308
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

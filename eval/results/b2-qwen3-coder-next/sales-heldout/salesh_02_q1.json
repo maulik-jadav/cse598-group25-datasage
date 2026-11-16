@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 2,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 14.8,
+  "tokens": 2245,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix region labels: strip whitespace and standardize to title case\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    \n    # Fix negative quantities: set to absolute value (since quantity should be positive)\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recalculate Revenue to ensure consistency: Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Filter for Electronics category only\n    df_electronics = df[df['Category'] == 'Electronics'].copy()\n    \n    return df_electronics\n\ndef answer(df):\n    # Group by region and sum revenue\n    grouped = df.groupby('Region')['Revenue'].sum()\n    \n    # Convert to dict and ensure keys are strings\n    result = {str(region): float(revenue) for region, revenue in grouped.items()}\n    \n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 18,
+  "damaged_rows": 51,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

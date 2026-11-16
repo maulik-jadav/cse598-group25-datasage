@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 111.76,
+  "tokens": 4391,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # strip whitespace from text columns and normalize empty strings to NaN\n    for col in [\"Category\", \"Region\", \"Date\", \"Product\"]:\n        if col in df.columns:\n            # preserve NaN\n            mask = df[col].notna()\n            df.loc[mask, col] = df.loc[mask, col].astype(str).str.strip()\n            df[col] = df[col].replace('', np.nan)\n    # fix Category label variants\n    if \"Category\" in df.columns:\n        df[\"Category\"] = df[\"Category\"].replace({\n            \"Office Suplies\": \"Office Supplies\",\n            \"Accesories\": \"Accessories\"\n        })\n    # ensure numeric types (handles text_number if present)\n    for col in [\"Quantity\", \"Price\", \"Revenue\"]:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors=\"coerce\")\n    # enforce Revenue formula: Revenue = Quantity * Price\n    if \"Quantity\" in df.columns and \"Price\" in df.columns:\n        df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n    # drop exact duplicate rows (Order_ID duplicate in sample rows 3/4)\n    df = df.drop_duplicates()\n    # also ensure Order_ID uniqueness - keep first occurrence\n    if \"Order_ID\" in df.columns:\n        df = df.drop_duplicates(subset=[\"Order_ID\"], keep=\"first\")\n    # optional: coerce invalid dates to NaT (invalid_date handling)\n    if \"Date\" in df.columns:\n        df[\"Date\"] = pd.to_datetime(df[\"Date\"], errors=\"coerce\")\n    return df\n\ndef answer(df):\n    # group by Category and sum Revenue, drop missing group keys\n    d = df.dropna(subset=[\"Category\"])\n    if d.empty:\n        return {}\n    grouped = d.groupby(\"Category\", dropna=True)[\"Revenue\"].sum()\n    result = {}\n    for k, v in grouped.items():\n        if pd.isna(k):\n            continue\n        # convert numpy types to native python int/float\n        fv = float(v)\n        if fv.is_integer():\n            result[str(k)] = int(fv)\n        else:\n            result[str(k)] = fv\n    return result\n"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

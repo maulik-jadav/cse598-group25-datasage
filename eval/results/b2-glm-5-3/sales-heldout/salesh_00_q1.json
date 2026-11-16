@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 24.45,
+  "tokens": 3137,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows (e.g. Order_ID 2004 appears twice)\n    df = df.drop_duplicates()\n    # Fix category label variants\n    df['Category'] = (\n        df['Category'].astype(str).str.strip()\n        .replace({'Office Suplies': 'Office Supplies', 'Accesories': 'Accessories'})\n    )\n    # Fix region label variants (extra spaces)\n    df['Region'] = df['Region'].astype(str).str.strip().replace({'nan': None, 'None': None})\n    # Recompute Revenue from Quantity * Price to enforce the formula\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\n\ndef answer(df):\n    df = clean(df)\n    grouped = df.groupby('Category')['Revenue'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 9.7,
+  "tokens": 2420,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix Price: remove $ and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).astype(float)\n    # Fix Quantity: ensure positive integers\n    df = df[df['Quantity'] > 0]\n    # Fix Revenue: ensure positive\n    df = df[df['Revenue'] > 0]\n    # Fix Region: standardize case and handle variants\n    region_mapping = {\n        'west': 'West',\n        'south': 'South',\n        'Wst': 'West',\n        'Suoth': 'South'\n    }\n    df['Region'] = df['Region'].map(region_mapping).fillna(df['Region'])\n    # Drop rows with missing Region\n    df = df.dropna(subset=['Region'])\n    return df\n\ndef answer(df):\n    # Group by Region and sum Quantity\n    result = df.groupby('Region', as_index=False)['Quantity'].sum()\n    # Convert to dict with Region as key and sum as value\n    return dict(zip(result['Region'], result['Quantity']))"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

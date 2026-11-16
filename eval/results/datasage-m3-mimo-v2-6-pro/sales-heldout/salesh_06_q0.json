@@ -1,0 +1,80 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 6,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 256.01,
+  "tokens": 23839,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "extra": {
+    "final_summary": "All 43 rows were used and the region totals are complete.\n\n**Units sold per region:**\n| Region | Units sold |\n|---|---|\n| West | 62 |\n| South | 53 |\n| North | 40 |\n| East | 28 |\n\n**Problems found and fixes applied:**\n- **Region label variants (6 rows):** `east`/`north` (case variants) and `Nort`, `Suoth`, `Wst` (misspellings) were merged into the allowed labels East, North, South, West per the rules file. Without this fix, units would have been split across 9 pseudo-regions. This fix was approved and applied.\n- **Quantity:** checked against the rule (positive whole number) \u2014 no out-of-range values.\n- **Duplicate rows:** none found.\n\n**Caveats (not affecting this answer):**\n- The `Price` column has 3 values stored as text (`$6.00`, `$350.00`) and one `Date` value is invalid (`2026-14-01`). These don't affect units-by-region, but would matter for revenue or date-based questions.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "north": "North",
+            "Nort": "North",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "Rules allow only North/South/East/West; merge case variants (east, north) and clear misspellings (Nort, Suoth, Wst) into canonical labels so region totals are not split."
+        },
+        "reason": "Rules allow only North/South/East/West; merge case variants (east, north) and clear misspellings (Nort, Suoth, Wst) into canonical labels so region totals are not split.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Region: merged 5 label variant(s), 6 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'north': 'North', 'Nort': 'North', 'Suoth': 'South', 'Wst': 'West'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mimo-v2-6-pro",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

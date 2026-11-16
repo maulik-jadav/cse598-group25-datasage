@@ -1,0 +1,158 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 15,
+  "tool_errors": 3,
+  "recovered_errors": 1,
+  "approvals_asked": 4,
+  "seconds": 20.12,
+  "tokens": 86863,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "extra": {
+    "final_summary": "The total revenue per month was calculated. The 'Quantity' column had a negative value, which was excluded. The 'Revenue' column had a cross-column check with 'Quantity * Price' that passed. There were label variants in the 'Region' column that were normalized. The user rejected filling in the missing 'Region' value. The data had 54 valid rows.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            34
+          ],
+          "reason": "negative quantity"
+        },
+        "reason": "negative quantity",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [34]",
+        "code": "df = df.drop(index=[34])"
+      },
+      {
+        "version": 2,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            47,
+            48,
+            56
+          ],
+          "reason": "invalid date"
+        },
+        "reason": "invalid date",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: set 3 value(s) to missing",
+        "code": "df.loc[[47, 48, 56], 'Date'] = pd.NA"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " West": "West",
+            "East ": "East",
+            "Eats": "East",
+            "Wst": "West"
+          },
+          "reason": "standardize region labels"
+        },
+        "reason": "standardize region labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Region: merged 4 label variant(s), 5 cells",
+        "code": "df['Region'] = df['Region'].replace({' West': 'West', 'East ': 'East', 'Eats': 'East', 'Wst': 'West'})"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "fill_missing",
+        "risk": "high",
+        "summary": "Region: filled 1 missing value(s) with 'Unknown'"
+      }
+    ],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "fill_missing",
+        "risk": "high",
+        "approved": false,
+        "why": "changes row 15 column Region to 'Unknown', expected nan"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 16
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-llama4-scout",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

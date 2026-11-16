@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 20.1,
+  "tokens": 2425,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "North": 40.0,
+    "South": 53.0,
+    "East": 28.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    # Fix region label variants\n    region_mapping = {\n        'north': 'North',\n        'Nort': 'North',\n        'east': 'East',\n        'Suoth': 'South',\n        'Wst': 'West'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Fix invalid date\n    # Convert Date to proper format\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Fix price column - remove $ and convert to float\n    df['Price'] = df['Price'].str.replace('$', '').astype(float)\n    \n    return df\n\ndef answer(df):\n    # Group by Region and sum Quantity\n    result = df.groupby('Region')['Quantity'].sum().to_dict()\n    \n    # Convert keys to title case for consistency\n    result = {k.title(): v for k, v in result.items()}\n    \n    # Ensure all regions are present even if 0\n    all_regions = ['North', 'South', 'East', 'West']\n    final_result = {}\n    for region in all_regions:\n        final_result[region] = result.get(region, 0)\n    \n    return final_result"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-30b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

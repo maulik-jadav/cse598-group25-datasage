@@ -1,0 +1,62 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.56,
+  "tokens": 2127,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "Unknown": 5400.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix negative quantities and revenues (set to 0)\n    df['Quantity'] = df['Quantity'].apply(lambda x: max(x, 0))\n    df['Revenue'] = df['Revenue'].apply(lambda x: max(x, 0))\n    # Standardize Region labels: strip spaces and capitalize\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    # Fill missing Region with a placeholder (or could drop; here we keep as 'Unknown')\n    df['Region'] = df['Region'].fillna('Unknown')\n    # Ensure Date is in proper ISO format (YYYY-MM-DD). If parsing fails, keep original.\n    # (No explicit fix needed if values are already ISO; just ensure type is string.)\n    df['Date'] = df['Date'].astype(str)\n    return df\n\ndef answer(df):\n    # Filter for Electronics category\n    electronics = df[df['Category'] == 'Electronics']\n    # Group by Region and sum Revenue\n    result = electronics.groupby('Region')['Revenue'].sum().to_dict()\n    return result\n"
+  },
+  "corrections": 6,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-granite41-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

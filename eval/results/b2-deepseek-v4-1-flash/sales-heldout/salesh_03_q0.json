@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 93.56,
+  "tokens": 5510,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    df = df.drop_duplicates().reset_index(drop=True)\n    if 'Category' in df.columns:\n        cat = df['Category'].astype('string').str.strip()\n        cat_map = {'electronics': 'Electronics', 'accessories': 'Accessories', 'furniture': 'Furniture', 'office supplies': 'Office Supplies'}\n        df['Category'] = cat.str.lower().map(cat_map).fillna(cat)\n    if 'Region' in df.columns:\n        reg = df['Region'].astype('string').str.strip()\n        reg_map = {'north': 'North', 'south': 'South', 'east': 'East', 'west': 'West', 'suoth': 'South', 'eats': 'East'}\n        df['Region'] = reg.str.lower().map(reg_map).fillna(reg)\n    if 'Date' in df.columns:\n        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    for col in ['Quantity', 'Price', 'Revenue']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Category'])\n    counts = d.groupby('Category')['Order_ID'].nunique()\n    return {str(k): int(v) for k, v in counts.items()}"
+  },
+  "corrections": 10,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 58.4,
+  "tokens": 2475,
+  "stop_reason": "code_error",
+  "note": "AttributeError: Can only use .str accessor with string values, not floating. Did you mean: 'std'?",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Make a copy to avoid modifying the original\n    df = df.copy()\n    \n    # Fix invalid dates: drop rows where Date is not a valid ISO date\n    df = df[df['Date'].str.match(r'^\\d{4}-\\d{2}-\\d{2}$', na=False)]\n    \n    # Convert Price to numeric (strip $ and convert)\n    df['Price'] = df['Price'].str.replace('$', '').astype(float)\n    \n    # Fix Region label variants\n    df['Region'] = df['Region'].str.strip().replace({'Suoth': 'South', 'North ': 'North'})\n    \n    # Ensure Revenue is correctly calculated (though profile says it's already correct)\n    # df['Revenue'] = df['Quantity'] * df['Price']  # Uncomment if needed\n    \n    return df\n\ndef answer(df):\n    cleaned_df = clean(df)\n    # Group by month (YYYY-MM) and sum Revenue\n    cleaned_df['Month'] = cleaned_df['Date'].str[:7]\n    result = cleaned_df.groupby('Month', as_index=False)['Revenue'].sum()\n    return {row['Month']: row['Revenue'] for _, row in result.iterrows()}\n"
+  },
+  "corrections": 0,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-devstral2-123b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

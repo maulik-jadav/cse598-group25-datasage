@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 27.54,
+  "tokens": 2816,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # Price: strip currency symbols/commas and convert to numeric\n    d['Price'] = pd.to_numeric(\n        d['Price'].astype(str).str.replace(r'[^0-9.\\-]', '', regex=True).replace('', pd.NA),\n        errors='coerce'\n    )\n    # Quantity: coerce to numeric\n    d['Quantity'] = pd.to_numeric(d['Quantity'], errors='coerce')\n    d['Revenue'] = pd.to_numeric(d['Revenue'], errors='coerce')\n    # Region: normalize case variants and typos to allowed labels\n    fix = {'west': 'West', 'south': 'South', 'east': 'East', 'north': 'North',\n           'wst': 'West', 'suoth': 'South', 'noth': 'North', 'esst': 'East'}\n    d['Region'] = d['Region'].astype(str).str.strip()\n    d.loc[d['Region'].isin(['nan', 'None', '']), 'Region'] = pd.NA\n    d['Region'] = d['Region'].apply(lambda r: fix.get(str(r).lower(), r) if pd.notna(r) else r)\n    # Drop rows with missing region (missing group key) and invalid quantities\n    d = d[d['Region'].notna()]\n    d = d[d['Quantity'].notna() & (d['Quantity'] >= 1) & (d['Quantity'] == d['Quantity'].round())]\n    return d.reset_index(drop=True)\n\ndef answer(df):\n    d = clean(df)\n    g = d.groupby('Region')['Quantity'].sum()\n    return {str(k): int(v) for k, v in g.items()}"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

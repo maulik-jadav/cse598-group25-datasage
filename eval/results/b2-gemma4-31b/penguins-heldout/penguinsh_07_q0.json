@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinsh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 11.74,
+  "tokens": 2815,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 190.1818181818182,
+    "Chinstrap": 199.53333333333333,
+    "Gentoo": 215.9375
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Fix island variants (though not needed for this specific question, good practice)\n    df['island'] = df['island'].str.strip().str.capitalize()\n    \n    # Fix flipper_length_mm: convert to numeric and handle negatives\n    # Based on profile, there are negatives. Usually these are absolute values in this dataset\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df.loc[df['flipper_length_mm'] < 0, 'flipper_length_mm'] = df['flipper_length_mm'].abs()\n    \n    # Filter out-of-range flipper lengths based on rules (170-235)\n    df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = np.nan\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('species')['flipper_length_mm'].mean().to_dict()\n    return result"
+  },
+  "corrections": 9,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gemma4-31b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 190.2812,
+    "Chinstrap": 199.6429,
+    "Gentoo": 215.1429
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 39.42,
+  "tokens": 3398,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.0,
+    "Electronics": 277.33,
+    "Furniture": 191.05,
+    "Office Supplies": 11.1
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Drop exact duplicate rows\n    df = df.drop_duplicates()\n    # Strip whitespace from text columns\n    for col in ['Category', 'Region', 'Product', 'Date']:\n        if col in df.columns:\n            df[col] = df[col].astype(str).str.strip()\n    # Fix Category spelling variants\n    cat_map = {\n        'Office Suplies': 'Office Supplies',\n        'Furnture': 'Furniture'\n    }\n    df['Category'] = df['Category'].replace(cat_map)\n    # Keep only allowed categories (optional safety)\n    allowed = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    df = df[df['Category'].isin(allowed)]\n    # Clean Region whitespace variants\n    df['Region'] = df['Region'].replace({r'^\\s+|\\s+$': ''}, regex=True)\n    # Convert numeric columns\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Fix negative quantities (should be positive whole numbers)\n    df.loc[df['Quantity'] < 0, 'Quantity'] = df.loc[df['Quantity'] < 0, 'Quantity'].abs()\n    df['Quantity'] = df['Quantity'].astype(int)\n    # Recalculate Revenue to satisfy the formula Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # Parse dates\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    return df\n\ndef answer(df):\n    clean_df = clean(df)\n    # Average unit price per Category\n    avg_price = clean_df.groupby('Category')['Price'].mean().round(2).to_dict()\n    return avg_price"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

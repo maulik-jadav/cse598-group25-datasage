@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 110.97,
+  "tokens": 6382,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # Standardize Region labels: trim whitespace and fix case\n    d['Region'] = d['Region'].astype('string').str.strip().str.title()\n    allowed_regions = ['North', 'South', 'East', 'West']\n    d.loc[~d['Region'].isin(allowed_regions), 'Region'] = pd.NA\n    # Quantity must be a positive whole number\n    d = d[d['Quantity'] >= 1].copy()\n    # Recalculate Revenue from the valid Quantity and Price\n    d['Revenue'] = d['Quantity'] * d['Price']\n    return d\n\ndef answer(df):\n    electronics = df[df['Category'] == 'Electronics']\n    grouped = electronics.groupby('Region', dropna=True)['Revenue'].sum()\n    result = {}\n    for region, revenue in grouped.items():\n        if pd.isna(region):\n            continue\n        result[str(region)] = int(round(revenue))\n    return result"
+  },
+  "corrections": 15,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

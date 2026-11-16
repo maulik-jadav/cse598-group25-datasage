@@ -1,0 +1,58 @@
+{
+  "task_id": "salesh_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 17.84,
+  "tokens": 2522,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0,
+    "all": 14330.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix invalid dates\n    df = df.copy()\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n    df['Date'] = df['Date'].dt.strftime('%Y-%m')\n    \n    # Normalize Region labels (case and typo variants)\n    region_map = {\n        'north': 'North', 'nort': 'North',\n        'east': 'East', 'suoth': 'South', 'wst': 'West'\n    }\n    df['Region'] = df['Region'].str.strip().map(lambda x: region_map.get(x.lower().strip(), x))\n    \n    # Convert Price from text to float\n    def parse_price(x):\n        if isinstance(x, str):\n            x = x.replace('$', '').replace(',', '').strip()\n            try:\n                return float(x)\n            except:\n                return None\n        return x\n    df['Price'] = df['Price'].apply(parse_price)\n    df = df.dropna(subset=['Price'])\n    \n    # Compute Revenue if missing or inconsistent\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Filter by Category rules\n    allowed_cat = {'Electronics', 'Accessories', 'Furniture', 'Office Supplies'}\n    df = df[df['Category'].isin(allowed_cat)]\n    \n    # Filter by Quantity and Price rules\n    df = df[(df['Quantity'] >= 1) & (df['Price'] >= 0)]\n    \n    # Keep only id (Order_ID) and required columns\n    return df[['Order_ID', 'Date', 'Category', 'Region', 'Quantity', 'Price', 'Revenue']]\n\n\ndef answer(df):\n    # Group by Region for Electronics only\n    electronics = df[df['Category'] == 'Electronics']\n    result = electronics.groupby('Region')['Revenue'].sum().to_dict()\n    # Drop regions with zero sum\n    result = {k: v for k, v in result.items() if v is not None and v != 0}\n    # Add 'all' key for total\n    total = sum(result.values())\n    if result:\n        result['all'] = total\n    return result"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 3,
+  "damaged_cells": 40,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

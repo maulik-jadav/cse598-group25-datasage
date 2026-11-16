@@ -1,0 +1,60 @@
+{
+  "task_id": "salest_07_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.67,
+  "tokens": 2132,
+  "stop_reason": "code_error",
+  "note": "AttributeError: 'dict_values' object has no attribute 'sum'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Quantity and Price to numeric (they may be stored as strings)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Clean Category label variants (trim spaces, standardize case)\n    df['Category'] = df['Category'].str.strip().str.title()\n    # Remove exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates()\n    # Fix negative or out-of-range Quantity (set to 0)\n    df.loc[(df['Quantity'] < 0) | (df['Quantity'] != df['Quantity'].astype(int)), 'Quantity'] = 0\n    # Ensure Revenue matches Quantity * Price; correct any discrepancies\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    # Group by Category and sum Revenue\n    result = df.groupby('Category')['Revenue'].sum().to_dict()\n    # Add overall total with key \"all\"\n    result['all'] = result.values().sum()\n    return result\n"
+  },
+  "corrections": 0,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-granite41-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,138 @@
+{
+  "task_id": "salest_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 617.39,
+  "tokens": 26345,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 9858.0,
+    "2026-02": 23613.0,
+    "2026-03": 8246.0,
+    "2026-04": 1391.0,
+    "2026-05": 2346.0,
+    "2026-06": 4690.0
+  },
+  "extra": {
+    "final_summary": "Total revenue per month (2026): Jan $9,858; Feb $23,613; Mar $8,246; Apr $1,391; May $2,346; Jun $4,690. Fixes applied: removed 2 exact duplicate rows; set 3 impossible dates (2026-14-01, 2026-02-30) to missing; recomputed Revenue = Quantity \u00d7 Price on 2 rows (270000\u21922700, 1080\u2192108). Caveat: the 3 rows with invalid dates are excluded from the monthly totals, so actual revenue may be slightly higher.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 51 and 56 are exact duplicates of earlier rows; they would double-count revenue."
+        },
+        "reason": "Rows 51 and 56 are exact duplicates of earlier rows; they would double-count revenue.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          51,
+          56
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Rows 8, 33, 37 have impossible dates (2026-14-01, 2026-02-30); set to missing so they don't corrupt monthly grouping."
+        },
+        "reason": "Rows 8, 33, 37 have impossible dates (2026-14-01, 2026-02-30); set to missing so they don't corrupt monthly grouping.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            29,
+            46
+          ],
+          "reason": "Revenue violates the rule Revenue = Quantity * Price (270000 vs 2700; 1080 vs 108)."
+        },
+        "reason": "Revenue violates the rule Revenue = Quantity * Price (270000 vs 2700; 1080 vs 108).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[29, 46], 'Revenue'] = [2700.0, 108.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 10,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-hemmingway-1-5",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 9858.0,
+    "2026-02": 23613.0,
+    "2026-03": 8246.0,
+    "2026-04": 1391.0,
+    "2026-05": 2346.0,
+    "2026-06": 4690.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

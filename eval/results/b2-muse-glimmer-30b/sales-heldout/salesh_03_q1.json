@@ -1,0 +1,62 @@
+{
+  "task_id": "salesh_03_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 134.41,
+  "tokens": 6151,
+  "stop_reason": "code_error",
+  "note": "TypeError: to_datetime() got an unexpected keyword argument 'infer_datetime_format'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # drop exact duplicate rows\n    df = df.drop_duplicates(keep='first')\n    # standardise Category label variant\n    df['Category'] = df['Category'].astype(str).str.strip()\n    cat_map = {'office supplies': 'Office Supplies'}\n    df['Category'] = df['Category'].replace(cat_map)\n    # standardise Region label variants\n    region_map = {'Suoth': 'South', 'Eats': 'East'}\n    def fix_region(x):\n        if isinstance(x, str):\n            return region_map.get(x.strip(), x.strip())\n        return x\n    df['Region'] = df['Region'].apply(fix_region)\n    # parse Date, fix non-ISO values\n    parsed = pd.to_datetime(df['Date'], errors='coerce', infer_datetime_format=True)\n    mask_invalid = parsed.isna()\n    if mask_invalid.any():\n        alt = df.loc[mask_invalid, 'Date'].astype(str).str.replace('/', '-').str.strip()\n        parsed.loc[mask_invalid] = pd.to_datetime(alt, errors='coerce')\n    df['Date'] = parsed\n    # ensure numeric types\n    for col in ['Quantity', 'Price', 'Revenue']:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    # enforce Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = df.copy()\n    # keep only rows with a valid date for month aggregation\n    df_valid = df.dropna(subset=['Date'])\n    df_valid['month'] = df_valid['Date'].dt.strftime('%Y-%m')\n    totals = df_valid.groupby('month')['Revenue'].sum()\n    # return dict month -> total revenue\n    return {k: float(v) for k, v in totals.items()}\n"
+  },
+  "corrections": 0,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

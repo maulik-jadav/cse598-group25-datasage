@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_06_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 41.63,
+  "tokens": 3490,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 32.0,
+    "Dream": 13.0,
+    "Torgersen": 6.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows (keep first occurrence, preserve penguin_id)\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    # Normalize species labels: strip spaces, fix typo\n    df['species'] = df['species'].astype(str).str.strip()\n    df['species'] = df['species'].replace({'Chinstarp': 'Chinstrap'})\n    df['species'] = df['species'].where(df['species'].isin(['Adelie', 'Chinstrap', 'Gentoo']), other=pd.NA)\n    # Fix negative flipper lengths (sign errors)\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    df.loc[~df['flipper_length_mm'].between(170, 235), 'flipper_length_mm'] = pd.NA\n    # Fix out-of-range body mass (value recorded in mg -> convert to grams)\n    mask = df['body_mass_g'] > 6500\n    df.loc[mask, 'body_mass_g'] = df.loc[mask, 'body_mass_g'] / 1000.0\n    df.loc[~df['body_mass_g'].between(2500, 6500), 'body_mass_g'] = pd.NA\n    # Sex: keep missing as unknown, do not guess\n    df['sex'] = df['sex'].where(df['sex'].isin(['male', 'female']), other=pd.NA)\n    return df\n\ndef answer(df):\n    df = clean(df)\n    counts = df['island'].value_counts()\n    return {island: int(counts[island]) for island in counts.index}"
+  },
+  "corrections": 4,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "penguins-heldout",
+  "question": "How many penguins were measured on each island?",
+  "reference_answer": {
+    "Biscoe": 30.0,
+    "Dream": 13.0,
+    "Torgersen": 4.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

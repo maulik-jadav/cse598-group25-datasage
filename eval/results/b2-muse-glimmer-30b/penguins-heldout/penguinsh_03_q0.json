@@ -1,0 +1,75 @@
+{
+  "task_id": "penguinsh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 3,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 139.07,
+  "tokens": 8867,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3738.0434782608695,
+    "Chinstrap": 3784.375,
+    "Gentoo": 5081.818181818182
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # strip whitespace from object columns\n    for col in df.select_dtypes(include='object').columns:\n        df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # standardise label variants\n    df['species'] = df['species'].replace({'Adeile': 'Adelie'})\n    df['sex'] = df['sex'].apply(lambda x: x.lower() if isinstance(x, str) else x)\n    # convert columns that are stored as text numbers\n    num_cols = ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g', 'year']\n    for col in num_cols:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n    # fix out of range body_mass_g (e.g., 4850000 -> 4850)\n    mask = df['body_mass_g'] > 6500\n    df.loc[mask, 'body_mass_g'] = df.loc[mask, 'body_mass_g'] / 1000\n    # remove exact duplicate rows and duplicate penguin_id\n    df = df.drop_duplicates()\n    df = df.drop_duplicates(subset=['penguin_id'], keep='first')\n    return df\n\ndef answer(df):\n    grp = df.groupby('species')['body_mass_g'].mean()\n    out = {}\n    for sp, val in grp.items():\n        if pd.notna(sp):\n            out[sp] = float(val)\n    return out\n"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3738.0435,
+    "Chinstrap": 3784.375,
+    "Gentoo": 5105.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

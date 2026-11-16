@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 96.71,
+  "tokens": 2527,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Price from text to numeric, handling currency format\n    df['Price'] = pd.to_numeric(df['Price'].str.replace(r'[\\$\\,]', '', regex=True), errors='coerce')\n    \n    # Convert Quantity to numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # Fix Region label variants (case-insensitive)\n    df['Region'] = df['Region'].str.title()\n    \n    # Fix Date format (already ISO, but ensure it's parsed)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Validate Quantity: must be positive whole number\n    df = df[df['Quantity'] > 0]\n    \n    # Recalculate Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Drop rows with invalid data (e.g., missing values after cleaning)\n    df = df.dropna(subset=['Quantity', 'Price', 'Revenue'])\n    \n    # Ensure Category is in allowed list (though profile says it's valid, just to be safe)\n    allowed_categories = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed_categories)]\n    \n    return df\n\n\ndef answer(df):\n    # Group by Category and sum Revenue\n    result = df.groupby('Category')['Revenue'].sum().to_dict()\n    \n    # Return as dict with keys as category names\n    return result"
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

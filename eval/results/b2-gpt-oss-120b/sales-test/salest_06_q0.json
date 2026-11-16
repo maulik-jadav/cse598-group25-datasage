@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 17.68,
+  "tokens": 2659,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.86,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # 1. Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates().reset_index(drop=True)\n    # 2. Fix Region label variant: replace 'Nort' with 'North'\n    df['Region'] = df['Region'].replace({'Nort': 'North'})\n    # 3. Remove rows with negative Quantity (data error)\n    df = df[df['Quantity'] >= 0].reset_index(drop=True)\n    # 4. Re\u2011calculate Revenue to ensure consistency with Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # 5. Ensure Category values are within the allowed list; drop any that are not\n    allowed_categories = {\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"}\n    df = df[df['Category'].isin(allowed_categories)].reset_index(drop=True)\n    # 6. Ensure Order_ID is unique (if any duplicates remain, keep first)\n    df = df.drop_duplicates(subset=['Order_ID'], keep='first').reset_index(drop=True)\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Compute average unit price per Category\n    avg_price = df.groupby('Category')['Price'].mean()\n    # Convert to plain python dict with categories as keys and floats as values\n    result = {cat: round(val, 2) for cat, val in avg_price.items()}\n    return result"
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.8571,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

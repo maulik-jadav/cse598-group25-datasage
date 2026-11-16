@@ -1,0 +1,107 @@
+{
+  "task_id": "salesh_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 63.01,
+  "tokens": 32873,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "extra": {
+    "final_summary": "Orders per category (70 rows after cleaning): Accessories 21, Electronics 18, Office Supplies 17, Furniture 14.\n\nProblems found and fixed:\n1. Category label variants \u2014 6 cells had whitespace variants (\" Furniture\", \"Furniture \", \" Office Supplies\") and misspellings (\"Furnture\", \"Accesories\"). Merged into the four allowed labels from the rules file with one normalize_labels call (approved). Without this, the counts would have been split across 9 pseudo-categories.\n2. Exact duplicate rows \u2014 rows 6 and 60 were identical copies of earlier rows (e.g. Order_ID 2006 appeared twice). Dropped (approved), so no order is double-counted.\n\nCaveats:\n- Order_ID is unique across the 70 remaining rows (70 distinct), so counting Order_ID equals counting orders.\n- Region has 1 missing value (row 39) and Revenue/Quantity/Price were not needed for this question, so they were left untouched. Revenue = Quantity * Price was not verified since it doesn't affect the counts.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            " Office Supplies": "Office Supplies",
+            "Furniture ": "Furniture",
+            "Accesories": "Accessories",
+            "Furnture": "Furniture"
+          },
+          "reason": "Merge whitespace variants and misspellings into the four allowed Category labels so per-category order counts are not split."
+        },
+        "reason": "Merge whitespace variants and misspellings into the four allowed Category labels so per-category order counts are not split.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Category: merged 5 label variant(s), 6 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', ' Office Supplies': 'Office Supplies', 'Furniture ': 'Furniture', 'Accesories': 'Accessories', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 6 and 60 are exact copies of earlier rows; keeping them would double-count orders in the per-category counts."
+        },
+        "reason": "Rows 6 and 60 are exact copies of earlier rows; keeping them would double-count orders in the per-category counts.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          60
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-deepseek-v4-1-flash",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

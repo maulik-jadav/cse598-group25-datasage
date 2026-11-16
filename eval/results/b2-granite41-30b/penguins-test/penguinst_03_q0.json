@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinst_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 17.98,
+  "tokens": 2513,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 39.025,
+    "Dream": 37.666666666666664,
+    "Torgersen": 39.26666666666667
+  },
+  "extra": {
+    "code": "def clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Trim and standardize island labels\n    df['island'] = df['island'].str.strip()\n    # Convert flipper_length_mm to numeric, treat non-numeric as NaN and drop those rows\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df = df.dropna(subset=['flipper_length_mm'])\n    # Convert body_mass_g to numeric, treat non-numeric as NaN and drop those rows\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'].str.replace(',', ''), errors='coerce')\n    df = df.dropna(subset=['body_mass_g'])\n    # Enforce valid ranges (as per rules)\n    df = df[(df['bill_length_mm'] >= 30) & (df['bill_length_mm'] <= 60)]\n    df = df[(df['flipper_length_mm'] >= 170) & (df['flipper_length_mm'] <= 235)]\n    df = df[(df['body_mass_g'] >= 2500) & (df['body_mass_g'] <= 6500)]\n    return df\n\ndef answer(df):\n    # Filter for Adelie penguins\n    sub = df[df['species'] == 'Adelie']\n    # Group by island and compute average bill length\n    result = sub.groupby('island')['bill_length_mm'].mean().to_dict()\n    return result\n"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-granite41-30b",
+  "dataset": "penguins-test",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 39.025,
+    "Dream": 37.6667,
+    "Torgersen": 39.2667
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

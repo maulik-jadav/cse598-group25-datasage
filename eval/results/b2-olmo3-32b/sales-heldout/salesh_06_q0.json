@@ -1,0 +1,56 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 17.24,
+  "tokens": 2493,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 28.0,
+    "Nort": 2.0,
+    "North": 38.0,
+    "South": 35.0,
+    "Suoth": 1.0,
+    "West": 57.0,
+    "Wst": 5.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix invalid dates\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n    df['Date'] = df['Date'].dt.strftime('%Y-%m')\n    \n    # Normalize Region labels (case and typo variants)\n    region_map = {\n        'north': 'North', 'nort': 'North',\n        'east': 'East', 'suoth': 'South', 'wst': 'West'\n    }\n    df['Region'] = df['Region'].str.strip().map(region_map).fillna(df['Region'])\n    # Enforce allowed categories (not required for the question, but for data integrity)\n    allowed_cat = {'Electronics', 'Accessories', 'Furniture', 'Office Supplies'}\n    df = df[df['Category'].isin(allowed_cat)]\n    \n    # Parse Price: remove $ and convert to float\n    df['Price'] = df['Price'].str.replace(r'\\$', '', regex=True).astype(float)\n    \n    # Ensure Quantity is integer and positive\n    df['Quantity'] = df['Quantity'].astype(int)\n    df = df[(df['Quantity'] >= 1) & (df['Price'] >= 0)]\n    \n    # Compute Revenue if missing or inconsistent\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Keep id column (Order_ID)\n    return df[['Order_ID', 'Date', 'Category', 'Region', 'Quantity', 'Price', 'Revenue']]\n\ndef answer(df):\n    # Group by Region, count total units sold\n    grouped = df.groupby('Region')['Quantity'].sum().reset_index()\n    result = {}\n    for _, row in grouped.iterrows():\n        region = row['Region']\n        units = int(row['Quantity'])\n        if region != '':\n            result[region] = units\n    # If all regions combined are requested, use 'all'\n    if not result:\n        result['all'] = df['Quantity'].sum().astype(int)\n    # Remove empty keys if any\n    return {k: v for k, v in result.items() if k != ''}"
+  },
+  "corrections": 6,
+  "planted": 12,
+  "damaged_rows": 3,
+  "damaged_cells": 40,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

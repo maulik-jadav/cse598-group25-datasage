@@ -1,0 +1,120 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 2,
+  "detect_fn": 3,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 124.64,
+  "tokens": 33898,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "extra": {
+    "final_summary": "Total revenue by category (after cleaning):\n- Electronics: $29,070\n- Furniture: $16,505\n- Accessories: $2,450\n- Office Supplies: $972\n\nData quality checks:\n- Category: no missing, no label variants; all values in allowed list.\n- Quantity: 3 rows (5,14,65) had negative quantities (-2,-6,-3) violating rules (Quantity min 1) and produced negative Revenue; excluded with approval.\n- Revenue: 3 rows (10,19,61) violated formula Revenue=Quantity*Price (e.g., 2400 vs 240); recomputed to Quantity*Price with approval.\n- Duplicates: none.\n- Region whitespace/case issues and Date invalids exist but do not affect this question and were left as-is.\n\nAnalysis used 64 rows (67 original minus 3 excluded) on cleaned version 2.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            5,
+            14,
+            65
+          ],
+          "reason": "Quantity must be >=1 per rules; rows have negative Quantity (-2, -6, -3) and negative Revenue, violating Quantity min and Price min rules"
+        },
+        "reason": "Quantity must be >=1 per rules; rows have negative Quantity (-2, -6, -3) and negative Revenue, violating Quantity min and Price min rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          5,
+          14,
+          65
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [5, 14, 65]",
+        "code": "df = df.drop(index=[5, 14, 65])"
+      },
+      {
+        "version": 2,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            10,
+            19,
+            61
+          ],
+          "reason": "Revenue must equal Quantity * Price per rules; rows 10,19,61 violate formula (e.g., 2400 vs 240)"
+        },
+        "reason": "Revenue must equal Quantity * Price per rules; rows 10,19,61 violate formula (e.g., 2400 vs 240)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[10, 19, 61], 'Revenue'] = [240.0, 24.0, 48.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 9,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-muse-spark-open",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 25.53,
+  "tokens": 2758,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # 1. Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    # 2. Standardize Category values\n    # Strip surrounding whitespace and lower case for comparison\n    cat_clean = df['Category'].astype(str).str.strip().str.lower()\n    # Mapping of known variants to canonical categories (lower\u2011case keys)\n    mapping = {\n        'electronics': 'Electronics',\n        'accessories': 'Accessories',\n        'accsories': 'Accessories',\n        'accesories': 'Accessories',\n        'accessorie': 'Accessories',\n        'furniture': 'Furniture',\n        'furnture': 'Furniture',\n        'office supplies': 'Office Supplies',\n        'office supply': 'Office Supplies',\n        'office  supplies': 'Office Supplies'\n    }\n    # Apply mapping; if not found keep title\u2011cased original after strip\n    df['Category'] = cat_clean.map(mapping).fillna(cat_clean.str.title())\n    # 3. Re\u2011calculate Revenue to ensure consistency with Quantity * Price\n    # Ensure Quantity and Price are numeric (they should already be)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # 4. Ensure Order_ID stays as is (it is numeric but may be read as object)\n    df['Order_ID'] = pd.to_numeric(df['Order_ID'], errors='coerce')\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Clean the data first\n    df_clean = clean(df)\n    # Count orders per Category\n    counts = df_clean.groupby('Category').size().to_dict()\n    return counts"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

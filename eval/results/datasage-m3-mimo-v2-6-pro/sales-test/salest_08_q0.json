@@ -1,0 +1,107 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 77.76,
+  "tokens": 24117,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "final_summary": "The data is clean for this question. Here are the results and what I did:\n\n**Total revenue per month (2026):**\n| Month | Revenue |\n|---|---|\n| 2026-01 | $3,138 |\n| 2026-02 | $1,908 |\n| 2026-03 | $1,050 |\n| 2026-04 | $10,290 |\n| 2026-05 | $4,953 |\n| 2026-06 | $2,688 |\n\n**Problems found and fixed:**\n1. **Invalid date (row 15):** `Date` was \"TBD\", not a valid YYYY-MM-DD date per the rules. Since the real date can't be guessed, it was set to missing and the row is excluded from the monthly grouping (40 of 41 rows used).\n2. **Revenue formula violations (rows 13, 29):** The rules state `Revenue = Quantity * Price`, but these rows had Revenue of 450 vs expected 45, and 1500 vs expected 15. I recomputed Revenue = Quantity * Price on both rows.\n\n**Not fixed (don't affect this question):** Category has label variants/misspellings (e.g. \"Accesories\", \"Electornics\", \"office supplies\") and Region has whitespace variants (\"East \", \" North\", \"North \"). Since the question groups by month and sums Revenue, these don't change the answer \u2014 but they would matter for any per-category or per-region breakdown.\n\n**Caveats:** One row (row 15) has no usable date, so its revenue is not in any month above. No duplicate rows were found.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Row 15 has 'TBD' which is not a valid YYYY-MM-DD date (rules require YYYY-MM-DD); it cannot be guessed, so it becomes missing and is excluded from month grouping."
+        },
+        "reason": "Row 15 has 'TBD' which is not a valid YYYY-MM-DD date (rules require YYYY-MM-DD); it cannot be guessed, so it becomes missing and is excluded from month grouping.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Date: 1 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            13,
+            29
+          ],
+          "reason": "Rules file states Revenue = Quantity * Price; rows 13 and 29 violate this formula (450 vs 45, 1500 vs 15), so recompute Revenue from Quantity * Price."
+        },
+        "reason": "Rules file states Revenue = Quantity * Price; rows 13 and 29 violate this formula (450 vs 45, 1500 vs 15), so recompute Revenue from Quantity * Price.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[13, 29], 'Revenue'] = [45.0, 15.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 3,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mimo-v2-6-pro",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ]
+  ]
+}

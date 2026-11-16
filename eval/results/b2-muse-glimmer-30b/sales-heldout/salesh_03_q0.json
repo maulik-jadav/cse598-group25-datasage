@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 96.26,
+  "tokens": 6437,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Standardise Category label variant\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].astype(str).str.strip()\n        df['Category'] = df['Category'].replace({'office supplies': 'Office Supplies'})\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Enforce unique Order_ID\n    if 'Order_ID' in df.columns:\n        df = df.drop_duplicates(subset=['Order_ID'], keep='first')\n    # Optional Region typo fixes \u2013 not required for the question but harmless\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].replace({'Suoth': 'South', 'Eats': 'East'})\n    return df\n\ndef answer(df):\n    if 'Category' not in df.columns or 'Order_ID' not in df.columns:\n        return {}\n    sub = df.dropna(subset=['Category'])\n    # Count unique orders per category\n    counts = sub.groupby('Category')['Order_ID'].nunique()\n    return {str(k): int(v) for k, v in counts.items()}\n"
+  },
+  "corrections": 7,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

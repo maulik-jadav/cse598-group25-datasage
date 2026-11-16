@@ -1,0 +1,166 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 136.07,
+  "tokens": 30671,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "final_summary": "**Total Revenue per Month (2026):**\n\n| Month | Total Revenue |\n|-------|---------------|\n| January | $3,138 |\n| February | $1,908 |\n| March | $1,050 |\n| April | $10,290 |\n| May | $4,953 |\n| June | $2,688 |\n\n**Data Problems Found & Fixed:**\n1. **Invalid Date** (Row 15): \"TBD\" \u2192 set to missing (1 row excluded from analysis)\n2. **Revenue Formula Error** (Rows 13, 29): Revenue didn't equal Quantity \u00d7 Price \u2192 recomputed (450\u219245, 1500\u219215)\n3. **Category Misspellings** (5 rows): Accesories, Electornics, electronics, Office Suplies, office supplies \u2192 normalized to correct spellings\n4. **Region Whitespace** (3 rows): \"East \", \" North\", \"North \" \u2192 trimmed to standard values\n\n**Caveat:** 1 row with invalid date (\"TBD\") was excluded from the monthly breakdown.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            15
+          ],
+          "reason": "\"TBD\" is not a valid date; cannot be parsed as YYYY-MM-DD"
+        },
+        "reason": "\"TBD\" is not a valid date; cannot be parsed as YYYY-MM-DD",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Date: set 1 value(s) to missing",
+        "code": "df.loc[[15], 'Date'] = pd.NA"
+      },
+      {
+        "version": 2,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            13,
+            29
+          ],
+          "reason": "Revenue should equal Quantity * Price; rows 13 and 29 have incorrect values"
+        },
+        "reason": "Revenue should equal Quantity * Price; rows 13 and 29 have incorrect values",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[13, 29], 'Revenue'] = [45.0, 15.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Accesories": "Accessories",
+            "Electornics": "Electronics",
+            "Office Suplies": "Office Supplies",
+            "electronics": "Electronics",
+            "office supplies": "Office Supplies"
+          },
+          "reason": "Fix misspellings and case variants in Category to match allowed values"
+        },
+        "reason": "Fix misspellings and case variants in Category to match allowed values",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Category: merged 5 label variant(s), 5 cells",
+        "code": "df['Category'] = df['Category'].replace({'Accesories': 'Accessories', 'Electornics': 'Electronics', 'Office Suplies': 'Office Supplies', 'electronics': 'Electronics', 'office supplies': 'Office Supplies'})"
+      },
+      {
+        "version": 4,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " North": "North",
+            "East ": "East",
+            "North ": "North"
+          },
+          "reason": "Fix whitespace variants in Region to match allowed values"
+        },
+        "reason": "Fix whitespace variants in Region to match allowed values",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: merged 3 label variant(s), 3 cells",
+        "code": "df['Region'] = df['Region'].replace({' North': 'North', 'East ': 'East', 'North ': 'North'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-minimax-m2-7",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 13.55,
+  "tokens": 2813,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 38.375,
+    "Dream": 39.385714285714286,
+    "Torgersen": 39.13333333333333
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates().copy()\n    \n    # Clean species labels\n    df['species'] = df['species'].str.strip()\n    df['species'] = df['species'].replace({'Chinstarp': 'Chinstrap'})\n    \n    # Fix negative flipper lengths (absolute value)\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce').abs()\n    \n    # Fix body mass out of range\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = np.nan\n    \n    return df\n\ndef answer(df):\n    # Filter for Adelie penguins\n    adelie_df = df[df['species'] == 'Adelie']\n    \n    # Group by island and calculate average bill length\n    result = adelie_df.groupby('island')['bill_length_mm'].mean().to_dict()\n    \n    return result"
+  },
+  "corrections": 4,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gemma4-31b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 38.375,
+    "Dream": 39.3857,
+    "Torgersen": 38.125
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

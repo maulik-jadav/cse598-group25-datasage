@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 70.47,
+  "tokens": 5013,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 38.375,
+    "Dream": 39.385714285714286,
+    "Torgersen": 39.13333333333333
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix species label variants (strip whitespace, correct misspelling)\n    df['species'] = df['species'].astype(str).str.strip()\n    df['species'] = df['species'].replace({'Chinstarp': 'Chinstrap'})\n    # Drop exact duplicate rows\n    df = df.drop_duplicates()\n    # Ensure numeric columns are numeric\n    for col in ['bill_length_mm', 'flipper_length_mm', 'body_mass_g', 'year']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n    # Fix negative flipper lengths (sign error)\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    return df\n\ndef answer(df):\n    df = clean(df)\n    sub = df[(df['species'] == 'Adelie') & (df['island'].notna()) & (df['bill_length_mm'].notna())]\n    result = sub.groupby('island')['bill_length_mm'].mean().to_dict()\n    # Ensure keys are strings and drop any missing group keys (already excluded)\n    return {str(k): float(v) for k, v in result.items()}"
+  },
+  "corrections": 4,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "penguins-heldout",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 38.375,
+    "Dream": 39.3857,
+    "Torgersen": 38.125
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

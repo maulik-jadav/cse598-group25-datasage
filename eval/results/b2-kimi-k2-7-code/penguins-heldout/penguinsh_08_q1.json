@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 44.05,
+  "tokens": 3983,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 190.38,
+    "Chinstrap": 196.0,
+    "Gentoo": 215.39
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows so they don't bias the averages\n    df = df.drop_duplicates(keep='first').copy()\n\n    # Standardize known label variants\n    df['island'] = df['island'].replace({'Dram': 'Dream', 'Torgerson': 'Torgersen'})\n    df['sex'] = df['sex'].str.lower()\n\n    # Ensure numeric columns are truly numeric\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', ''),\n        errors='coerce'\n    )\n\n    return df\n\ndef answer(df):\n    # Average flipper length per species; groupby automatically drops missing species keys\n    result = df.groupby('species')['flipper_length_mm'].mean().round(2)\n    return result.to_dict()\n"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "penguins-heldout",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 190.375,
+    "Chinstrap": 196.0,
+    "Gentoo": 215.3913
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

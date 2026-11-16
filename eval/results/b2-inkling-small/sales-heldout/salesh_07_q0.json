@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 46.04,
+  "tokens": 3744,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.67,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.67
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Fix Region: trim whitespace and standardize case\n    df['Region'] = df['Region'].str.strip()\n    df['Region'] = df['Region'].str.title()\n    # Remove invalid negative quantities and enforce positive integers\n    df = df[df['Quantity'] >= 1].copy()\n    df['Quantity'] = df['Quantity'].astype(int)\n    # Recalculate Revenue to match formula\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    # Average unit price per category\n    avg_prices = df.groupby('Category')['Price'].mean()\n    return {k: round(float(v), 2) for k, v in avg_prices.items()}\n"
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

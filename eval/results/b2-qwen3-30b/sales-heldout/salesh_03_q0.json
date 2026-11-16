@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 13.8,
+  "tokens": 2318,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert text columns to numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Fix case variants in Category\n    category_mapping = {\n        'Office Supplies': 'Office Supplies',\n        'office supplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].map(category_mapping).fillna(df['Category'])\n    \n    # Fix spelling variants in Region\n    region_mapping = {\n        'Suoth': 'South',\n        'Eats': 'East'\n    }\n    df['Region'] = df['Region'].map(region_mapping).fillna(df['Region'])\n    \n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Drop rows with missing Category (since we need to group by it)\n    df = df.dropna(subset=['Category'])\n    \n    return df\n\ndef answer(df):\n    # Count orders by Category\n    result = df.groupby('Category', as_index=False).size()\n    result.columns = ['Category', 'count']\n    \n    # Convert to dict with category as key and count as value\n    return dict(zip(result['Category'], result['count']))"
+  },
+  "corrections": 7,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

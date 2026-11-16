@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 135.25,
+  "tokens": 6063,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    df = df.copy()\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # normalise Region whitespace and variants\n    if \"Region\" in df.columns:\n        df[\"Region\"] = df[\"Region\"].astype(object).apply(\n            lambda x: x.strip() if isinstance(x, str) else x\n        )\n        df[\"Region\"] = df[\"Region\"].replace({\"\": np.nan, \"nan\": np.nan, \"None\": np.nan})\n    # fix Category label variant\n    if \"Category\" in df.columns:\n        df[\"Category\"] = df[\"Category\"].replace({\"Furnture\": \"Furniture\"})\n    # ensure numeric types\n    for col in [\"Order_ID\", \"Quantity\", \"Price\", \"Revenue\"]:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors=\"coerce\")\n    # enforce Revenue = Quantity * Price\n    if {\"Quantity\", \"Price\"}.issubset(df.columns):\n        df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n    # parse dates\n    if \"Date\" in df.columns:\n        df[\"Date\"] = pd.to_datetime(df[\"Date\"], errors=\"coerce\")\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    df = clean(df)\n    # month key YYYY-MM\n    df = df.copy()\n    if not pd.api.types.is_datetime64_any_dtype(df[\"Date\"]):\n        df[\"Date\"] = pd.to_datetime(df[\"Date\"], errors=\"coerce\")\n    df = df.dropna(subset=[\"Date\"])\n    df[\"month\"] = df[\"Date\"].dt.strftime(\"%Y-%m\")\n    grouped = df.groupby(\"month\", dropna=True)[\"Revenue\"].sum()\n    out = {}\n    for k, v in grouped.items():\n        if pd.isna(k):\n            continue\n        # return int when possible\n        if pd.isna(v):\n            out[k] = None\n        else:\n            fv = float(v)\n            out[k] = int(fv) if fv.is_integer() else fv\n    return out\n"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

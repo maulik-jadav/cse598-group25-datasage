@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 138.74,
+  "tokens": 6171,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 33.18181818181818,
+    "Electronics": 568.6666666666666,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # remove exact duplicate rows\n    df = df.drop_duplicates()\n    # standardize Category labels\n    cat_map = {\n        'accessories': 'Accessories',\n        'furnture': 'Furniture',\n        'office supplies': 'Office Supplies',\n    }\n    def norm_cat(v):\n        if pd.isna(v):\n            return v\n        s = str(v).strip()\n        low = s.lower()\n        if low in cat_map:\n            return cat_map[low]\n        # fallback title case for minor variants\n        return s\n    df['Category'] = df['Category'].apply(norm_cat)\n    allowed = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed)]\n    # ensure numeric types\n    for col in ['Quantity', 'Price', 'Revenue']:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    # enforce Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # normalize dates to YYYY-MM-DD where possible\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d')\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    avg_price = dfc.groupby('Category')['Price'].mean()\n    return {cat: float(avg_price[cat]) for cat in avg_price.index}\n"
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.1818,
+    "Electronics": 568.6667,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

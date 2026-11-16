@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinsh_07_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 10.64,
+  "tokens": 2506,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3667250.0,
+    "Chinstrap": 55625.0,
+    "Gentoo": 70175.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix island label variants (lowercase and trailing space)\n    df['island'] = df['island'].str.strip().str.title()\n    \n    # Convert body_mass_g from text to numeric (handle commas)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'].str.replace(',', ''), errors='coerce')\n    \n    # Convert flipper_length_mm to numeric (already numeric but some negatives exist)\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    \n    # Drop rows with negative flipper_length_mm (invalid per rules)\n    df = df[df['flipper_length_mm'] >= 0]\n    \n    return df\n\ndef answer(df):\n    # Group by species and sum body_mass_g\n    result = df.groupby('species')['body_mass_g'].sum().to_dict()\n    return result\n"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 117250.0,
+    "Chinstrap": 55625.0,
+    "Gentoo": 70175.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

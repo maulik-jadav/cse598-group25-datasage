@@ -1,0 +1,105 @@
+{
+  "task_id": "salest_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 12,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 172.35,
+  "tokens": 34588,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "extra": {
+    "final_summary": "Total Revenue by Region for Electronics (sum of Revenue where Category=Electronics):\n\n- East: $1,140\n- North: $260\n- South: $4,800\n- West: $2,700\n\nData quality checks and fixes:\n- Category: fixed 3 whitespace variants (e.g., \"Furniture \" -> \"Furniture\") via normalize_labels.\n- Region: fixed 2 misspellings (Nort->North, Suoth->South) via normalize_labels.\n- Revenue formula verified: Revenue = Quantity * Price holds for all rows (0 mismatches).\n- No duplicate rows, Quantity and Price within allowed ranges.\n\nCaveat: 1 Electronics row (Order_ID 2016, Revenue $1,800) has missing Region and was excluded from the by-region totals. Rows_used=10 of 11 Electronics rows. If included, total Electronics revenue would be $10,700.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            "Accessories ": "Accessories",
+            "Furniture ": "Furniture"
+          },
+          "reason": "Category has whitespace variants that should merge into allowed labels per rules; affects filter for Electronics"
+        },
+        "reason": "Category has whitespace variants that should merge into allowed labels per rules; affects filter for Electronics",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 3 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', 'Accessories ': 'Accessories', 'Furniture ': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Nort": "North",
+            "Suoth": "South"
+          },
+          "reason": "Region has misspellings Nort->North, Suoth->South that should merge into allowed labels per rules"
+        },
+        "reason": "Region has misspellings Nort->North, Suoth->South that should merge into allowed labels per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'Nort': 'North', 'Suoth': 'South'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-muse-spark-open",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.96,
+  "tokens": 2402,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix region labels: standardize to allowed values\n    region_map = {\n        'north': 'North',\n        'North': 'North',\n        'Nort': 'North',\n        'south': 'South',\n        'South': 'South',\n        'Suoth': 'South',\n        'east': 'East',\n        'East': 'East',\n        'west': 'West',\n        'West': 'West',\n        'Wst': 'West'\n    }\n    df['Region'] = df['Region'].map(region_map).fillna(df['Region'])\n    \n    # Convert Quantity to integer\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce').astype(int)\n    \n    # Convert Price to numeric (remove $ and convert)\n    df['Price'] = df['Price'].str.replace('$', '', regex=False).astype(float)\n    \n    return df\n\ndef answer(df):\n    # Group by Region and sum Quantity (units sold)\n    result = df.groupby('Region')['Quantity'].sum().to_dict()\n    return result\n"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

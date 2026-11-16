@@ -164,8 +164,8 @@ def trace_stats(system: str, datasets: list[str]) -> dict:
 
     error_kinds: dict[str, int] = {}
     causes: dict[str, int] = {}
-    loops = nudges = tasks_with_errors = calls_after_finish_ignored = 0
-    wrong = 0
+    loops = nudges = tasks_with_errors = 0
+    wrong = tasks = looked_outside = excluded = 0
     for dataset in datasets:
         folder = RESULTS / system / dataset
         if not folder.exists():
@@ -175,6 +175,15 @@ def trace_stats(system: str, datasets: list[str]) -> dict:
             trace_path = folder / "traces" / f"{result['task_id']}.jsonl"
             trace = [json.loads(line) for line in trace_path.read_text().splitlines()] if trace_path.exists() else []
             tools = [e for e in trace if e.get("event") == "tool"]
+            tasks += 1
+            table = result["task_id"].rsplit("_", 1)[0]
+            spec = next(t["spec"] for t in json.loads((ROOT / "datasets" / dataset / table / "tasks.json").read_text())
+                        if t["task_id"] == result["task_id"])
+            used = set(spec.get("group_by") or []) | {spec.get("metric")} | {f["column"] for f in spec.get("filters") or []}
+            looked_outside += any(e["name"].startswith("check_") and isinstance(e["args"], dict)
+                                  and e["args"].get("column") not in (None, *used) for e in tools)
+            excluded += any(e["name"] == "exclude_rows" and e["ok"] and isinstance(e["output"], dict)
+                            and e["output"].get("applied") for e in tools)
             nudges += sum(e.get("event") == "nudge" for e in trace)
             bad = [e for e in tools if not e["ok"]]
             tasks_with_errors += bool(bad)
@@ -194,7 +203,6 @@ def trace_stats(system: str, datasets: list[str]) -> dict:
                     loops += 1
             if not result["analysis_correct"]:
                 wrong += 1
-                table = result["task_id"].rsplit("_", 1)[0]
                 planted = json.loads((ROOT / "datasets" / dataset / table / "planted.json").read_text())["errors"]
                 for reason in diagnose(result, trace, planted):
                     if reason.startswith("stopped early: "):
@@ -202,7 +210,9 @@ def trace_stats(system: str, datasets: list[str]) -> dict:
                     causes[reason] = causes.get(reason, 0) + 1
     return {"wrong_tasks": wrong, "failure_causes": dict(sorted(causes.items(), key=lambda kv: -kv[1])),
             "tool_error_kinds": error_kinds, "error_loops": loops, "nudges": nudges,
-            "tasks_with_tool_errors": tasks_with_errors}
+            "tasks_with_tool_errors": tasks_with_errors,
+            "tasks_checking_a_column_the_question_does_not_use": looked_outside / tasks if tasks else None,
+            "tasks_with_an_applied_exclude_rows": excluded / tasks if tasks else None}
 
 
 def study_systems() -> list[tuple[str, str, str, str]]:
@@ -212,6 +222,56 @@ def study_systems() -> list[tuple[str, str, str, str]]:
 
     rows = [(s, m, f"datasage-m3-{s}", f"b2-{s}") for s, m in MODEL_SYSTEMS.items()]
     return rows + [("qwen3-30b-original", SMALL_MODEL, "datasage-m3", "b2-qwen3-30b")]
+
+
+def _ranks(values: list[float]) -> list[float]:
+    order = sorted(range(len(values)), key=lambda i: values[i])
+    ranks = [0.0] * len(values)
+    i = 0
+    while i < len(order):
+        j = i
+        while j + 1 < len(order) and values[order[j + 1]] == values[order[i]]:
+            j += 1
+        for k in range(i, j + 1):
+            ranks[order[k]] = (i + j) / 2 + 1
+        i = j + 1
+    return ranks
+
+
+def spearman(xs: list[float], ys: list[float]) -> float:
+    rx, ry = _ranks(xs), _ranks(ys)
+    mx, my = statistics.mean(rx), statistics.mean(ry)
+    cov = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    return cov / (sum((a - mx) ** 2 for a in rx) * sum((b - my) ** 2 for b in ry)) ** 0.5
+
+
+def summary(models: dict) -> dict:
+    """Cross-model facts used in docs/final/findings_models.md: the accuracy/latency and accuracy/token Pareto
+    fronts, and how accuracy relates to looking beyond the question's columns (models with under 5% tool errors)."""
+    rows = [(s, e["agent"]["heldout_test"], e["agent"]["behaviour"]) for s, e in models.items()
+            if e["agent"]["heldout_test"] and e["agent"]["heldout_test"]["tasks"] == 80 and not s.endswith("-original")]
+
+    def front(key: str) -> list[str]:
+        keep = []
+        for s, a, _ in rows:
+            dominated = any(b["accuracy"] >= a["accuracy"] and b[key] <= a[key]
+                            and (b["accuracy"] > a["accuracy"] or b[key] < a[key]) for _, b, _ in rows)
+            if not dominated:
+                keep.append(s)
+        return sorted(keep, key=lambda s: models[s]["agent"]["heldout_test"][key])
+
+    clean = [(a, b) for _, a, b in rows if (a["tool_error_rate"] or 0) < 0.05]
+    return {
+        "models_with_80_tasks": len(rows),
+        "pareto_accuracy_vs_median_seconds": front("seconds_median"),
+        "pareto_accuracy_vs_median_tokens": front("tokens_median"),
+        "spearman_accuracy_vs_checking_outside_question_columns": {
+            "models": len(clean),
+            "rho": spearman([a["accuracy"] for a, _ in clean],
+                            [b["tasks_checking_a_column_the_question_does_not_use"] for _, b in clean])},
+        "spearman_accuracy_vs_median_seconds": spearman([a["accuracy"] for _, a, _ in rows],
+                                                        [a["seconds_median"] for _, a, _ in rows]),
+    }
 
 
 def aggregate() -> None:
@@ -233,6 +293,7 @@ def aggregate() -> None:
         if a and b and a["tasks"] == b["tasks"]:
             entry["agent_minus_single_call"] = a["accuracy"] - b["accuracy"]
         out["models"][short] = entry
+    out["summary"] = summary(out["models"])
     (RESULTS / "study_models.json").write_text(json.dumps(out, indent=2, default=str))
     for short, e in out["models"].items():
         a, b = e["agent"]["heldout_test"], e["single_call"]["heldout_test"]
@@ -241,12 +302,40 @@ def aggregate() -> None:
         print(f"{short:22s} agent {agent:16s} single call {single}")
 
 
+def table() -> None:
+    """Print the comparison table (Markdown) from study_models.json, best agent accuracy first."""
+    data = json.loads((RESULTS / "study_models.json").read_text())["models"]
+
+    def pct(x):
+        return "n/a" if x is None else f"{100 * x:.1f}"
+
+    rows = []
+    for short, e in data.items():
+        a, b = e["agent"]["heldout_test"], e["single_call"]["heldout_test"]
+        if not a:
+            continue
+        rows.append((a["accuracy"], short, e, a, b))
+    print("| Model | n | Agent correct | 95% CI | Single call | Gain | Done | Detect P/R | Errors handled | Damage "
+          "| Tool errors | Recovered | Approvals | Median s | p90 s | Median tokens |")
+    print("|---|---:|---:|---|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|")
+    for acc, short, e, a, b in sorted(rows, key=lambda r: (-r[0], r[3]["seconds_median"])):
+        single = f"{pct(b['accuracy'])}% ({b['correct']}/{b['tasks']})" if b else "n/a"
+        gain = e.get("agent_minus_single_call")
+        terr = f"{a['tool_errors']}/{a['tool_calls']} ({pct(a['tool_error_rate'])}%)"
+        name = e["model"] + (" (original M3 run)" if short.endswith("-original") else "")
+        print(f"| {name} | {a['tasks']} | {pct(acc)}% ({a['correct']}) | {pct(a['ci95'][0])}-{pct(a['ci95'][1])} "
+              f"| {single} | {'n/a' if gain is None else f'{100 * gain:+.1f}'} | {pct(a['completion'])}% "
+              f"| {a['detect_precision']:.2f}/{a['detect_recall']:.2f} | {pct(a['errors_handled'])}% "
+              f"| {a['damaged_cells_rows']} | {terr} | {a['recovered_errors']} | {a['approvals_median']} "
+              f"| {a['seconds_median']:.0f} | {a['seconds_p90']:.0f} | {a['tokens_median']:,.0f} |")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("command", choices=["probe", "aggregate"])
+    parser.add_argument("command", choices=["probe", "aggregate", "table"])
     parser.add_argument("--workers", type=int, default=8)
     args = parser.parse_args()
-    probe(args.workers) if args.command == "probe" else aggregate()
+    {"probe": lambda: probe(args.workers), "aggregate": aggregate, "table": table}[args.command]()
 
 
 if __name__ == "__main__":

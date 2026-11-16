@@ -1,0 +1,102 @@
+{
+  "task_id": "salesh_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 68.92,
+  "tokens": 30048,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 33.3333,
+    "Electronics": 397.6923,
+    "Furniture": 207.8125,
+    "Office Supplies": 12.6667
+  },
+  "extra": {
+    "final_summary": "Average unit price by category (53 rows used, after cleaning):\n\n- Accessories: $33.33\n- Electronics: $397.69\n- Furniture: $207.81\n- Office Supplies: $12.67\n\nProblems found and fixed:\n1. Category label misspelling \u2014 \"Furnture\" (2 rows: 36, 38) merged into the allowed label \"Furniture\" (normalize_labels, approved). Without this, Furniture's average would have been split across two groups.\n2. Exact duplicate row \u2014 row 23 was an identical copy of an earlier row; removed (drop_duplicates, approved) so that order isn't counted twice.\n\nChecks that came back clean for the columns this question uses:\n- Price: fully numeric, no text-stored numbers, no negatives, nothing below the rules' minimum of 0.\n- Category: no missing values, no case/space variants left after the merge.\n- Revenue = Quantity \u00d7 Price: 0 mismatches (not needed for this question, but confirms Price is consistent).\n\nCaveats:\n- Region has 1 missing value and 3 whitespace variants (\"East \", \"West \", \" North\") \u2014 not used by this question, so left untouched.\n- The averages are unweighted means of the unit price per order line, so categories with more order lines (Accessories: 16) contribute more rows than others; if you want a quantity-weighted average price, that's a different calculation.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture"
+          },
+          "reason": "\"Furnture\" is a misspelling of the allowed label \"Furniture\"; merging so the category grouping is correct."
+        },
+        "reason": "\"Furnture\" is a misspelling of the allowed label \"Furniture\"; merging so the category grouping is correct.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 1 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 23 is an exact duplicate of an earlier row; keeping it would double-count that order in the per-category average price."
+        },
+        "reason": "Row 23 is an exact duplicate of an earlier row; keeping it would double-count that order in the per-category average price.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 4,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-deepseek-v4-1-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.3333,
+    "Electronics": 397.6923,
+    "Furniture": 207.8125,
+    "Office Supplies": 12.6667
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

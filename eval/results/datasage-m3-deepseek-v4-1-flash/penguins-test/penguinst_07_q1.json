@@ -1,0 +1,79 @@
+{
+  "task_id": "penguinst_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 52.32,
+  "tokens": 27035,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Biscoe": 40.9333,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "extra": {
+    "final_summary": "Average bill length for Adelie penguins by island (13 Adelie rows): Biscoe 40.93 mm, Dream 38.75 mm, Torgersen 40.70 mm.\n\nProblems found and handled:\n- species had 7 dirty cells: case/space variants (\"adelie\", \"Gentoo \", \"Chinstrap \") and misspellings (\"Adeile\", \"Gentto\", \"Chinstarp\"). Applied one normalize_labels fix (approved) merging them into the three allowed labels. This mattered: without it, 2 Adelie rows (\"adelie\", \"Adeile\") would have been dropped from the filter.\n- island: clean, only the 3 allowed labels, no variants.\n- bill_length_mm: no missing values, no negatives, all within the rules range 30\u201360 mm.\n- No exact duplicate rows.\n\nCaveats (columns not used by this question, left untouched):\n- flipper_length_mm contains one impossible negative value (-200 mm, rules say 170\u2013235).\n- body_mass_g is stored as text with thousands separators (e.g. \"3,750\") in 3 cells.\n- sex has 2 missing values (rules say missing = unknown, so not filled).\nThese do not affect the bill-length averages but should be fixed before any analysis using those columns.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "species",
+          "mapping": {
+            "Chinstrap ": "Chinstrap",
+            "Gentoo ": "Gentoo",
+            "adelie": "Adelie",
+            "Adeile": "Adelie",
+            "Chinstarp": "Chinstrap",
+            "Gentto": "Gentoo"
+          },
+          "reason": "Merge case/space variants and misspellings into the three allowed species labels so the Adelie filter includes all Adelie rows (rows 5, 7, 13, 26, 28, 33, 35)."
+        },
+        "reason": "Merge case/space variants and misspellings into the three allowed species labels so the Adelie filter includes all Adelie rows (rows 5, 7, 13, 26, 28, 33, 35).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 7,
+        "summary": "species: merged 6 label variant(s), 7 cells",
+        "code": "df['species'] = df['species'].replace({'Chinstrap ': 'Chinstrap', 'Gentoo ': 'Gentoo', 'adelie': 'Adelie', 'Adeile': 'Adelie', 'Chinstarp': 'Chinstrap', 'Gentto': 'Gentoo'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-deepseek-v4-1-flash",
+  "dataset": "penguins-test",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 40.9333,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ]
+  ]
+}

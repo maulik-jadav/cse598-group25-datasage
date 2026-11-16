@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 2,
+  "detect_fn": 4,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 114.1,
+  "tokens": 11311,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Office Supplies": 23.0,
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.drop_duplicates(subset=['Order_ID'], keep='first')\n    allowed_categories = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    df['Category'] = df['Category'].str.strip().str.title()\n    df['Category'] = df['Category'].apply(lambda x: x if x in allowed_categories else pd.NA)\n    df = df[ (df['Quantity'].astype(int) == df['Quantity']) & (df['Quantity'] >= 1) ]\n    df = df[df['Price'] >= 0]\n    df = df[df['Category'].notna()]\n    return df\n\ndef answer(df):\n    return df['Category'].value_counts().to_dict()"
+  },
+  "corrections": 5,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Price"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

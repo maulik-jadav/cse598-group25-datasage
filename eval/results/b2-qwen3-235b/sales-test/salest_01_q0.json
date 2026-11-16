@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 21.4,
+  "tokens": 2439,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 36.25,
+    "Electronics": 396.43,
+    "Furniture": 161.07,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix Price: remove $ and convert to numeric\n    df = df.copy()\n    df['Price'] = df['Price'].astype(str).str.replace(r'\\$|\\.00', '', regex=True).astype(float)\n    \n    # Fix Region case variants\n    region_mapping = {'south': 'South', 'east': 'East'}\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Convert Quantity to numeric (already mostly numeric, but ensure)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # We do not fix negative Quantity/Revenue here because the question is about average unit price per category,\n    # which depends only on Price and Category. Negative quantities/revenue may be data issues, but they don't\n    # affect the average of Price (which is per unit). However, we ensure no negative Price (though not seen).\n    # But according to rules, Price >= 0, so we cap negatives at 0 if any.\n    df['Price'] = df['Price'].clip(lower=0)\n    \n    return df\n\ndef answer(df):\n    # Group by Category and compute average of Price\n    result = df.groupby('Category')['Price'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 4,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-235b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 162.15,
+  "tokens": 27468,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "extra": {
+    "final_summary": "Question: units sold per region (sum of Quantity).\n\nProblems found:\n- Region had case variants and misspellings (west, south, Wst, Suoth) plus 3 missing values (rows 8, 48, 57).\n- Price stored as text in 2 rows ('$900.00', '$45.00').\n- Quantity had one invalid negative value (-5, row 44), violating the min=1 rule; Revenue was consequently negative.\n- No duplicate rows; Revenue matched Quantity*Price; dates valid.\n\nFixes applied:\n- Normalized Region labels to North/South/East/West (4 cells).\n- Cast Price to numeric (no values lost).\n- Excluded row 44 (invalid negative quantity).\n\nResult (58 rows with a known region; 3 rows with missing Region excluded from grouping):\n- East: 94 units\n- North: 37 units\n- South: 78 units\n- West: 72 units\n\nCaveat: 3 rows have missing Region and could not be attributed; no rule specified a fill value, so they were left as missing.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "south": "South",
+            "west": "West",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "Normalize case variants and misspellings to allowed Region labels per rules file."
+        },
+        "reason": "Normalize case variants and misspellings to allowed Region labels per rules file.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Region: merged 4 label variant(s), 4 cells",
+        "code": "df['Region'] = df['Region'].replace({'south': 'South', 'west': 'West', 'Suoth': 'South', 'Wst': 'West'})"
+      },
+      {
+        "version": 2,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Convert text-stored prices like '$900.00' to numbers."
+        },
+        "reason": "Convert text-stored prices like '$900.00' to numbers.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (62 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            44
+          ],
+          "reason": "Row 44 has Quantity -5, violating the rule that Quantity must be a positive whole number (min 1). Revenue is consequently negative. Exclude this impossible row."
+        },
+        "reason": "Row 44 has Quantity -5, violating the rule that Quantity must be a positive whole number (min 1). Revenue is consequently negative. Exclude this impossible row.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          44
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [44]",
+        "code": "df = df.drop(index=[44])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-beam-1-0",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

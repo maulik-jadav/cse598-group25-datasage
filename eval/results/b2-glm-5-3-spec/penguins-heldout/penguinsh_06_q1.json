@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinsh_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 67.6,
+  "tokens": 4204,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 38.375,
+    "Dream": 39.385714285714286,
+    "Torgersen": 39.13333333333333
+  },
+  "extra": {
+    "code": "import numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Strip stray whitespace in text columns (fixes ' Adelie')\n    for c in df.select_dtypes(include='object').columns:\n        df[c] = df[c].str.strip()\n    # Fix typo variant\n    df['species'] = df['species'].replace({'Chinstarp': 'Chinstrap'})\n    # Drop the exact duplicate row (keeps penguin_id unique)\n    df = df.drop_duplicates()\n    # Fix negative flipper lengths (sign errors)\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    # Fix out-of-range body mass (unit error: grams vs kg-scale value)\n    mask = df['body_mass_g'] > 6500\n    df.loc[mask, 'body_mass_g'] = df.loc[mask, 'body_mass_g'] / 1000.0\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['species'] == 'Adelie']\n    g = d.groupby('island')['bill_length_mm'].mean()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 4,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "penguins-heldout",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 38.375,
+    "Dream": 39.3857,
+    "Torgersen": 38.125
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ]
+  ]
+}

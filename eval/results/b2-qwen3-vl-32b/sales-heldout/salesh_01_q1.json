@@ -1,0 +1,66 @@
+{
+  "task_id": "salesh_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 60.13,
+  "tokens": 2413,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0,
+    "all": 70.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Quantity, Price, Revenue to numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Fix Category label variants (trim whitespace, correct typos)\n    df['Category'] = df['Category'].str.strip()\n    df['Category'] = df['Category'].replace({'Furnture': 'Furniture', 'Accesories': 'Accessories', ' Office Supplies': 'Office Supplies', 'Furniture ': 'Furniture'})\n    \n    # Drop exact duplicate rows (based on all columns)\n    df = df.drop_duplicates()\n    \n    # Fill missing Region with 'Unknown' (or drop if needed, but question doesn't require Region)\n    df['Region'] = df['Region'].fillna('Unknown')\n    \n    return df\n\n\ndef answer(df):\n    # Count orders per Category (after cleaning)\n    counts = df.groupby('Category').size().to_dict()\n    \n    # Return as dict with key 'all' for total if needed, but question asks per category\n    # Since question is 'How many orders are there in each category?', return per category\n    result = {}\n    for cat, count in counts.items():\n        if cat in ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']:\n            result[cat] = count\n    \n    # Add overall total\n    result['all'] = sum(result.values())\n    \n    return result"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

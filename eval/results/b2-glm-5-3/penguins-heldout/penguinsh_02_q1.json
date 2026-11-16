@@ -1,0 +1,53 @@
+{
+  "task_id": "penguinsh_02_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 73.91,
+  "tokens": 3346,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3942.8571428571427,
+    "male": 4486.290322580645
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # sex: normalize label variants / extra spaces\n    d['sex'] = d['sex'].astype(str).str.strip().str.lower()\n    d.loc[~d['sex'].isin(['male', 'female']), 'sex'] = None\n    # body_mass_g: numbers written as text (e.g. '4,925') -> numeric\n    d['body_mass_g'] = pd.to_numeric(\n        d['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    # keep only in-range body mass values\n    d.loc[(d['body_mass_g'] < 2500) | (d['body_mass_g'] > 6500), 'body_mass_g'] = None\n    # flipper_length_mm: negative sign errors -> absolute value, then range check\n    d['flipper_length_mm'] = pd.to_numeric(d['flipper_length_mm'], errors='coerce').abs()\n    d.loc[(d['flipper_length_mm'] < 170) | (d['flipper_length_mm'] > 235), 'flipper_length_mm'] = None\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['sex', 'body_mass_g'])\n    g = d.groupby('sex')['body_mass_g'].mean()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3924.2647,
+    "male": 4516.3793
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

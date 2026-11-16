@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 84.41,
+  "tokens": 5752,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 17405.0,
+    "Office Supplies": 1080.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Standardize Region label variants and whitespace\n    if 'Region' in df.columns:\n        def norm_region(v):\n            if pd.isna(v):\n                return v\n            if not isinstance(v, str):\n                v = str(v)\n            s = v.strip().lower()\n            mapping = {'north': 'North', 'south': 'South', 'east': 'East', 'west': 'West'}\n            return mapping.get(s, v.strip().title())\n        df['Region'] = df['Region'].apply(norm_region)\n    # Fix Quantity: must be positive whole number\n    if 'Quantity' in df.columns:\n        df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n        # correct sign errors by taking absolute value\n        df['Quantity'] = df['Quantity'].abs()\n        # ensure integer\n        df['Quantity'] = df['Quantity'].round().astype('Int64')\n    # Recompute Revenue to enforce Revenue = Quantity * Price\n    if 'Quantity' in df.columns and 'Price' in df.columns:\n        df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n        df['Revenue'] = df['Quantity'] * df['Price']\n    # Keep Order_ID as identifier\n    return df\n\ndef answer(df):\n    # total revenue by Category on cleaned data\n    if 'Category' not in df.columns or 'Revenue' not in df.columns:\n        return {}\n    grouped = df.groupby('Category', dropna=False)['Revenue'].sum()\n    # drop missing group keys\n    result = {str(k): float(v) for k, v in grouped.items() if pd.notna(k)}\n    return result\n"
+  },
+  "corrections": 12,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

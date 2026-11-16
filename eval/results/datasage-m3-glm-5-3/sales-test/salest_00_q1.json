@@ -1,0 +1,125 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 56.95,
+  "tokens": 29999,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "extra": {
+    "final_summary": "Total revenue per month (2026): Jan $5,335 \u00b7 Feb $6,462 \u00b7 Mar $6,058 \u00b7 Apr $1,694 \u00b7 May $4,619 \u00b7 Jun $879.\n\nData problems found and fixed:\n- Price: 3 values stored as text with \"$\" formatting (rows 16, 25, 28) \u2014 converted to numbers (low risk).\n- Region: \"North \" (trailing space) and misspelling \"Suoth\" merged into the allowed labels \"North\" and \"South\".\n- Date: 3 invalid values (\"TBD\", \"not-a-date\", \"13/45/2026\" in rows 5, 6, 44) set to missing; those 3 rows are excluded from the monthly totals since their month is unknown.\n- Verified Revenue = Quantity \u00d7 Price holds for all rows; no duplicate rows; no missing or out-of-range values in Quantity/Revenue.\n\nCaveat: the 3 rows with unparseable dates (total revenue included in the dataset but not attributable to a month) could not be assigned to any month. If you can supply the correct dates, I can update the monthly totals.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "3 prices stored as text with '$' formatting; converting to numbers so Revenue = Quantity * Price can be verified and used."
+        },
+        "reason": "3 prices stored as text with '$' formatting; converting to numbers so Revenue = Quantity * Price can be verified and used.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (47 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "North ": "North",
+            "Suoth": "South"
+          },
+          "reason": "Merging label variants into allowed labels: trailing-space variant \"North \" and misspelling \"Suoth\" \u2192 \"South\"."
+        },
+        "reason": "Merging label variants into allowed labels: trailing-space variant \"North \" and misspelling \"Suoth\" \u2192 \"South\".",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'North ': 'North', 'Suoth': 'South'})"
+      },
+      {
+        "version": 3,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "3 invalid date values (\"TBD\", \"not-a-date\", \"13/45/2026\") cannot be parsed; setting them to missing so monthly grouping works on valid dates only."
+        },
+        "reason": "3 invalid date values (\"TBD\", \"not-a-date\", \"13/45/2026\") cannot be parsed; setting them to missing so monthly grouping works on valid dates only.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

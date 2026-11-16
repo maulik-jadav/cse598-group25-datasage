@@ -1,0 +1,77 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 5,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 16.25,
+  "tokens": 2439,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    \n    # Fix label variants in Category\n    df['Category'] = df['Category'].str.strip().replace({'Office Supplies ': 'Office Supplies', ' Electronics': 'Electronics'})\n    # Fix label variants in Region (if any, but sample shows no variant, keep as is)\n    # If there are case variants, uncomment below:\n    # df['Region'] = df['Region'].str.strip().str.title()\n    \n    # Validate Date format (YYYY-MM-DD)\n    df = df[df['Date'].str.match(r'^\\d{4}-\\d{2}-\\d{2}$')]\n    \n    # Quantity must be positive integer >=1\n    df = df[(df['Quantity'].notnull()) & (df['Quantity'].astype(int) >= 1)]\n    df['Quantity'] = df['Quantity'].astype(int)\n    \n    # Price must be >=0\n    df = df[df['Price'] >= 0]\n    \n    # Fill missing Region with 'Unknown' or drop if not required; here we fill with 'Unknown'\n    df['Region'] = df['Region'].fillna('Unknown')\n    \n    # Compute Revenue correctly\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Drop rows where Revenue is negative (should not happen after above, but just in case)\n    df = df[df['Revenue'] >= 0]\n    \n    # Keep id column (Order_ID)\n    return df\n\ndef answer(df):\n    # Group by Category\n    grouped = df.groupby('Category')\n    result = {}\n    # If only one group, use 'all' key\n    if len(grouped.groups) == 1:\n        result['all'] = len(df)\n    else:\n        for label, group in grouped:\n            # Join multi-column group labels if needed (not here, but general)\n            key = str(label)\n            result[key] = len(group)\n    # Drop keys with 0 count (shouldn't happen, but just in case)\n    result = {k: v for k, v in result.items() if v > 0}\n    return result"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Price"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

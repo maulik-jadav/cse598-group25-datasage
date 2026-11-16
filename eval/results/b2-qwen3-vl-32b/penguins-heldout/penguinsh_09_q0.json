@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 68.72,
+  "tokens": 2643,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3666.6666666666665,
+    "Chinstrap": 3818.3333333333335,
+    "Gentoo": 5158.823529411765
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert text numbers to numeric\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    \n    # Fix negative flipper lengths (likely data entry error; set to NaN)\n    df.loc[df['flipper_length_mm'] < 0, 'flipper_length_mm'] = pd.NA\n    \n    # Fix body mass out of range (5050000 is likely 5050; assume typo)\n    df.loc[df['body_mass_g'] > 6500, 'body_mass_g'] = df.loc[df['body_mass_g'] > 6500, 'body_mass_g'] / 1000\n    \n    # Clean sex column: trim whitespace and standardize\n    df['sex'] = df['sex'].astype(str).str.strip()\n    df.loc[df['sex'].isin(['male ', ' male']), 'sex'] = 'male'\n    \n    # Drop rows with missing species (not needed for this question, but good practice)\n    df = df.dropna(subset=['species'])\n    \n    return df\n\ndef answer(df):\n    # Group by species and compute average body mass\n    result = df.groupby('species')['body_mass_g'].mean().to_dict()\n    \n    # Return as dict with species as keys\n    return result"
+  },
+  "corrections": 4,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3694.4444,
+    "Chinstrap": 3801.7857,
+    "Gentoo": 5173.3333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

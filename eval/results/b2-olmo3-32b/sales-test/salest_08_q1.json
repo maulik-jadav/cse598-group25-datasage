@@ -1,0 +1,48 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 10.69,
+  "tokens": 2228,
+  "stop_reason": "code_error",
+  "note": "TypeError: 'int' object is not subscriptable",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Normalize 'Category' labels\n    cat_map = {\n        'Accesories': 'Accessories',\n        'Accesories': 'Accessories',\n        'electronics': 'Electronics',\n        'Electornics': 'Electronics',\n        'Office Suplies': 'Office Supplies',\n        'office supplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].map(cat_map).fillna(df['Category'])\n    # Normalize 'Region' labels and strip spaces\n    region_map = {\n        'East ': 'East',\n        ' North': 'North',\n        'North ': 'North'\n    }\n    df['Region'] = df['Region'].str.strip().map(region_map).fillna(df['Region'])\n    # Ensure Revenue is computed correctly where missing (though missing=0 here)\n    # But if needed: df['Revenue'] = df['Quantity'] * df['Price']\n    # Keep id column (Order_ID)\n    return df\n\ndef answer(df):\n    # Group by Category\n    grouped = df.groupby('Category')\n    result = {}\n    # Compute total revenue per category\n    for cat, group in grouped[['Revenue']].sum().reset_index().iterrows():\n        result[cat['Category']] = int(cat['Revenue'])\n    # If all categories combined are requested, add 'all' key\n    # But question asks by category, so only per-category\n    # Drop any category with missing group key (none here)\n    return result"
+  },
+  "corrections": 0,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "values_with_extra_spaces",
+      "Region"
+    ]
+  ]
+}

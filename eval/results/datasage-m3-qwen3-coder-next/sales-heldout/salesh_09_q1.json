@@ -1,0 +1,168 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 15,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 39.93,
+  "tokens": 83262,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed the following issues:\n1. Excluded 1 row (row 34) with negative Quantity (-7), which violated the rule that Quantity must be positive and caused negative Revenue.\n2. Converted Price column from text (e.g., \"$300.00\") to numeric values.\n3. Normalized Region label variants (e.g., \" East\", \"East \", \"Eats\", \"Wst\") to standard labels (\"East\", \"West\").\n4. Set 3 invalid dates (\"TBD\", \"not-a-date\", \"not-a-date\") to missing to ensure valid YYYY-MM-DD format.\n\nThe Revenue formula (Revenue = Quantity * Price) was verified to hold for all remaining rows. Total revenue per month is:\n- 2026-01: $2,665.00\n- 2026-02: $6,096.00\n- 2026-03: $4,160.00\n- 2026-04: $5,575.00\n- 2026-05: $3,045.00\n- 2026-06: $9,941.00",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            34
+          ],
+          "reason": "Row 34 has a negative Quantity (-7), which violates the rule that Quantity must be positive (min: 1). This also causes Revenue to be negative, which violates the Revenue formula rule."
+        },
+        "reason": "Row 34 has a negative Quantity (-7), which violates the rule that Quantity must be positive (min: 1). This also causes Revenue to be negative, which violates the Revenue formula rule.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [34]",
+        "code": "df = df.drop(index=[34])"
+      },
+      {
+        "version": 2,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains text values like \"$300.00\" and \"$50.00\" that need to be converted to numeric values."
+        },
+        "reason": "Price contains text values like \"$300.00\" and \"$50.00\" that need to be converted to numeric values.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (57 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " West": "West",
+            "East ": "East",
+            "Eats": "East",
+            "Wst": "West"
+          },
+          "reason": "Normalize region labels to standardize variants (e.g., \" East\", \"East \", \"Eats\", \"Wst\") into allowed labels (\"East\", \"West\")."
+        },
+        "reason": "Normalize region labels to standardize variants (e.g., \" East\", \"East \", \"Eats\", \"Wst\") into allowed labels (\"East\", \"West\").",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Region: merged 4 label variant(s), 5 cells",
+        "code": "df['Region'] = df['Region'].replace({' West': 'West', 'East ': 'East', 'Eats': 'East', 'Wst': 'West'})"
+      },
+      {
+        "version": 4,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Date column contains 3 invalid dates (\"TBD\", \"not-a-date\", \"not-a-date\") that need to be set to missing to ensure valid YYYY-MM-DD format for monthly grouping."
+        },
+        "reason": "Date column contains 3 invalid dates (\"TBD\", \"not-a-date\", \"not-a-date\") that need to be set to missing to ensure valid YYYY-MM-DD format for monthly grouping.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 15
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen3-coder-next",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Date"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

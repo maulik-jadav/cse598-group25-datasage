@@ -1,0 +1,62 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 3,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 62.55,
+  "tokens": 2300,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    " South": 5400.0,
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 5140.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    # Fix negative quantities\n    df = df[df['Quantity'] > 0]\n    \n    # Fix region label variants\n    region_mapping = {\n        'South': 'South',\n        ' North': 'North',\n        'North ': 'North',\n        'west': 'West',\n        'east': 'East',\n        'north': 'North'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Remove rows with missing regions\n    df = df.dropna(subset=['Region'])\n    \n    # Recalculate revenue to ensure it matches Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Filter for Electronics category\n    electronics_df = df[df['Category'] == 'Electronics']\n    \n    # Group by region and sum revenue\n    result = electronics_df.groupby('Region')['Revenue'].sum().to_dict()\n    \n    # Convert to required format\n    return {region: float(revenue) for region, revenue in result.items()}"
+  },
+  "corrections": 10,
+  "planted": 18,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

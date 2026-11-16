@@ -1,0 +1,56 @@
+{
+  "task_id": "salesh_09_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 138.47,
+  "tokens": 14541,
+  "stop_reason": "code_error",
+  "note": "AttributeError: 'float' object has no attribute 'strip'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    def parse_price(s):\n        s = s.strip()\n        if s.startswith('$'):\n            s = s[1:]\n        try:\n            return float(s)\n        except:\n            return np.nan\n    df['Price'] = df['Price'].apply(parse_price)\n    df = df.dropna(subset=['Price'])\n    df = df[(df['Quantity'].astype(int) == df['Quantity']) & (df['Quantity'] >= 1)]\n    allowed_regions = ['North', 'South', 'East', 'West']\n    df['Region'] = df['Region'].apply(lambda x: x.strip().title() if x is not None else np.nan)\n    df = df.replace({'Region': np.nan}, subset=['Region'])\n    df = df[df['Region'].isin(allowed_regions)]\n    return df\n\ndef answer(df):\n    def parse_price(s):\n        s = s.strip()\n        if s.startswith('$'):\n            s = s[1:]\n        try:\n            return float(s)\n        except:\n            return np.nan\n    df['Price'] = df['Price'].apply(parse_price)\n    df = df.dropna(subset=['Price'])\n    df = df[(df['Quantity'].astype(int) == df['Quantity']) & (df['Quantity'] >= 1)]\n    allowed_regions = ['North', 'South', 'East', 'West']\n    df['Region'] = df['Region'].apply(lambda x: x.strip().title() if x is not None else np.nan)\n    df = df.replace({'Region': np.nan}, subset=['Region'])\n    df = df[df['Region'].isin(allowed_regions)]\n    grouped = df.groupby('Category')['Price'].mean().reset_index()\n    return {cat: row['Price'] for cat, row in grouped.iterrows()}"
+  },
+  "corrections": 0,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 201.1538,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

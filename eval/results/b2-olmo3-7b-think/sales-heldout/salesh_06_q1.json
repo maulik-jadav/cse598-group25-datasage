@@ -1,0 +1,44 @@
+{
+  "task_id": "salesh_06_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 356.46,
+  "tokens": 12661,
+  "stop_reason": "code_error",
+  "note": "TypeError: string indices must be integers, not 'str'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    issues = []\n    # Check for invalid dates in Date column\n    valid_dates = []\n    for date_str in df['Date']:\n        try:\n            parts = date_str.split('-')\n            if len(parts) != 3:\n                issues.append({'type': 'invalid_date', 'column': 'Date'})\n                continue\n            year, month, day = parts\n            if not year.isdigit() or not month.isdigit() or not day.isdigit():\n                issues.append({'type': 'invalid_date', 'column': 'Date'})\n                continue\n            year = int(year)\n            month = int(month)\n            day = int(day)\n            if month < 1 or month > 12:\n                issues.append({'type': 'invalid_date', 'column': 'Date'})\n                continue\n            if day < 1 or day > 31:\n                issues.append({'type': 'invalid_date', 'column': 'Date'})\n                continue\n            valid_dates.append(date_str)\n        except:\n            issues.append({'type': 'invalid_date', 'column': 'Date'})\n    # Create mask for valid dates\n    valid_date_mask = df['Date'].isin(valid_dates)\n    df = df[valid_date_mask]\n\n    # Check Category and Region validity\n    allowed_category = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    allowed_region = [\"North\", \"South\", \"East\", \"West\"]\n\n    # Check Category\n    category_invalid = df['Category'].notna() & (df['Category'].isin(allowed_category) == False)\n    if category_invalid.any():\n        issues.append({'type': 'label_variant', 'column': 'Category'})\n\n    # Check Region\n    region_invalid = df['Region'].notna() & (df['Region'].isin(allowed_region) == False)\n    if region_invalid.any():\n        issues.append({'type': 'label_variant', 'column': 'Region'})\n\n    # Filter rows where Category and Region are valid\n    valid_rows_mask = df['Category'].isin(allowed_category) & df['Region'].isin(allowed_region)\n    df = df[valid_rows_mask]\n\n    # Parse Price to numeric\n    import re\n    def parse_price(price_str):\n        cleaned = re.sub(r'[^0-9.]', '', price_str)\n        if not cleaned:\n            return 0.0\n        return float(cleaned)\n    df['Parsed_Price'] = df['Price'].apply(parse_price)\n\n    # Compute Corrected_Revenue\n    df['Corrected_Revenue'] = df['Quantity'] * df['Parsed_Price']\n\n    # Check Quantity validity: must be >=1 and <=8\n    quantity_invalid = df['Quantity'].isna() | (df['Quantity'] < 1) | (df['Quantity'] > 8)\n    if quantity_invalid.any():\n        issues.append({'type': 'out_of_range', 'column': 'Quantity'})\n\n    # Check Parsed_Price >=0\n    price_invalid = df['Parsed_Price'].isna() | (df['Parsed_Price'] < 0)\n    if price_invalid.any():\n        issues.append({'type': 'negative', 'column': 'Price'})\n\n    # Filter rows with invalid Quantity or Price\n    valid_quantity_mask = df['Quantity'].between(1, 8)\n    valid_price_mask = df['Parsed_Price'].ge(0)\n    df = df[valid_quantity_mask & valid_price_mask]\n\n    # Check for duplicates based on Order_ID\n    duplicates = df.duplicated('Order_ID', keep=False)\n    if duplicates.any():\n        issues.append({'type': 'duplicates', 'column': 'Order_ID'})\n\n    # Drop original Revenue and use Corrected_Revenue\n    df = df.drop('Revenue', axis=1)\n    df['Revenue'] = df['Corrected_Revenue']\n    return df\n\ndef answer(df):\n    # Group by Region and sum Revenue\n    grouped = df.groupby('Region')['Revenue'].sum().reset_index()\n    result = {}\n    for row in grouped:\n        region = row['Region']\n        total = row['Revenue']\n        result[region] = total\n    return result"
+  },
+  "corrections": 0,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

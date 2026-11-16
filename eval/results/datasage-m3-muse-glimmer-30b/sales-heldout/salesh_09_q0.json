@@ -1,0 +1,156 @@
+{
+  "task_id": "salesh_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 16,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 82.71,
+  "tokens": 92747,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 201.1538,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "final_summary": "Data quality issues found and fixed:\n- Price contained text numbers ($300.00, $50.00); cast to numeric.\n- Quantity had an out-of-range value -7 at row 34 (violates min 1); row excluded.\n- Region had label variants with extra spaces and misspellings ( West, East , Eats, Wst); normalized to allowed labels.\n- Date had 3 invalid values (TBD, not-a-date); parsed dates, invalid set to missing.\n- One missing Region remains (row 15) but does not affect the requested metric.\n\nAverage unit price by Category (mean of Price, 57 rows used):\n- Accessories: 30.2632\n- Electronics: 277.8571\n- Furniture: 201.1538\n- Office Supplies: 12.0\n\nCaveats: 1 row excluded for invalid Quantity, 3 dates set to missing, 1 Region still missing.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains text numbers with $ and decimals; need numeric for average unit price calculation"
+        },
+        "reason": "Price contains text numbers with $ and decimals; need numeric for average unit price calculation",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (58 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            34
+          ],
+          "reason": "Quantity -7 violates rule min 1 and causes negative Revenue; row is invalid for analysis"
+        },
+        "reason": "Quantity -7 violates rule min 1 and causes negative Revenue; row is invalid for analysis",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [34]",
+        "code": "df = df.drop(index=[34])"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " West": "West",
+            "East ": "East",
+            "Eats": "East",
+            "Wst": "West"
+          },
+          "reason": "Region variants with extra spaces and misspellings should be merged to allowed labels"
+        },
+        "reason": "Region variants with extra spaces and misspellings should be merged to allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Region: merged 4 label variant(s), 5 cells",
+        "code": "df['Region'] = df['Region'].replace({' West': 'West', 'East ': 'East', 'Eats': 'East', 'Wst': 'West'})"
+      },
+      {
+        "version": 4,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Date column has invalid values TBD and not-a-date; parse to set invalid to missing"
+        },
+        "reason": "Date column has invalid values TBD and not-a-date; parse to set invalid to missing",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 16
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 201.1538,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

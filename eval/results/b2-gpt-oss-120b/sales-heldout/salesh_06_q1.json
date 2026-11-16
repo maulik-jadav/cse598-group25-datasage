@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 23.79,
+  "tokens": 3274,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef _clean_price(series):\n    \"\"\"Convert price strings like \"$350.00\" or \"25\" to float numbers.\"\"\"\n    return series.astype(str).str.replace(r'[^0-9\\.]+', '', regex=True).astype(float)\n\ndef _normalize_region(series):\n    \"\"\"Map variant spellings of regions to the canonical values.\n    Allowed values: North, South, East, West.\n    \"\"\"\n    mapping = {\n        'north': 'North',\n        'nort': 'North',\n        'south': 'South',\n        'suoth': 'South',\n        'east': 'East',\n        'west': 'West',\n        'wst': 'West'\n    }\n    # lower\u2011case and strip spaces\n    cleaned = series.astype(str).str.strip().str.lower()\n    return cleaned.map(mapping).fillna(series)\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    df = df.copy()\n    # ---- Date ----\n    # Convert to datetime, coerce invalid dates to NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n\n    # ---- Region ----\n    df['Region'] = _normalize_region(df['Region'])\n\n    # ---- Category ----\n    # Ensure proper casing and strip spaces\n    df['Category'] = df['Category'].astype(str).str.strip().str.title()\n\n    # ---- Price ----\n    df['Price'] = _clean_price(df['Price'])\n\n    # ---- Quantity ----\n    # Ensure integer type\n    df['Quantity'] = df['Quantity'].astype(int)\n\n    # ---- Revenue ----\n    # Re\u2011calculate revenue from Quantity * Price\n    df['Revenue_calc'] = df['Quantity'] * df['Price']\n    # If the existing Revenue differs (allow small floating tolerance), replace it\n    df['Revenue'] = np.where(\n        np.isclose(df['Revenue'].astype(float), df['Revenue_calc'], atol=1e-2),\n        df['Revenue'].astype(float),\n        df['Revenue_calc']\n    )\n    df.drop(columns=['Revenue_calc'], inplace=True)\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    \"\"\"Return total revenue for each Region where Category == 'Electronics'.\n    The key is the region name; the value is the summed revenue (float).\n    \"\"\"\n    df_clean = clean(df)\n    # Filter Electronics\n    electronics = df_clean[df_clean['Category'] == 'Electronics']\n    # Group by Region and sum Revenue\n    result_series = electronics.groupby('Region')['Revenue'].sum()\n    # Convert to plain python dict (region -> float)\n    result = {region: float(value) for region, value in result_series.items()}\n    return result"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}
