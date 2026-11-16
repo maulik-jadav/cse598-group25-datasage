@@ -96,6 +96,8 @@ async function start() {
   if (!S.sample && !S.file && !(S.files && S.files.length)) { $("#fileChip").animate([{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(0)" }], { duration: 260 }); $("#fileInput").click(); return; }
   if (!question) { $("#question").focus(); return; }
   const mode = (document.querySelector('input[name="mode"]:checked') || {}).value || "ask";
+  const badge = $("#modeBadge");
+  badge.textContent = mode === "auto" ? "Auto" : "Ask me"; badge.classList.toggle("auto", mode === "auto"); badge.hidden = false;
   const body = S.sample ? { sample: S.sample, question, client_id: CLIENT_ID, approve: mode }
     : S.files && S.files.length > 1
       ? { question, files: await Promise.all(S.files.map(async (f) => ({ file_name: f.name, file_b64: await toB64(f) }))), rules_text: S.rules, client_id: CLIENT_ID, approve: mode }
@@ -151,6 +153,14 @@ function setRunning(on) {
 }
 function setStatus(t) { $("#status").textContent = t; $("#status").classList.remove("error"); }
 function fail(msg) { setRunning(false); setStatus(msg); $("#status").classList.add("error"); if (S.es) S.es.close(); }
+
+// ---------- home ----------
+$("#newRun").addEventListener("click", async () => {
+  if (S.running && S.runId) await stop();
+  if (S.es) S.es.close();
+  $("#work").hidden = true; $("#empty").hidden = false; $("#modeBadge").hidden = true;
+  $("#runBtn").textContent = "Run"; S.runId = null;
+});
 
 // ---------- views ----------
 const FILE_INFO = {
@@ -422,16 +432,19 @@ function finish(ev) {
     log.append(li);
   });
   if (!ev.changes.length) log.append(el("li", null, "No changes were needed."));
-  $("#aSummary").textContent = ev.summary || "";
+  renderSummary($("#aSummary"), ev.summary || "");
   const files = $("#aFiles"); files.textContent = "";
   ev.files.forEach((f) => {
     const info = FILE_INFO[f] || { title: f, text: "" };
     const li = el("li", "file");
     const text = el("div", "file-text");
     text.append(el("span", "file-title", info.title), el("span", "file-name", f), el("span", "file-desc", info.text));
+    const view = el("a", "ghost small", "View"); view.href = `/view?run=${S.runId}&file=${f}`; view.target = "_blank"; view.rel = "noopener";
+    view.setAttribute("aria-label", `View ${f} in a new tab`);
     const link = el("a", "ghost small", "Download"); link.href = `/api/runs/${S.runId}/files/${f}`; link.setAttribute("download", f);
     link.setAttribute("aria-label", `Download ${f}`);
-    li.append(text, link); files.append(li);
+    const acts = el("div", "file-acts"); acts.append(view, link);
+    li.append(text, acts); files.append(li);
   });
   const prof = el("li", "file");
   const ptext = el("div", "file-text");
@@ -569,6 +582,39 @@ function countUp(node, target) {
 }
 
 const vis = (v) => (v === "" || v == null ? "—" : String(v).replace(/^ +| +$/g, (m) => "␣".repeat(m.length)));  // stray spaces made visible
+// The agent's summary is often one long sentence joined with semicolons: show a lead line and one bullet per item.
+function withQuotes(text) {
+  const span = el("span");
+  text.split(/('[^']{1,40}')/g).forEach((part) => {
+    if (/^'[^']+'$/.test(part)) span.append(el("code", null, part.slice(1, -1)));
+    else if (part) span.append(document.createTextNode(part));
+  });
+  return span;
+}
+function renderSummary(box, text) {
+  box.textContent = "";
+  const sentences = text.replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+(?=[A-Z])/).filter(Boolean);
+  sentences.forEach((s) => {
+    const parts = s.split(/;\s+/);
+    const colon = parts[0].indexOf(": ");
+    if (parts.length < 2 && !/: .+, .+: /.test(s)) { const p = el("p"); p.append(withQuotes(s)); box.append(p); return; }
+    let items = parts;
+    if (colon > 0 && colon < 120) {
+      const p = el("p", "sum-lead"); p.append(withQuotes(parts[0].slice(0, colon + 1))); box.append(p);
+      items = [parts[0].slice(colon + 2), ...parts.slice(1)];
+    }
+    if (items.length === 1 && /, \S+: /.test(items[0])) items = items[0].split(/,\s+(?=\S+: )/);  // "a: 1, b: 2" lists
+    const ul = el("ul", "sum-list");
+    items.forEach((it) => {
+      const clean = it.replace(/^(and |finally,? |then,? )/i, "").replace(/[.;]$/, "");
+      if (!clean) return;
+      const text = /^[a-z]+ /.test(clean) ? clean.charAt(0).toUpperCase() + clean.slice(1) : clean;  // keep names like orders_07.csv
+      const li = el("li"); li.append(withQuotes(text)); ul.append(li);
+    });
+    box.append(ul);
+  });
+}
+
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
 function plain(text) {
   return text.replace(/^drop_duplicates: /, "").replace(/^normalize_labels: /, "").replace(/^exclude_rows: /, "")
