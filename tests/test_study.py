@@ -46,7 +46,7 @@ def test_replay_rebuilds_the_logged_answer():
 
 
 def test_root_causes_lists_unhandled_errors_when_nothing_was_fixed():
-    untouched = {"extra": {"changes": []}, "damaged_rows": 0, "damaged_cells": 0}
+    untouched = {"answer": {"x": 1.0}, "stop_reason": "finish", "extra": {"changes": []}, "damaged_rows": 0, "damaged_cells": 0}
     causes = study.root_causes("penguins-test", "penguinst_00_q1", untouched)
     assert causes == ["label_variant (restore) on a question column not handled",
                       "out_of_range (exclude) on a column the question does not use not handled"]
@@ -68,4 +68,8 @@ def test_same_question_ignores_the_metric_of_a_count():
     spec = {"group_by": ["island"], "metric": None, "agg": "count"}
     assert study.same_question(spec, {"group_by": ["island"], "metric": "penguin_id", "agg": "count", "filters": []})
     assert not study.same_question(spec, {"group_by": ["species"], "metric": None, "agg": "count"})
-    assert study.root_causes("sales-test", "salest_00_q0", {"extra": {}}) == ["no change log"]
+    assert study.root_causes("sales-test", "salest_00_q0", {"answer": {"x": 1.0}, "stop_reason": "finish", "extra": {}}) == ["no change log"]
+    assert study.root_causes("sales-test", "salest_00_q0", {"answer": {"x": 1.0}, "stop_reason": "tool_budget_exhausted"}) == [
+        "did not finish (stopped: tool_budget_exhausted)"]
+    assert study.root_causes("sales-test", "salest_00_q0", {"answer": None, "stop_reason": "tool_budget_exhausted"}) == [
+        "no answer (stopped: tool_budget_exhausted)"]

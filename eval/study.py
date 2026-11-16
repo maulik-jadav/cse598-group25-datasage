@@ -244,6 +244,11 @@ def root_causes(dataset: str, task_id: str, result: dict, trace: list[dict] | No
     folder = ROOT / "datasets" / dataset / table
     planted = json.loads((folder / "planted.json").read_text())
     task = next(t for t in json.loads((folder / "tasks.json").read_text()) if t["task_id"] == task_id)
+    stop = str(result.get("stop_reason")).split(":")[0]
+    if not result.get("answer"):
+        return [f"no answer (stopped: {stop})"]
+    if stop not in ("finish", "answered_without_finish", "done"):  # an unfinished run is scored wrong
+        return [f"did not finish (stopped: {stop})"]
     cleaned = replay_cleaned(dataset, task_id, result)
     if cleaned is None:
         return ["no change log"]
@@ -346,6 +351,31 @@ def failure_section(keys: list[tuple[str, str]], runs: dict[str, Path]) -> dict:
     }
 
 
+def exposure_section(keys: list[tuple[str, str]], runs: dict[str, Path]) -> dict:
+    """Accuracy of datasage-m3 (all runs) on questions whose table has a row to exclude for a rule broken
+    on a column the question does not use, against the other questions."""
+    out = {}
+    for kind in ("out_of_range", "negative"):
+        groups: dict = {"exposed": [], "not exposed": []}
+        for dataset, task_id in keys:
+            folder = ROOT / "datasets" / dataset / task_id.rsplit("_", 1)[0]
+            planted = json.loads((folder / "planted.json").read_text())["errors"]
+            spec = next(t["spec"] for t in json.loads((folder / "tasks.json").read_text()) if t["task_id"] == task_id)
+            cols = question_columns(spec)
+            exposed = any(p["type"] == kind and p["column"] not in cols for p in planted)
+            groups["exposed" if exposed else "not exposed"].append((dataset, task_id))
+        out[kind] = {}
+        for name, group in groups.items():
+            right = total = 0
+            for root in runs.values():
+                rows = results_for(root, FINAL, group)
+                right += sum(r["analysis_correct"] for r in rows.values())
+                total += len(rows)
+            out[kind][name] = {"questions": len(group), "task_runs": total, "right": right,
+                               "accuracy": right / total if total else None}
+    return out
+
+
 def pct(x: float) -> str:
     return f"{100 * x:.1f}%"
 
@@ -394,6 +424,10 @@ def markdown(study: dict) -> str:
     lines += ["", "Questions wrong in at least one run:", ""]
     lines += [f"- {q}: wrong in {len(v['wrong_in_runs'])} ({', '.join(v['wrong_in_runs'])}); {v['root_causes']}; "
               f"answer: {v['answer_diffs'][0]}" for q, v in f["final_wrong_questions"].items()]
+    lines += ["", "datasage-m3 on questions exposed to a rule-breaking row on a column they do not use (all runs):", ""]
+    for kind, groups in study["exposure_to_rule_breaking_rows_on_unused_columns"].items():
+        lines += [f"- {kind}, {name}: {g['questions']} questions, {g['right']}/{g['task_runs']} task-runs right"
+                  for name, g in groups.items()]
     lines += ["", "Root causes for the ablations:", ""]
     for system, v in f["ablations"].items():
         lines.append(f"- {system} ({v['wrong']} wrong): " + "; ".join(f"{c} x{n}" for c, n in v["root_causes"]))
@@ -415,6 +449,7 @@ def build() -> dict:
         "ablations": ablation_section(all_keys, keys_by_split),
         "paired": paired_section(all_keys, runs),
         "failures": failure_section(all_keys, runs),
+        "exposure_to_rule_breaking_rows_on_unused_columns": exposure_section(all_keys, runs),
     }
 
 

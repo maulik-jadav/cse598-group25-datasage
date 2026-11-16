@@ -26,11 +26,15 @@ SPLITS = [
     ("sales", "Sales", "dev"), ("penguins", "Penguins", "dev"),
     ("sales-heldout", "Sales", "held-out"), ("penguins-heldout", "Penguins", "held-out"),
     ("sales-test", "Sales", "test"), ("penguins-test", "Penguins", "test"),
+    # scale-up splits (seeds 303, 404, 505), see docs/final/findings_scale_and_ablations.md
+    ("sales-s303", "Sales", "seed 303"), ("penguins-s303", "Penguins", "seed 303"),
+    ("sales-s404", "Sales", "seed 404"), ("penguins-s404", "Penguins", "seed 404"),
+    ("sales-s505", "Sales", "seed 505"), ("penguins-s505", "Penguins", "seed 505"),
 ]
 GROUPS = [
     ("devheld", "Dev + held-out", ["sales", "penguins", "sales-heldout", "penguins-heldout"]),
     ("test", "Test", ["sales-test", "penguins-test"]),
-    ("all", "All six", [s[0] for s in SPLITS]),
+    ("all", "All six", [s[0] for s in SPLITS[:6]]),
 ]
 # Plain names for the page. kind: baseline, datasage (earlier versions), final, ablation.
 SYSTEMS = {
@@ -47,6 +51,10 @@ SYSTEMS = {
     "datasage-m3-large": ("Final, 235B", "Milestone 3 with the large model", "datasage"),
     "datasage-reject": ("Every risky fix rejected", "The 235B agent when the person says no to every risky fix", "ablation"),
     "datasage-novalidator": ("No validator", "The 235B agent without the validator that checks each fix and rolls back a bad one", "ablation"),
+    "datasage-m3-nocoverage": ("Final, no coverage check", "The final agent without the coverage check before analyze", "ablation"),
+    "datasage-m3-novalidator": ("Final, no validator", "The final agent without the validator", "ablation"),
+    "datasage-m3-nomerge": ("Final, no merge rule", "The final agent with the prompt that lacks the spelling-merge rule", "ablation"),
+    "datasage-m3-reject": ("Final, every risky fix rejected", "The final agent when the person says no to every risky fix", "ablation"),
 }
 PROGRESSION = ["datasage", "datasage-fix", "datasage-small-fix", "datasage-m3"]
 ABLATION = ["datasage", "datasage-novalidator", "datasage-reject"]
@@ -86,7 +94,7 @@ def results() -> dict:
     for gid, label, members in GROUPS:
         systems = {}
         for system in order:
-            if system in ("datasage-reject", "datasage-novalidator"):
+            if SYSTEMS.get(system, ("", "", ""))[2] == "ablation":
                 continue
             if not all(system in per_split.get(s, {}) for s in members):
                 continue

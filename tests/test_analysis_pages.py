@@ -40,8 +40,8 @@ def test_results_api_has_every_system_and_split_in_summary_csv(results):
     with open(SUMMARY, newline="") as fh:
         rows = list(csv.DictReader(fh))
     assert {s["id"] for s in results["splits"]} == {r["dataset"] for r in rows}
-    assert [s["id"] for s in results["splits"]] == ["sales", "penguins", "sales-heldout", "penguins-heldout",
-                                                    "sales-test", "penguins-test"]
+    assert [s["id"] for s in results["splits"]][:6] == ["sales", "penguins", "sales-heldout", "penguins-heldout",
+                                                        "sales-test", "penguins-test"]
     assert set(results["order"]) == {r["system"] for r in rows}
     for r in rows:  # every per-split number is the one in summary.csv
         got = results["per_split"][r["dataset"]][r["system"]]
