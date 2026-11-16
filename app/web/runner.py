@@ -235,6 +235,8 @@ class BrowserApprover(Approver):
         self.run = run
 
     def decide(self, tool, args, risk, preview):
+        if self.run.cancelled:  # stopped before this question came up: reject without asking
+            return False
         approval_id = uuid.uuid4().hex[:8]
         waiter = threading.Event()
         self.run.pending[approval_id] = {"event": waiter, "answer": False}
@@ -246,6 +248,8 @@ class BrowserApprover(Approver):
             "rows": [int(r) for r in rows][:20], "column": args.get("column"),
             "examples": examples(preview, tool, args, getattr(self.run, "session", None)),
         })
+        if self.run.cancelled:  # a stop that landed while the card was being sent
+            waiter.set()
         answered = waiter.wait(APPROVAL_TIMEOUT) and not self.run.cancelled
         answer = bool(self.run.pending.pop(approval_id)["answer"]) if answered else False
         self.run.emit({"type": "approval_closed", "id": approval_id, "answer": answer, "timed_out": not answered})
@@ -254,10 +258,12 @@ class BrowserApprover(Approver):
 
 class Run:
     def __init__(self, input_path: Path, question: str, rules_path: Path | None, out_dir: Path, model: str | None,
-                 sheet: str | None = None):
+                 sheet: str | None = None, client_id: str = ""):
         self.id = out_dir.name
         self.input_path, self.question, self.rules_path, self.out_dir, self.model = input_path, question, rules_path, out_dir, model
         self.sheet = sheet
+        self.client_id = client_id
+        self.created = time.time()
         self.events: list[dict] = []
         self.cond = threading.Condition()
         self.pending: dict[str, dict] = {}
@@ -316,7 +322,8 @@ class Run:
                        "read": df.attrs.get("read", {})})
             kwargs = {"model": self.model} if self.model else {}
             result = run_agent(self.input_path, self.question, BrowserApprover(self), rules_path=self.rules_path,
-                               on_event=self._on_event, sheet=self.sheet, **kwargs)
+                               on_event=self._on_event, sheet=self.sheet,
+                               should_stop=lambda: self.cancelled, **kwargs)
             write_outputs(result, self.out_dir)
             analysis = result.session.analyses[-1] if result.session.analyses else None
             changes = [{"applied": True, "text": plural(c.summary), "approval": c.approval}

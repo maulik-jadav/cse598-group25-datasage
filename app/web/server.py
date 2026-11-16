@@ -13,7 +13,9 @@ import binascii
 import json
 import mimetypes
 import re
+import shutil
 import tempfile
+import time
 import uuid
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -37,6 +39,9 @@ MAX_UPLOAD = 20 * 1024 * 1024
 FILES = {"cleaned.csv": "text/csv", "report.md": "text/markdown", "replay.py": "text/x-python",
          "trace.jsonl": "application/json"}
 RUNS: dict[str, Run] = {}
+MAX_RUNS = 50              # finished runs kept in memory; older ones are dropped with their folders
+OUTPUT_TTL = 24 * 3600     # output folders older than this are deleted
+CLIENT_ID = re.compile(r"^[A-Za-z0-9-]{1,64}$")
 MODEL: str | None = None
 
 
@@ -178,13 +183,17 @@ class Handler(BaseHTTPRequestHandler):
                     return self._error(400, "the rules file is not valid JSON")
                 rules_path = folder / "rules.json"
                 rules_path.write_text(body["rules_text"])
-        for old in RUNS.values():  # one live run at a time; an older one stops asking for approvals
-            if not old.done:
+        client = str(body.get("client_id") or "")
+        client = client if CLIENT_ID.match(client) else ""
+        for old in RUNS.values():  # a new run replaces this browser's earlier run, never someone else's
+            if not old.done and client and old.client_id == client:
                 old.cancel()
         sheet = body.get("sheet")
-        run = Run(input_path, question, rules_path, folder, MODEL, sheet=str(sheet) if sheet not in (None, "") else None)
+        run = Run(input_path, question, rules_path, folder, MODEL, sheet=str(sheet) if sheet not in (None, "") else None,
+                  client_id=client)
         RUNS[run_id] = run
         run.start()
+        prune()
         self._json({"run_id": run_id})
 
     def _events(self, run: Run, start: int) -> None:
@@ -215,6 +224,20 @@ class Handler(BaseHTTPRequestHandler):
             pass
 
 
+def prune(now: float | None = None) -> None:
+    """Keep memory and disk bounded: drop the oldest finished runs past MAX_RUNS, and delete old output folders."""
+    now = now or time.time()
+    finished = [rid for rid, r in RUNS.items() if r.done]
+    for rid in finished[: max(0, len(RUNS) - MAX_RUNS)]:
+        shutil.rmtree(RUNS.pop(rid).out_dir, ignore_errors=True)
+    if OUT.exists():
+        live = {r.out_dir.name for r in RUNS.values() if not r.done}
+        for folder in OUT.iterdir():
+            if folder.is_dir() and folder.name not in live and now - folder.stat().st_mtime > OUTPUT_TTL:
+                RUNS.pop(folder.name, None)
+                shutil.rmtree(folder, ignore_errors=True)
+
+
 def main() -> None:
     global MODEL
     parser = argparse.ArgumentParser(description="DataSage browser app")
@@ -225,6 +248,7 @@ def main() -> None:
     MODEL = args.model
     if not re.match(r"^[\w.\-:]+$", args.host):
         raise SystemExit("bad host")
+    prune()
     server = ThreadingHTTPServer((args.host, args.port), Handler)
     server.daemon_threads = True
     print(f"DataSage is running at http://{args.host}:{args.port}  (Ctrl+C to stop)")
