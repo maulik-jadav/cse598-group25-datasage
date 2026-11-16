@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 27.17,
+  "tokens": 2899,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Fix Category label variants (extra spaces)\n    df['Category'] = df['Category'].str.strip()\n    # Drop exact duplicate rows\n    df = df.drop_duplicates()\n    # Drop rows with invalid negative quantity (rule: min 1)\n    df = df[df['Quantity'] >= 1]\n    # Recompute Revenue from formula: Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df = df.dropna(subset=['Category'])\n    grouped = df.groupby('Category')['Revenue'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-2",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

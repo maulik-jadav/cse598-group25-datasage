@@ -1,0 +1,138 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 3,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 180.65,
+  "tokens": 23002,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "final_summary": "**Total Electronics revenue by region:**\n- South: $10,540\n- East: $7,580\n- North: $3,750\n- West: $1,800\n- **Grand total: $23,670** across 12 Electronics rows.\n\n**Data problems found and fixed:**\n1. **Region label variants** (6 rows): \" South\", \"North \", \"east\", \"north\", \"west\" were normalized to the allowed labels (South, North, East) per the rules file \u2014 without this, Electronics rows in \" South\" and \"North \" would have been split into separate groups.\n2. **Revenue formula violations** (rows 10, 19, 61): Revenue did not equal Quantity \u00d7 Price (e.g., row 10 had 2400 instead of 240). Recomputed Revenue = Quantity \u00d7 Price on those rows.\n3. **Negative Quantity** (rows 5, 14, 65): rules say Quantity is always a positive whole number (units sold). These rows were excluded from the analysis (user approved).\n\n**Caveats:** 3 rows had missing Region values; none of them were Electronics rows, so they did not affect this answer. The excluded negative-quantity rows were Furniture/Office Supplies, not Electronics, so they also did not affect the Electronics totals.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " South": "South",
+            "North ": "North",
+            "east": "East",
+            "north": "North",
+            "west": "West"
+          },
+          "reason": "Merge case/space variants into the allowed Region labels per rules file"
+        },
+        "reason": "Merge case/space variants into the allowed Region labels per rules file",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Region: merged 5 label variant(s), 6 cells",
+        "code": "df['Region'] = df['Region'].replace({' South': 'South', 'North ': 'North', 'east': 'East', 'north': 'North', 'west': 'West'})"
+      },
+      {
+        "version": 2,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            10,
+            19,
+            61
+          ],
+          "reason": "Revenue must equal Quantity * Price per rules file; rows 10, 19, 61 violate the formula"
+        },
+        "reason": "Revenue must equal Quantity * Price per rules file; rows 10, 19, 61 violate the formula",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[10, 19, 61], 'Revenue'] = [240.0, 24.0, 48.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            5,
+            14,
+            65
+          ],
+          "reason": "Rows 5, 14, 65 have negative Quantity, but rules say Quantity is always a positive whole number (units sold)"
+        },
+        "reason": "Rows 5, 14, 65 have negative Quantity, but rules say Quantity is always a positive whole number (units sold)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          5,
+          14,
+          65
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [5, 14, 65]",
+        "code": "df = df.drop(index=[5, 14, 65])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 15,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

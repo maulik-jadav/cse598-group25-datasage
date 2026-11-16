@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 47.97,
+  "tokens": 2256,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    # Fix category label variants (leading/trailing spaces)\n    df['Category'] = df['Category'].astype(str).str.strip()\n    # Convert Price written as text (e.g. '$180.00') to numeric\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    # Ensure Quantity is numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    return df\n\ndef answer(df):\n    d = df[df['Region'].notna()].copy()\n    d['Region'] = d['Region'].astype(str).str.strip()\n    grouped = d.groupby('Region')['Quantity'].sum()\n    return {region: int(qty) for region, qty in grouped.items()}"
+  },
+  "corrections": 6,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

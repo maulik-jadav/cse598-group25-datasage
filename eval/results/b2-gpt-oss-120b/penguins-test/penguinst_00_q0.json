@@ -1,0 +1,53 @@
+{
+  "task_id": "penguinst_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 19.23,
+  "tokens": 3221,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3944.1666666666665,
+    "male": 4668.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # Standardize species labels (title case, strip spaces)\n    if 'species' in df.columns:\n        df['species'] = df['species'].astype(str).str.strip().str.title()\n        # Ensure only allowed values remain\n        allowed_species = {\"Adelie\", \"Chinstrap\", \"Gentoo\"}\n        df = df[df['species'].isin(allowed_species)]\n    # Standardize island labels (strip spaces)\n    if 'island' in df.columns:\n        df['island'] = df['island'].astype(str).str.strip()\n        allowed_islands = {\"Biscoe\", \"Dream\", \"Torgersen\"}\n        df = df[df['island'].isin(allowed_islands)]\n    # Convert flipper_length_mm to numeric (it may be stored as text)\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    # Convert body_mass_g to numeric (it may be stored as text) and filter realistic range\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n        df = df[df['body_mass_g'].between(2500, 6500, inclusive='both')]\n    # Keep only rows where required numeric columns are not missing\n    numeric_cols = ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g']\n    df = df.dropna(subset=numeric_cols)\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    clean_df = clean(df)\n    # Exclude rows with missing sex (unknown)\n    result = (\n        clean_df.dropna(subset=['sex'])\n        .groupby('sex')['body_mass_g']\n        .mean()\n        .to_dict()\n    )\n    # Convert numpy floats to native Python floats for JSON compatibility\n    return {k: float(v) for k, v in result.items()}\n"
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3944.1667,
+    "male": 4668.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

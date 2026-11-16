@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinst_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 69.85,
+  "tokens": 4090,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3688.157894736842,
+    "Chinstrap": 3745.8333333333335,
+    "Gentoo": 5081.578947368421
+  },
+  "extra": {
+    "code": "import pandas as pd\ndef clean(df):\n    df = df.copy()\n    # normalize species: case variants and typo Gentto -> Gentoo\n    species_map = {'adelie': 'Adelie', 'chinstrap': 'Chinstrap', 'gentoo': 'Gentoo', 'gentto': 'Gentoo'}\n    # strip and lower then map\n    s = df['species'].astype(str).str.strip()\n    lower = s.str.lower()\n    mapped = lower.map(species_map)\n    df['species'] = mapped.where(mapped.notna(), s)\n    # keep only allowed values, others become NaN (will be dropped in answer)\n    allowed = {'Adelie', 'Chinstrap', 'Gentoo'}\n    df.loc[~df['species'].isin(allowed), 'species'] = pd.NA\n    # body_mass_g is text with commas like \"3,900\" -> numeric\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip(), errors='coerce')\n    # flipper_length_mm has negative values due to sign error -> absolute value\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df.loc[df['flipper_length_mm'] < 0, 'flipper_length_mm'] = df.loc[df['flipper_length_mm'] < 0, 'flipper_length_mm'].abs()\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df = df.dropna(subset=['species', 'body_mass_g'])\n    # optional range filter per rules (keeps valid body_mass)\n    df = df[(df['body_mass_g'] >= 2500) & (df['body_mass_g'] <= 6500)]\n    grouped = df.groupby('species')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in grouped.items()}\n"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3701.3889,
+    "Chinstrap": 3754.5455,
+    "Gentoo": 5081.5789
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

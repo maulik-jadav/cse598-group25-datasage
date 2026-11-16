@@ -1,0 +1,63 @@
+{
+  "task_id": "salesh_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 71.58,
+  "tokens": 4964,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Fix Region: strip whitespace and standardize case\n    df['Region'] = df['Region'].str.strip()\n    df['Region'] = df['Region'].str.title()\n    # Keep only allowed region values; leave missing as NaN\n    allowed = {'North', 'South', 'East', 'West'}\n    df.loc[~df['Region'].isin(allowed), 'Region'] = None\n    # Fix negative quantities (take absolute) and enforce integer\n    df['Quantity'] = df['Quantity'].abs()\n    df['Quantity'] = df['Quantity'].astype(int)\n    # Recompute Revenue per formula\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    sub = df[(df['Category'] == 'Electronics') & (df['Region'].notna())]\n    grouped = sub.groupby('Region')['Revenue'].sum()\n    result = {str(k): float(v) for k, v in grouped.items()}\n    return result"
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

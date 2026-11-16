@@ -1,0 +1,53 @@
+{
+  "task_id": "penguinst_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 79.1,
+  "tokens": 5959,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3765.625,
+    "male": 4312.5
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # standardise text variants\n    if 'species' in df.columns:\n        df['species'] = df['species'].astype(str).str.strip()\n    if 'island' in df.columns:\n        df['island'] = df['island'].astype(str).str.strip().str.title()\n    # parse body_mass_g which is stored as text with commas\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False)\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # ensure numeric columns are numeric\n    for col in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'year']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    sub = dfc.dropna(subset=['sex', 'body_mass_g'])\n    means = sub.groupby('sex')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in means.items()}\n"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3765.625,
+    "male": 4312.5
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

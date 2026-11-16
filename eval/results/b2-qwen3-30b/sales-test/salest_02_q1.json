@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_02_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 16.58,
+  "tokens": 2341,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 10786.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix Category label variants\n    category_mapping = {\n        'Office Suplies': 'Office Supplies',\n        'Furnture': 'Furniture'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Fix Region label variants (trim spaces and standardize)\n    df['Region'] = df['Region'].str.strip()\n    \n    # Convert Quantity and Revenue to numeric, handle negatives\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Remove rows with negative Quantity or Revenue\n    df = df[(df['Quantity'] >= 1) & (df['Revenue'] >= 0)]\n    \n    # Ensure Date is datetime and extract month\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df['Month'] = df['Date'].dt.to_period('M').astype(str)\n    \n    # Drop rows with invalid Date\n    df = df.dropna(subset=['Date'])\n    \n    return df\n\ndef answer(df):\n    # Group by Month and sum Revenue\n    result = df.groupby('Month', as_index=False)['Revenue'].sum()\n    \n    # Convert to dictionary with YYYY-MM format\n    return dict(zip(result['Month'], result['Revenue']))"
+  },
+  "corrections": 11,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

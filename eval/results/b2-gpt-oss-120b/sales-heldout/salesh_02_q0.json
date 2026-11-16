@@ -1,0 +1,62 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 33.08,
+  "tokens": 3137,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 17405.0,
+    "Office Supplies": 1080.0,
+    "all": 50005.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    \"\"\"Clean the raw dataframe so that the revenue calculation is reliable.\n    - Trim whitespace and normalise case for *Region* values.\n    - Fill missing *Region* with the most common region.\n    - Convert any negative *Quantity* values to positive (quantities must be >0).\n    - Re\u2011calculate *Revenue* as Quantity * Price (overwrites incorrect or negative values).\n    - Parse *Date* to a proper datetime (ISO\u2011format).\n    The function returns a new DataFrame leaving the original untouched.\n    \"\"\"\n    df = df.copy()\n\n    # ----- Region normalisation -----\n    # Convert to string, strip surrounding spaces, title\u2011case (North, South, ...)\n    df[\"Region\"] = df[\"Region\"].astype(str).str.strip().str.title()\n    # Replace the string \"nan\" that appears after casting NaN to str\n    df[\"Region\"] = df[\"Region\"].replace({\"nan\": pd.NA})\n    # Fill missing values with the mode (most frequent region)\n    if not df[\"Region\"].mode().empty:\n        mode_region = df[\"Region\"].mode().iloc[0]\n        df[\"Region\"] = df[\"Region\"].fillna(mode_region)\n\n    # ----- Quantity -----\n    # Quantities must be positive whole numbers \u2013 take absolute value and cast to int\n    df[\"Quantity\"] = df[\"Quantity\"].abs().astype(int)\n\n    # ----- Revenue -----\n    # Re\u2011compute revenue to guarantee consistency with the formula\n    df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n\n    # ----- Date -----\n    df[\"Date\"] = pd.to_datetime(df[\"Date\"], errors=\"coerce\")\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    \"\"\"Return total revenue per Category and an overall total.\n    The input *df* is expected to be the cleaned dataframe produced by ``clean``.\n    The result dictionary maps each category name to its summed revenue and also\n    includes a key ``\"all\"`` for the grand total.\n    \"\"\"\n    # Ensure we are working on a clean copy\n    df = df.copy()\n    # Group by Category and sum Revenue\n    totals = df.groupby(\"Category\", dropna=False)[\"Revenue\"].sum().to_dict()\n    # Add overall total\n    totals[\"all\"] = df[\"Revenue\"].sum()\n    return totals\n"
+  },
+  "corrections": 12,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

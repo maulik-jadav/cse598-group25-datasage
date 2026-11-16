@@ -1,0 +1,63 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 5.86,
+  "tokens": 2448,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0,
+    "TBD": 560.0,
+    "not-a-d": 2140.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    # Fix negative quantity\n    df = df[df['Quantity'] > 0]\n    \n    # Fix negative revenue\n    df = df[df['Revenue'] >= 0]\n    \n    # Fix region label variants\n    df['Region'] = df['Region'].str.strip()\n    df['Region'] = df['Region'].replace({'Wst': 'West', 'Eats': 'East', ' West': 'West', 'East ': 'East'})\n    \n    # Fix price text numbers\n    df['Price'] = df['Price'].str.replace('$', '').astype(float)\n    \n    return df\n\ndef answer(df):\n    # Extract year-month from Date\n    df['Year-Month'] = df['Date'].str.slice(0, 7)\n    \n    # Calculate total revenue per month\n    monthly_revenue = df.groupby('Year-Month')['Revenue'].sum()\n    \n    # Convert to dictionary\n    result = monthly_revenue.to_dict()\n    \n    # Format keys to YYYY-MM\n    formatted_result = {}\n    for key, value in result.items():\n        formatted_result[key] = float(value)\n    \n    return formatted_result"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

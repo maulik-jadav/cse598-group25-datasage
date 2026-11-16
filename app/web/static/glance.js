@@ -91,7 +91,25 @@
     }
     if (pair.children.length) box.append(pair);
 
-    // 4. Harder tables
+    // 4. Which model
+    if (s.models && s.models.rows && s.models.rows.length) {
+      const m = s.models;
+      const d = m.default;
+      const c6 = card(`Which model? ${m.count} models tried as DataSage's planner`,
+        `${d ? `The default, Qwen3-30B, is number ${m.rank} of ${m.count} at ${pct(d.accuracy, 1)}, and among the fastest (${Math.round(d.seconds)} s per question). ` : ""}` +
+        `With DataSage around it, a model answers a median ${Math.round(m.median_lift * 100)} points more questions right than the same model asked in one call.`);
+      const list6 = el("div", "g-list");
+      const top = m.rows.slice(0, 6);
+      if (d && !top.some((r) => r.id === d.id)) top.push(d);
+      top.forEach((r) => list6.append(row(r.model, `${r.seconds ? `${Math.round(r.seconds)} s per question` : ""}${r.single != null ? ` · one call: ${pct(r.single, 0)}` : ""}`,
+        r.accuracy, { cls: r.id === "qwen3-30b" ? "final" : "", highlight: r.id === "qwen3-30b", ci: r.ci95 })));
+      const low = m.rows.slice(-2).reverse();
+      c6.append(list6);
+      c6.append(el("p", "g-foot", `80 held-out and test questions per model; the thin band is the 95% range; times were measured while many runs shared the API. Lowest: ${low.map((r) => `${r.model} ${pct(r.accuracy, 1)}`).join(", ")}, mostly from malformed tool calls. No model, strong or weak, changed a correct cell as DataSage's planner.`));
+      box.append(c6);
+    }
+
+    // 5. Harder tables
     if (s.hard) {
       const h = s.hard;
       const c5 = card("On bigger, messier tables", "Tables of 300 to 2,000 rows with many problems at once, including more rule-breaking rows than a check lists.");

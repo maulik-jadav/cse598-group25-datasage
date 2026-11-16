@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 15.87,
+  "tokens": 2853,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # 1. Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates().reset_index(drop=True)\n    # 2. Standardise Category values (strip whitespace, unify case)\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].astype(str).str.strip()\n    # 3. Convert Price from text to numeric (remove $ and possible commas)\n    if 'Price' in df.columns:\n        df['Price'] = (\n            df['Price']\n            .astype(str)\n            .str.replace('[$,]', '', regex=True)\n            .astype(float)\n        )\n    # 4. Ensure Quantity is integer type\n    if 'Quantity' in df.columns:\n        df['Quantity'] = df['Quantity'].astype(int)\n    # 5. Ensure Revenue matches Quantity * Price (re\u2011calculate to be safe)\n    if {'Quantity', 'Price', 'Revenue'}.issubset(df.columns):\n        df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Clean the dataframe first\n    df = clean(df)\n    # Drop rows where Region is missing because group key must be present\n    df = df.dropna(subset=['Region'])\n    # Group by Region and sum the units sold (Quantity)\n    result_series = df.groupby('Region')['Quantity'].sum()\n    # Convert to plain python dict with region names as keys and int values\n    result = {region: int(qty) for region, qty in result_series.items()}\n    return result"
+  },
+  "corrections": 8,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

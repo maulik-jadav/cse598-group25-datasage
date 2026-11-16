@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 160.59,
+  "tokens": 6928,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Region: strip spaces and normalise case\n    def norm_region(x):\n        if pd.isna(x):\n            return x\n        if isinstance(x, str):\n            return x.strip().title()\n        return x\n    df['Region'] = df['Region'].apply(norm_region)\n    # Quantity: numeric, positive whole number\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Quantity'] = df['Quantity'].abs().round().astype('Int64')\n    # Price numeric\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Revenue must follow formula\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # Date: parse to YYYY-MM-DD, invalid become NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df['Date'] = df['Date'].dt.strftime('%Y-%m-%d')\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    sub = dfc[dfc['Category'] == 'Electronics']\n    sub = sub.dropna(subset=['Region'])\n    allowed = {'North', 'South', 'East', 'West'}\n    sub = sub[sub['Region'].isin(allowed)]\n    grouped = sub.groupby('Region')['Revenue'].sum()\n    # plain python numbers\n    out = {}\n    for k, v in grouped.items():\n        if pd.isna(v):\n            continue\n        fv = float(v)\n        out[k] = int(fv) if fv.is_integer() else fv\n    return out\n"
+  },
+  "corrections": 15,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 88.62,
+  "tokens": 5894,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    for col in df.select_dtypes(include='object').columns:\n        df[col] = df[col].astype('string').str.strip()\n    df['Category'] = df['Category'].str.title().replace({'Furnture': 'Furniture'})\n    df['Region'] = df['Region'].str.title()\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    for col in ['Quantity', 'Price', 'Revenue']:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n    df = df.drop_duplicates()\n    df = df.drop_duplicates(subset=['Order_ID'], keep='first')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df = df.dropna(subset=['Date'])\n    df['month'] = df['Date'].dt.strftime('%Y-%m')\n    out = df.groupby('month', dropna=True)['Revenue'].sum()\n    return {str(k): float(v) for k, v in out.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 15.37,
+  "tokens": 2242,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.666666666666668,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.666666666666666
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # normalize text labels (strip whitespace, fix case)\n    for c in ['Product', 'Category', 'Region']:\n        if c in df.columns:\n            df[c] = df[c].astype('string').str.strip().str.title()\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # drop rows with invalid (negative) quantity\n    df = df[df['Quantity'].isna() | (df['Quantity'] >= 1)]\n    return df.reset_index(drop=True)\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Category', 'Price'])\n    g = d.groupby('Category')['Price'].mean()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 9,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

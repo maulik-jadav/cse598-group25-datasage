@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 17.88,
+  "tokens": 2372,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 37.142857142857146,
+    "Electronics": 369.0,
+    "Furniture": 169.16666666666666,
+    "Office Supplies": 13.636363636363637
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix Price: remove '$' and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).astype(float)\n    \n    # Fix Region: strip spaces and correct 'Suoth' -> 'South', 'North ' -> 'North'\n    df['Region'] = df['Region'].astype(str).str.strip().replace('Suoth', 'South')\n    \n    # Fix Date: convert to datetime, coerce errors to NaT (but question doesn't use Date)\n    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce')\n    \n    # Drop rows with invalid dates (optional, but keeps data clean)\n    # However, since question is about Category and Price only, we can keep all rows\n    # So no drop needed\n    \n    return df\n\ndef answer(df):\n    # Group by Category and compute average Price\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    return result\n"
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 37.1429,
+    "Electronics": 369.0,
+    "Furniture": 169.1667,
+    "Office Supplies": 13.6364
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "task_id": "salest_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 115.73,
+  "tokens": 5101,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # strip whitespace from text columns (fixes ' Furniture' variant)\n    for c in ['Category', 'Region', 'Date']:\n        if c in df.columns:\n            df[c] = df[c].where(df[c].isna(), df[c].astype(str).str.strip())\n            df[c] = df[c].replace('', pd.NA)\n    # fix Price written as text e.g. \"$180.00\"\n    if 'Price' in df.columns:\n        df['Price'] = df['Price'].astype(str).str.replace(r'[\\$,]', '', regex=True).str.strip()\n        df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    if 'Quantity' in df.columns:\n        df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # coerce invalid dates (iso_date_rate 0.95)\n    if 'Date' in df.columns:\n        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # Revenue cross-column / out_of_range not needed for this question but could be fixed:\n    # df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    # remove exact duplicate rows (2 duplicate rows)\n    df = df.drop_duplicates()\n    return df\n\ndef answer(df):\n    # drop missing Region keys\n    df2 = df.dropna(subset=['Region'])\n    df2 = df2[df2['Region'].astype(str).str.strip() != '']\n    df2['Quantity'] = pd.to_numeric(df2['Quantity'], errors='coerce')\n    grouped = df2.groupby('Region', dropna=True)['Quantity'].sum()\n    result = {str(k): int(v) for k, v in grouped.items() if pd.notna(k) and str(k).lower() != 'nan'}\n    return result\n"
+  },
+  "corrections": 9,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

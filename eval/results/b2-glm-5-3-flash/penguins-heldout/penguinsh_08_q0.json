@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 264.82,
+  "tokens": 2637,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 37.25,
+    "Dream": 37.4667,
+    "Torgersen": 39.2091
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # drop exact duplicate rows\n    d = d.drop_duplicates().reset_index(drop=True)\n    # fix island label variants\n    d['island'] = d['island'].astype(str).str.strip()\n    d['island'] = d['island'].replace({'Dram': 'Dream', 'Torgerson': 'Torgersen'})\n    # fix sex label variants\n    d['sex'] = d['sex'].astype(str).str.strip().str.lower().replace({'nan': None})\n    # numeric coercion for text-encoded numeric columns\n    for col in ['body_mass_g', 'flipper_length_mm', 'year']:\n        if col in d.columns:\n            d[col] = pd.to_numeric(d[col].astype(str).str.replace(',', ''), errors='coerce')\n    # enforce valid ranges\n    d = d[(d['bill_length_mm'] >= 30) & (d['bill_length_mm'] <= 60)]\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['species'] == 'Adelie']\n    d = d.dropna(subset=['island', 'bill_length_mm'])\n    g = d.groupby('island')['bill_length_mm'].mean()\n    return {k: round(float(v), 4) for k, v in g.items()}"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "penguins-heldout",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 37.25,
+    "Dream": 37.4667,
+    "Torgersen": 39.2091
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

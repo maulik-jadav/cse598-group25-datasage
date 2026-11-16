@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 40.97,
+  "tokens": 2509,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    \n    # Clean Price: remove $ and convert to numeric\n    df['Price'] = df['Price'].replace('[$,]', '', regex=True).astype(float)\n    \n    # Clean Quantity: remove negatives (invalid per rules)\n    df = df[df['Quantity'] > 0]\n    \n    # Recalculate Revenue based on rules to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Clean Region (though not needed for this specific question, good practice)\n    df['Region'] = df['Region'].str.capitalize()\n    \n    return df\n\ndef answer(df):\n    # Total revenue by category\n    result = df.groupby('Category')['Revenue'].sum().to_dict()\n    return result"
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gemma4-31b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

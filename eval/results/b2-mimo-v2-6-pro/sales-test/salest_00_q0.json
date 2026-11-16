@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 24.75,
+  "tokens": 2567,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 37.142857142857146,
+    "Electronics": 369.0,
+    "Furniture": 169.16666666666666,
+    "Office Supplies": 13.636363636363637
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    d = df.copy()\n    # Price: strip currency symbols/commas and convert to numeric\n    d['Price'] = pd.to_numeric(\n        d['Price'].astype(str).str.replace(r'[^0-9.\\-]', '', regex=True).replace('', np.nan),\n        errors='coerce'\n    )\n    # Date: parse to datetime, invalid -> NaT\n    d['Date'] = pd.to_datetime(d['Date'], format='%Y-%m-%d', errors='coerce')\n    # Region: trim whitespace and fix known typo variants\n    d['Region'] = d['Region'].astype(str).str.strip().replace({'Suoth': 'South'})\n    # Quantity / Revenue sanity (positive whole numbers)\n    d['Quantity'] = pd.to_numeric(d['Quantity'], errors='coerce')\n    d['Revenue'] = pd.to_numeric(d['Revenue'], errors='coerce')\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Category', 'Price'])\n    res = d.groupby('Category')['Price'].mean()\n    return {str(k): float(v) for k, v in res.items()}"
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 37.1429,
+    "Electronics": 369.0,
+    "Furniture": 169.1667,
+    "Office Supplies": 13.6364
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

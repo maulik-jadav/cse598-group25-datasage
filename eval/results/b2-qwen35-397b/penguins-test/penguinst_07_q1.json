@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 92.62,
+  "tokens": 3859,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 40.93333333333334,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix species label variants - strip spaces and normalize case/typos\n    df['species'] = df['species'].str.strip()\n    df['species'] = df['species'].replace({\n        'adelie': 'Adelie',\n        'Adeile': 'Adelie',\n        'Gentto': 'Gentoo',\n        'Chinstarp': 'Chinstrap'\n    })\n    \n    # Fix body_mass_g - convert text with commas to numeric\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False),\n        errors='coerce'\n    )\n    \n    # Fix flipper_length_mm - set negative values to NaN\n    df.loc[df['flipper_length_mm'] < 0, 'flipper_length_mm'] = pd.NA\n    \n    return df\n\ndef answer(df):\n    # Filter for Adelie penguins only\n    adelie = df[df['species'] == 'Adelie'].copy()\n    \n    # Group by island and calculate average bill length\n    result = adelie.groupby('island')['bill_length_mm'].mean().to_dict()\n    \n    return result"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-397b",
+  "dataset": "penguins-test",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 40.9333,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

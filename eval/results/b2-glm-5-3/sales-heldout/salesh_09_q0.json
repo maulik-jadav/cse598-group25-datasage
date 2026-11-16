@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 57.73,
+  "tokens": 3482,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 199.6429,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Price: strip currency symbols / text formatting, convert to numeric\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.replace('$', '', regex=False)\n        .str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    # Date: parse to datetime (invalid formats -> NaT)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # Region: strip spaces and fix typo variants\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Wst': 'West', 'Eats': 'East', 'nan': np.nan, '': np.nan})\n    # Quantity: invalid negative value -> NaN (min is 1)\n    df.loc[df['Quantity'] < 1, 'Quantity'] = np.nan\n    # Recompute Revenue where inputs are valid\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = df.dropna(subset=['Category', 'Price'])\n    g = d.groupby('Category')['Price'].mean()\n    return {k: float(round(v, 4)) for k, v in g.items()}"
+  },
+  "corrections": 11,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 201.1538,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

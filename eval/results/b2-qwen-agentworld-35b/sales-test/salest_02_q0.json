@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 2014.32,
+  "tokens": 9610,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.0,
+    "Electronics": 277.3333333333333,
+    "Furniture": 191.05263157894737,
+    "Office Supplies": 11.1
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Drop duplicates\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Category label variants\n    df['Category'] = df['Category'].replace({\n        'Office Suplies': 'Office Supplies',\n        'Furnture': 'Furniture'\n    })\n    \n    # Ensure Price is numeric\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Strip Region spaces\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].astype(str).str.strip()\n    \n    return df\n\ndef answer(df):\n    # Compute average unit price in each category\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    return result"
+  },
+  "corrections": 8,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen-agentworld-35b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

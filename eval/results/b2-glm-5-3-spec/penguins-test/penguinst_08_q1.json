@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 97.26,
+  "tokens": 3660,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3500.0,
+    "Chinstrap": 3907.81,
+    "Gentoo": 5248.33
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix species label variants\n    df['species'] = df['species'].replace({'Adeile': 'Adelie', 'Gentto': 'Gentoo'})\n    # Fix island case variant\n    df['island'] = df['island'].str.strip().str.title()\n    # Parse body_mass_g written as text (e.g. '3,800')\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False),\n        errors='coerce'\n    )\n    # Enforce valid range 2500-6500 g; treat out-of-range as missing\n    df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = float('nan')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    s = df.groupby('species')['body_mass_g'].mean().dropna()\n    return {k: round(float(v), 2) for k, v in s.items()}"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3500.0,
+    "Chinstrap": 3907.8125,
+    "Gentoo": 5248.3333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

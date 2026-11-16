@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 350.71,
+  "tokens": 7058,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3738.0434782608695,
+    "Chinstrap": 3784.375,
+    "Gentoo": 5105.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix species label variant typo (Adeile -> Adelie)\n    df['species'] = df['species'].replace({'Adeile': 'Adelie'})\n    # Convert body_mass_g to numeric (numbers stored as text)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # Drop out-of-range body mass values (4850000 is invalid; allowed 2500-6500)\n    df = df[(df['body_mass_g'] >= 2500) & (df['body_mass_g'] <= 6500)]\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    return df\n\ndef answer(df):\n    df = clean(df)\n    result = {}\n    grouped = df.groupby('species')['body_mass_g'].mean()\n    for species, value in grouped.items():\n        if pd.notna(species) and pd.notna(value):\n            result[str(species)] = float(value)\n    return result"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-ornith-1-5-35b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3738.0435,
+    "Chinstrap": 3784.375,
+    "Gentoo": 5105.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

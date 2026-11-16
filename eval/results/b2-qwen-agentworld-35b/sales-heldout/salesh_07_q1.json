@@ -1,0 +1,59 @@
+{
+  "task_id": "salesh_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 166.34,
+  "tokens": 9942,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Drop exact duplicates\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Region: strip spaces and capitalize\n    df['Region'] = df['Region'].apply(lambda x: x.strip().capitalize() if isinstance(x, str) else x)\n    \n    # Filter valid Region\n    valid_regions = [\"North\", \"South\", \"East\", \"West\"]\n    df = df[df['Region'].isin(valid_regions)]\n    \n    # Fix Quantity: ensure numeric and >= 1\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df = df[df['Quantity'] >= 1]\n    \n    # Fix Price: ensure numeric\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Recalculate Revenue\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Question: What is the total revenue by region for Electronics?\n    df_electronics = df[df['Category'] == 'Electronics']\n    # Group by Region and sum Revenue\n    result = df_electronics.groupby('Region')['Revenue'].sum().to_dict()\n    return result"
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen-agentworld-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

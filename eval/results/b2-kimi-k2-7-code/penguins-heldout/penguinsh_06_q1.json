@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinsh_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 66.25,
+  "tokens": 4949,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 38.375,
+    "Dream": 39.385714285714286,
+    "Torgersen": 39.13333333333333
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    # Remove exact duplicate rows while keeping the id column\n    df = df.drop_duplicates().reset_index(drop=True)\n\n    # Fix species label variants (extra spaces and typo)\n    df[\"species\"] = df[\"species\"].astype(str).str.strip()\n    df[\"species\"] = df[\"species\"].replace({\"Chinstarp\": \"Chinstrap\"})\n\n    # Mark invalid numeric measurements as missing (not used by the question, but cleaned for consistency)\n    df.loc[~df[\"flipper_length_mm\"].between(170, 235), \"flipper_length_mm\"] = np.nan\n    df.loc[~df[\"body_mass_g\"].between(2500, 6500), \"body_mass_g\"] = np.nan\n\n    return df\n\ndef answer(df):\n    adelie = df[df[\"species\"] == \"Adelie\"]\n    avg = adelie.groupby(\"island\")[\"bill_length_mm\"].mean()\n    return {str(k): float(v) for k, v in avg.items() if pd.notna(k)}\n"
+  },
+  "corrections": 4,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "penguins-heldout",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 38.375,
+    "Dream": 39.3857,
+    "Torgersen": 38.125
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ]
+  ]
+}

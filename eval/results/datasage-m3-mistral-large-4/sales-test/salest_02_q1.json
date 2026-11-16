@@ -1,0 +1,144 @@
+{
+  "task_id": "salest_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 3,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 1172.57,
+  "tokens": 24683,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "extra": {
+    "final_summary": "Total revenue per month (66 valid rows used, out of 70 original):\n- 2026-01: $4,102\n- 2026-02: $4,325\n- 2026-03: $3,356\n- 2026-04: $2,981\n- 2026-05: $5,129\n- 2026-06: $6,668\n\nData problems found and fixed (all on the analysis copy; original untouched):\n1. Duplicate row: row 5 was an exact copy of row 4 (Order_ID 2005) \u2014 removed via drop_duplicates.\n2. Negative quantities: rows 1, 34, 51 had negative Quantity (and negative Revenue), violating the rule that Quantity is always a positive whole number (min 1) \u2014 excluded via exclude_rows.\n3. Broken formula: row 64 had Revenue 7505 but Quantity \u00d7 Price = 75, violating Revenue = Quantity \u00d7 Price \u2014 recomputed to 75.\n\nChecks: Date column was fully valid ISO YYYY-MM-DD (no fixes needed); Revenue is now numeric with no negatives and satisfies Revenue = Quantity \u00d7 Price on all rows.\n\nCaveats: Category has 2 misspelled labels (\"Office Suplies\", \"Furnture\") and Region has 2 missing values plus whitespace variants (\" West\", \" South\", \"West \") \u2014 these columns are not used by this question, so they were left as-is.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 5 is an exact duplicate of row 4 (Order_ID 2005); keeping the first copy only."
+        },
+        "reason": "Row 5 is an exact duplicate of row 4 (Order_ID 2005); keeping the first copy only.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          5
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            1,
+            34,
+            51
+          ],
+          "reason": "Rows 1, 34, 51 have negative Quantity (and negative Revenue), violating the rule that Quantity is always a positive whole number (min 1). These rows are invalid for revenue totals."
+        },
+        "reason": "Rows 1, 34, 51 have negative Quantity (and negative Revenue), violating the rule that Quantity is always a positive whole number (min 1). These rows are invalid for revenue totals.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          1,
+          34,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [1, 34, 51]",
+        "code": "df = df.drop(index=[1, 34, 51])"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            64
+          ],
+          "reason": "Row 64 has Revenue 7505 but Quantity * Price = 75, violating the rule Revenue = Quantity * Price. Recomputing from the formula."
+        },
+        "reason": "Row 64 has Revenue 7505 but Quantity * Price = 75, violating the rule Revenue = Quantity * Price. Recomputing from the formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[64], 'Revenue'] = [75.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 7,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mistral-large-4",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

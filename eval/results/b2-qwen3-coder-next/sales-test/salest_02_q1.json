@@ -1,0 +1,73 @@
+{
+  "task_id": "salest_02_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 21.17,
+  "tokens": 2357,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 4302.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 4793.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Convert Date to datetime and extract YYYY-MM\n    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d')\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n    \n    # Fix category labels: normalize typos\n    category_map = {\n        'Office Suplies': 'Office Supplies',\n        'Furnture': 'Furniture'\n    }\n    df['Category'] = df['Category'].replace(category_map)\n    \n    # Fix region labels: strip extra spaces\n    df['Region'] = df['Region'].str.strip()\n    \n    # Fix negative quantities: set to absolute value (since quantity should be positive)\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recalculate Revenue to ensure correctness: Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Group by month and sum revenue\n    grouped = df.groupby('Month')['Revenue'].sum()\n    # Convert to dict with month keys as strings\n    result = grouped.to_dict()\n    # Ensure keys are strings (they should be already)\n    return {str(k): float(v) for k, v in result.items()}\n"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

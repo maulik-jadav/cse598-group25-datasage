@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 45.25,
+  "tokens": 3060,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\nALLOWED_CATS = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\nCAT_MAP = {c.lower(): c for c in ALLOWED_CATS}\n\ndef clean(df):\n    d = df.copy()\n    # drop exact duplicate rows\n    d = d.drop_duplicates()\n    # normalize Category labels (trim + canonical case)\n    d['Category'] = (d['Category'].astype(str).str.strip()\n                     .map(lambda x: CAT_MAP.get(x.lower(), x.strip())))\n    d.loc[~d['Category'].isin(ALLOWED_CATS), 'Category'] = pd.NA\n    # parse text numbers in Price (e.g. '$300.00')\n    d['Price'] = pd.to_numeric(d['Price'].astype(str).str.replace(r'[^0-9.\\-]', '', regex=True), errors='coerce')\n    d['Quantity'] = pd.to_numeric(d['Quantity'], errors='coerce')\n    # Quantity must be a positive whole number -> drop invalid rows\n    d = d[(d['Quantity'] >= 1) & (d['Quantity'] % 1 == 0)]\n    # recompute Revenue = Quantity * Price\n    d['Revenue'] = d['Quantity'] * d['Price']\n    return d\n\ndef answer(df):\n    c = clean(df)\n    c = c.dropna(subset=['Category'])\n    g = c.groupby('Category')['Order_ID'].count()\n    return {str(k): int(v) for k, v in g.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

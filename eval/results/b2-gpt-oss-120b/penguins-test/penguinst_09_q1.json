@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 27.15,
+  "tokens": 3533,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3688.16,
+    "Chinstrap": 322688.46,
+    "Gentoo": 5081.58
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    df = df.copy()\n    # ----- species: normalize case, trim spaces, fix misspellings -----\n    species_map = {\n        'adelie': 'Adelie',\n        'adeli': 'Adelie',  # just in case\n        'gentoo': 'Gentoo',\n        'gentto': 'Gentoo',\n        'chinstrap': 'Chinstrap',\n        'chinstrap': 'Chinstrap'\n    }\n    # lower\u2011case and strip spaces\n    df['species'] = df['species'].astype(str).str.strip().str.lower()\n    df['species'] = df['species'].map(species_map).where(df['species'].isin(species_map), other=pd.NA)\n    # keep only allowed values (drop rows with unknown species later in answer)\n    # ----- body_mass_g: remove commas, convert to numeric -----\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # ----- flipper_length_mm: ensure numeric, flag out\u2011of\u2011range/negative -----\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    # valid range according to rules: 170\u2011235\n    valid_min, valid_max = 170, 235\n    mask_valid = df['flipper_length_mm'].between(valid_min, valid_max, inclusive='both')\n    df.loc[~mask_valid, 'flipper_length_mm'] = pd.NA\n    # ----- other numeric columns (ensure proper dtype) -----\n    numeric_cols = ['bill_length_mm', 'bill_depth_mm', 'year']\n    for col in numeric_cols:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    \"\"\"Return average body mass (grams) per species.\n    The key is the species name; rows with missing/invalid species or body_mass are ignored.\n    \"\"\"\n    clean_df = clean(df)\n    # drop rows where species or body_mass_g is missing\n    valid = clean_df.dropna(subset=['species', 'body_mass_g'])\n    # compute mean per species\n    result_series = valid.groupby('species')['body_mass_g'].mean()\n    # convert to plain python dict with float values (rounded to 2 decimals for readability)\n    result = {species: round(value, 2) for species, value in result_series.items()}\n    return result"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3701.3889,
+    "Chinstrap": 3754.5455,
+    "Gentoo": 5081.5789
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

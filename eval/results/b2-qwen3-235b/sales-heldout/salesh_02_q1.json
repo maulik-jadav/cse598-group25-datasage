@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 34.93,
+  "tokens": 2240,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix Quantity and Revenue: negative values are invalid per rules (Quantity min=1, Revenue derived from positive Quantity and Price)\n    # Since Revenue = Quantity * Price, we assume negative values are data entry errors and take absolute value\n    df = df.copy()\n    df['Quantity'] = df['Quantity'].abs()\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Clean Region: strip whitespace and standardize case\n    df['Region'] = df['Region'].str.strip().str.capitalize()\n    \n    # Only keep rows where Category is Electronics (as per question)\n    # But keep all for now, filtering in answer\n    \n    return df\n\ndef answer(df):\n    df = df[df['Category'] == 'Electronics']\n    # Group by Region and sum Revenue\n    result = df.groupby('Region')['Revenue'].sum().round(2)\n    # Convert to dict, skip missing (NaN) regions\n    return {k: v for k, v in result.to_dict().items() if pd.notna(k)}"
+  },
+  "corrections": 12,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-235b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

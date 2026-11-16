@@ -1,0 +1,110 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 603.93,
+  "tokens": 24696,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "final_summary": "Total revenue per month (2026):\n- January: $3,138\n- February: $1,908\n- March: $1,050\n- April: $10,290\n- May: $4,953\n- June: $2,688\n\nData issues found and fixed:\n1. Row 15 had an invalid date (\"TBD\") \u2014 set to missing (row excluded from monthly totals).\n2. Rows 13 and 29 had Revenue values inconsistent with Quantity \u00d7 Price \u2014 recomputed per the rules formula.\n\nNo duplicate rows or other issues affecting the question were found.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            15
+          ],
+          "reason": "Date value 'TBD' is not a valid YYYY-MM-DD date"
+        },
+        "reason": "Date value 'TBD' is not a valid YYYY-MM-DD date",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Date: set 1 value(s) to missing",
+        "code": "df.loc[[15], 'Date'] = pd.NA"
+      },
+      {
+        "version": 2,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            13,
+            29
+          ],
+          "reason": "Revenue does not equal Quantity * Price per rules"
+        },
+        "reason": "Revenue does not equal Quantity * Price per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[13, 29], 'Revenue'] = [45.0, 15.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 3,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-hemmingway-1-5",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ]
+  ]
+}

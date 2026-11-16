@@ -1,0 +1,70 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 81.9,
+  "tokens": 22055,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 36.25,
+    "Electronics": 396.4286,
+    "Furniture": 161.0714,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "final_summary": "Average unit price (Price) by category:\n\n- Office Supplies: $12.00\n- Accessories: $36.25\n- Furniture: $161.07\n- Electronics: $396.43\n\nFixes applied:\n- Cast the Price column to numeric. Two values were stored as text with dollar signs (\"$6.00\" and \"$180.00\"); the rest were plain numbers. After casting, all 61 values are numeric (0 became missing).\n\nData problems found (not relevant to this question, left as-is):\n- Category is clean \u2014 all four labels are allowed, no variants.\n- No duplicate rows.\n- Region has case variants (\"east\"/\"south\") \u2014 not used in this question, so left alone.\n- Quantity and Revenue contain negative values that violate the rules (Quantity must be positive; Revenue = Quantity \u00d7 Price). These columns aren't used for the average unit price, so I did not modify them.\n\nCaveat: The average is computed over all rows in each category, including rows with negative Quantity/Revenue. Since the question only asks for average unit price, this is fine, but note that some unit prices may be paired with negative quantities in the raw data.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price is the unit price metric for this question. Two values ($6.00, $180.00) are stored as text with dollar signs; cast the whole column to numeric so averages can be computed."
+        },
+        "reason": "Price is the unit price metric for this question. Two values ($6.00, $180.00) are stored as text with dollar signs; cast the whole column to numeric so averages can be computed.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (61 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 2,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-ornith-1-5-35b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

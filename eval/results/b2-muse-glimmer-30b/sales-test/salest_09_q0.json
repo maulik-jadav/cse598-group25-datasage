@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 359.35,
+  "tokens": 7470,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 9.0,
+    "Electronics": 12.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # normalize Category label variants (extra spaces)\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].astype(str).str.strip()\n    # remove exact duplicate rows\n    df = df.drop_duplicates()\n    # make Price numeric for consistency\n    if 'Price' in df.columns:\n        df['Price'] = pd.to_numeric(df['Price'].astype(str).replace(r'[\\$,]', '', regex=True), errors='coerce')\n    # ensure Quantity is numeric\n    if 'Quantity' in df.columns:\n        df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    if 'Category' not in dfc.columns or 'Order_ID' not in dfc.columns:\n        return {}\n    # count distinct orders per category\n    counts = dfc.groupby('Category')['Order_ID'].nunique()\n    counts = counts.dropna()\n    return {str(k): int(v) for k, v in counts.items()}\n"
+  },
+  "corrections": 6,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

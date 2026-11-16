@@ -1,0 +1,71 @@
+{
+  "task_id": "salesh_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 4,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 30.63,
+  "tokens": 2395,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Strip whitespace from Region and standardize case\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    \n    # Fix case for allowed regions only, set invalid ones to NaN\n    allowed_regions = ['North', 'South', 'East', 'West']\n    df['Region'] = df['Region'].where(df['Region'].isin(allowed_regions))\n    \n    # Convert Quantity and Revenue to numeric, coerce errors to NaN\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Fix negative Quantity and Revenue\n    # Since Quantity must be >= 1, and Revenue = Quantity * Price, we recalculate Revenue\n    # Replace negative Quantity with absolute value (assuming data entry error)\n    df['Quantity'] = df['Quantity'].abs()\n    # Ensure Quantity is at least 1\n    df['Quantity'] = df['Quantity'].clip(lower=1)\n    \n    # Recalculate Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Drop rows where Region is missing after cleaning\n    df = df.dropna(subset=['Region'])\n    \n    return df\n\ndef answer(df):\n    # Filter for Electronics category\n    electronics_df = df[df['Category'] == 'Electronics']\n    # Group by Region and sum Revenue\n    result = electronics_df.groupby('Region')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 6,
+  "planted": 10,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-235b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

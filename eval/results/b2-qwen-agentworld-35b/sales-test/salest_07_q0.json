@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1089.91,
+  "tokens": 10703,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 11.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Convert columns to numeric\n    if 'Order_ID' in df.columns:\n        df['Order_ID'] = pd.to_numeric(df['Order_ID'], errors='coerce')\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Fix negative Quantity\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Fix Revenue cross_column\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Clean Category label variants\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].astype(str).str.strip()\n    \n    # Remove duplicates\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    return df\n\ndef answer(df):\n    valid_categories = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(valid_categories)].copy()\n    result = df.groupby('Category').size().to_dict()\n    return result"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen-agentworld-35b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

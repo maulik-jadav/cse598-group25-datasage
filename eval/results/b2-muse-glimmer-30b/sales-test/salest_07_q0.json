@@ -1,0 +1,69 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 3,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 113.57,
+  "tokens": 7269,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # standardise category labels\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].astype(str).str.strip()\n    # remove exact duplicate rows\n    df = df.drop_duplicates()\n    # ensure Order_ID uniqueness\n    if 'Order_ID' in df.columns:\n        df = df.drop_duplicates(subset=['Order_ID'], keep='first')\n    # filter invalid quantity\n    qty = pd.to_numeric(df['Quantity'], errors='coerce')\n    df = df[qty >= 1]\n    # keep only allowed categories\n    allowed = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed)]\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    counts = dfc.groupby('Category')['Order_ID'].nunique()\n    return {str(k): int(v) for k, v in counts.items()}\n"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 254.06,
+  "tokens": 4238,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    df = df.drop_duplicates()\n    df['Date'] = pd.to_datetime(df['Date'].astype(str).str.strip(), errors='coerce')\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.replace(r'[$,]', '', regex=True).str.strip(),\n        errors='coerce'\n    )\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n    df['Region'] = df['Region'].astype('string').str.strip().replace({'': pd.NA})\n    df['Category'] = df['Category'].astype('string').str.strip()\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['Category'].eq('Electronics') & d['Region'].notna()]\n    out = d.groupby('Region', dropna=True)['Revenue'].sum()\n    return {str(k): float(v) for k, v in out.items()}\n"
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

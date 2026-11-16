@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 31.44,
+  "tokens": 2725,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # normalize category label variants to allowed values\n    df['Category'] = df['Category'].replace({\n        'Office Suplies': 'Office Supplies',\n        'Accesories': 'Accessories',\n    })\n    # normalize region whitespace/case variants (missing stays missing)\n    def norm_region(v):\n        if pd.isna(v):\n            return v\n        s = str(v).strip().title()\n        allowed = {'North', 'South', 'East', 'West'}\n        return s if s in allowed else v\n    df['Region'] = df['Region'].apply(norm_region)\n    # parse dates (invalid -> NaT)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # enforce Revenue = Quantity * Price\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Category'])\n    g = d.groupby('Category')['Revenue'].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 135.44,
+  "tokens": 4864,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 33.333333333333336,
+    "Electronics": 397.6923076923077,
+    "Furniture": 207.8125,
+    "Office Supplies": 12.666666666666666
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    df = df.drop_duplicates()\n    if \"Category\" in df.columns:\n        df[\"Category\"] = df[\"Category\"].astype(\"string\").str.strip()\n        df[\"Category\"] = df[\"Category\"].replace({\"Furnture\": \"Furniture\"})\n    if \"Region\" in df.columns:\n        df[\"Region\"] = df[\"Region\"].astype(\"string\").str.strip()\n        df[\"Region\"] = df[\"Region\"].replace({\"\": pd.NA})\n    for col in [\"Order_ID\", \"Quantity\", \"Price\", \"Revenue\"]:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors=\"coerce\")\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d[d[\"Category\"].notna()]\n    grouped = d.groupby(\"Category\", dropna=True)[\"Price\"].mean()\n    return {str(label): float(value) for label, value in grouped.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-beam-1-0",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.3333,
+    "Electronics": 397.6923,
+    "Furniture": 207.8125,
+    "Office Supplies": 12.6667
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

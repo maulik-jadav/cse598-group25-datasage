@@ -1,0 +1,62 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 26.78,
+  "tokens": 3128,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 3015.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 198.0,
+    "all": 23548.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Standardize Category (remove surrounding whitespace)\n    df['Category'] = df['Category'].astype(str).str.strip()\n    # Standardize Region (remove whitespace and fix known misspellings)\n    df['Region'] = df['Region'].astype(str).str.strip()\n    region_corrections = {\n        'Suoth': 'South',\n        'Nort': 'North'\n    }\n    df['Region'] = df['Region'].replace(region_corrections)\n    # Parse dates, coerce errors to NaT and drop those rows\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n    # Re\u2011calculate Revenue where it does not match Quantity * Price\n    df['Revenue_calc'] = df['Quantity'] * df['Price']\n    df.loc[df['Revenue'] != df['Revenue_calc'], 'Revenue'] = df['Revenue_calc']\n    df = df.drop(columns=['Revenue_calc'])\n    return df\n\ndef answer(df):\n    # Assume df is already cleaned (or clean it here for safety)\n    df = clean(df)\n    # Sum revenue per Category\n    result = df.groupby('Category', dropna=False)['Revenue'].sum().to_dict()\n    # Add overall total\n    result['all'] = df['Revenue'].sum()\n    return result"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

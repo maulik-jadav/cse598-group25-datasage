@@ -1,0 +1,123 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 57.05,
+  "tokens": 19243,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "final_summary": "Counted orders per category after cleaning: Electronics 24, Furniture 20, Office Supplies 13, Accessories 10 (67 rows used). Fixes: normalized 2 whitespace Category variants (\" Electronics\"\u2192Electronics, \"Office Supplies \"\u2192Office Supplies); removed 2 exact duplicate rows (6, 49); excluded row 41 for Quantity = -4 (rules require positive quantity). Caveats: rows 0 and 7 have Revenue inconsistent with Quantity \u00d7 Price (left unchanged since the question only counts orders), and row 9 has a missing Region (irrelevant to this count).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Electronics": "Electronics",
+            "Office Supplies ": "Office Supplies"
+          },
+          "reason": "Merge case/space variants into the allowed Category labels per rules file"
+        },
+        "reason": "Merge case/space variants into the allowed Category labels per rules file",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({' Electronics': 'Electronics', 'Office Supplies ': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 6 and 49 are exact later copies of earlier rows (e.g. row 6 duplicates row 5); counting orders requires unique rows"
+        },
+        "reason": "Rows 6 and 49 are exact later copies of earlier rows (e.g. row 6 duplicates row 5); counting orders requires unique rows",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          49
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            41
+          ],
+          "reason": "Row 41 has Quantity = -4, violating the rules (Quantity min 1, always positive); it is not a valid order"
+        },
+        "reason": "Row 41 has Quantity = -4, violating the rules (Quantity min 1, always positive); it is not a valid order",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          41
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [41]",
+        "code": "df = df.drop(index=[41])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mimo-v2-6-pro",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

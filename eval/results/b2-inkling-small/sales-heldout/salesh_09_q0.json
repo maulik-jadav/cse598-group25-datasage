@@ -1,0 +1,56 @@
+{
+  "task_id": "salesh_09_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 74.44,
+  "tokens": 5284,
+  "stop_reason": "code_error",
+  "note": "TypeError: to_datetime() got an unexpected keyword argument 'infer_datetime_format'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Price: remove $/commas and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'[\\$,]', '', regex=True)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Quantity: coerce to numeric, fix negatives by absolute value, cast to int\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df.loc[df['Quantity'] < 0, 'Quantity'] = df.loc[df['Quantity'] < 0, 'Quantity'].abs()\n    df['Quantity'] = df['Quantity'].astype(int)\n    # Region: strip whitespace and fix variant labels\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Wst':'West', 'Eats':'East'})\n    # Date: parse and standardize to YYYY-MM-DD\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce', infer_datetime_format=True)\n    df['Date'] = df['Date'].apply(lambda x: x.strftime('%Y-%m-%d') if pd.notnull(x) else None)\n    # Revenue: recalculate from corrected Quantity and Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    avg = df.groupby('Category', dropna=True)['Price'].mean()\n    return {str(k): float(v) for k, v in avg.items() if pd.notnull(k)}\n"
+  },
+  "corrections": 0,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-inkling-small",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 201.1538,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 75.12,
+  "tokens": 4521,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 78775.0,
+    "Chinstrap": 28400.0,
+    "Gentoo": 160050.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates(keep='first')\n    # Normalize species labels to the allowed casing\n    df['species'] = df['species'].astype(str).str.strip().str.title()\n    # Fix obvious island typos to allowed values\n    island_map = {'Bisco': 'Biscoe', 'Dram': 'Dream'}\n    df['island'] = df['island'].replace(island_map)\n    # Ensure body mass is numeric\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # Drop rows missing the grouping key or the value to sum\n    df = df.dropna(subset=['species', 'body_mass_g'])\n    return df\n\ndef answer(df):\n    cleaned = clean(df)\n    totals = cleaned.groupby('species')['body_mass_g'].sum()\n    return {str(species): int(mass) if mass == int(mass) else float(mass)\n            for species, mass in totals.items()}\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 74875.0,
+    "Chinstrap": 24675.0,
+    "Gentoo": 155250.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ]
+  ]
+}

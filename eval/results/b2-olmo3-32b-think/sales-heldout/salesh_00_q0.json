@@ -1,0 +1,62 @@
+{
+  "task_id": "salesh_00_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1996.2,
+  "tokens": 7622,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.45454545454545,
+    "Electronics": 259.2307692307692,
+    "Furniture": 246.1764705882353,
+    "Office Supplies": 9.23076923076923,
+    "all": 130.07692307692307
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.drop_duplicates(subset=['Order_ID'], keep='first')\n    region_mode = df['Region'].mode()[0]\n    df['Region'] = df['Region'].fillna(region_mode)\n    df['Region'] = df['Region'].str.strip()\n    category_mapping = {'Office Suplies': 'Office Supplies', 'Accesories': 'Accessories'}\n    df['Category'] = df['Category'].map(category_mapping).fillna(df['Category'])\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce', format='%Y-%m-%d').dt.strftime('%Y-%m-%d')\n    df = df.dropna(subset=['Date'])\n    return df\n\ndef answer(df):\n    category_avg = df.groupby('Category')['Price'].mean().to_dict()\n    overall_avg = df['Price'].mean()\n    result = {**category_avg, 'all': overall_avg}\n    return result"
+  },
+  "corrections": 5,
+  "planted": 9,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b-think",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.6522,
+    "Electronics": 259.2308,
+    "Furniture": 251.9444,
+    "Office Supplies": 9.2308
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 178.68,
+  "tokens": 9663,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    cols = ['Order_ID', 'Date', 'Product', 'Category', 'Quantity', 'Price', 'Region', 'Revenue']\n    df = df[cols].copy()\n    \n    # Clean Quantity: convert to numeric, take absolute value for negatives\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Clean Price: remove '$' and convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Clean Region: fix label variants\n    region_mapping = {\n        'west': 'West',\n        'south': 'South',\n        'Wst': 'West',\n        'Suoth': 'South',\n        'east': 'East',\n        'north': 'North'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Ensure Region is one of the allowed regions, drop missing or invalid\n    allowed_regions = ['North', 'South', 'East', 'West']\n    df = df[df['Region'].isin(allowed_regions)]\n    \n    # Recalculate Revenue\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df_elec = df[df['Category'] == 'Electronics'].copy()\n    result = df_elec.groupby('Region')['Revenue'].sum().to_dict()\n    return result"
+  },
+  "corrections": 6,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen-agentworld-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

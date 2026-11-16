@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 41.89,
+  "tokens": 2998,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3848.913043478261,
+    "Chinstrap": 3721.4285714285716,
+    "Gentoo": 5181.818181818182
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    d = df.copy()\n    # body_mass_g stored as text (e.g. '5,500') -> numeric\n    d['body_mass_g'] = pd.to_numeric(\n        d['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    # out-of-range body mass (e.g. 4000000) -> invalid\n    d.loc[(d['body_mass_g'] < 2500) | (d['body_mass_g'] > 6500), 'body_mass_g'] = np.nan\n    # island label variants\n    d['island'] = d['island'].replace({'Torgerson': 'Torgersen', 'Bisco': 'Biscoe'})\n    # sex case variants\n    d['sex'] = d['sex'].astype(str).str.strip().str.lower().replace({'nan': np.nan, '': np.nan})\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'body_mass_g'])\n    g = d.groupby('species')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3848.913,
+    "Chinstrap": 3721.4286,
+    "Gentoo": 5181.8182
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

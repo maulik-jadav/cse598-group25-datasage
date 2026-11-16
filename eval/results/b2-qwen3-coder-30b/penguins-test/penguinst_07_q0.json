@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 42.98,
+  "tokens": 2656,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 35900.0,
+    "Gentoo": 103500.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    # Fix species label variants\n    species_mapping = {\n        'Adelie': 'Adelie',\n        'adelie': 'Adelie',\n        'Adeile': 'Adelie',\n        'Chinstrap': 'Chinstrap',\n        'Chinstarp': 'Chinstrap',\n        'Chinstrap ': 'Chinstrap',\n        'Gentoo': 'Gentoo',\n        'Gentoo ': 'Gentoo',\n        'Gentto': 'Gentoo'\n    }\n    df['species'] = df['species'].map(species_mapping)\n    \n    # Convert body_mass_g to numeric, handling commas\n    df['body_mass_g'] = df['body_mass_g'].str.replace(',', '').astype(float)\n    \n    # Fix negative flipper length\n    df = df[df['flipper_length_mm'] > 0]\n    \n    return df\n\ndef answer(df):\n    # Group by species and sum body mass\n    result = df.groupby('species')['body_mass_g'].sum().to_dict()\n    \n    # Convert to required format\n    formatted_result = {}\n    for species, total_mass in result.items():\n        formatted_result[species] = int(total_mass)\n    \n    return formatted_result"
+  },
+  "corrections": 13,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-30b",
+  "dataset": "penguins-test",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 35900.0,
+    "Gentoo": 103500.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "*"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

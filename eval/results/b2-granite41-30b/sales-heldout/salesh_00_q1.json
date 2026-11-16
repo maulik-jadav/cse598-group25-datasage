@@ -1,0 +1,56 @@
+{
+  "task_id": "salesh_00_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 13.46,
+  "tokens": 2132,
+  "stop_reason": "code_error",
+  "note": "AttributeError: 'dict_values' object has no attribute 'sum'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Standardize Category labels to the allowed set\n    mapping = {\"Accesories\": \"Accessories\", \"Office Suplies\": \"Office Supplies\"}\n    df['Category'] = df['Category'].map(mapping).fillna(df['Category'])\n    # Convert Quantity and Price to numeric (they may be stored as strings)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Fill missing Region with a placeholder (or drop; here we keep them as \"Unknown\")\n    df['Region'] = df['Region'].fillna('Unknown')\n    return df\n\ndef answer(df):\n    # Ensure Revenue is numeric (in case it was stored as string)\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    # Group by Category and sum Revenue\n    result = df.groupby('Category')['Revenue'].sum().to_dict()\n    # Add overall total\n    result['all'] = result.values().sum()\n    return result\n"
+  },
+  "corrections": 0,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-granite41-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

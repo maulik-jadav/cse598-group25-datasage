@@ -1,0 +1,69 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 19.21,
+  "tokens": 2333,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7142857142857,
+    "Furniture": 191.05263157894737,
+    "Office Supplies": 11.368421052631579
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix category labels: normalize typos\n    category_map = {\n        'Office Suplies': 'Office Supplies',\n        'Furnture': 'Furniture'\n    }\n    df['Category'] = df['Category'].replace(category_map)\n    \n    # Fix region labels: strip extra spaces\n    df['Region'] = df['Region'].str.strip()\n    \n    # Convert Quantity and Price to numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'])\n    df['Price'] = pd.to_numeric(df['Price'])\n    \n    # Remove rows with negative Quantity (invalid per rules)\n    df = df[df['Quantity'] >= 0].copy()\n    \n    # Drop rows where Category is not in allowed list (should be none after mapping, but safety check)\n    allowed_categories = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed_categories)].copy()\n    \n    return df\n\ndef answer(df):\n    # Group by Category and compute average Price\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    return result\n"
+  },
+  "corrections": 11,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

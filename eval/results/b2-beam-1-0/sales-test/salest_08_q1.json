@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 178.47,
+  "tokens": 5943,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport difflib\n\ndef clean(df):\n    df = df.copy()\n    allowed_categories = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    allowed_regions = [\"North\", \"South\", \"East\", \"West\"]\n    category_typos = {\n        \"accesories\": \"Accessories\",\n        \"electornics\": \"Electronics\",\n        \"office suplies\": \"Office Supplies\",\n    }\n\n    def canonicalize(value, allowed, typo_map=None):\n        if pd.isna(value):\n            return value\n        s = \" \".join(str(value).split())\n        for item in allowed:\n            if s.casefold() == item.casefold():\n                return item\n        if typo_map is not None:\n            mapped = typo_map.get(s.casefold())\n            if mapped is not None:\n                return mapped\n        matches = difflib.get_close_matches(s, allowed, n=1, cutoff=0.75)\n        return matches[0] if matches else s\n\n    df[\"Category\"] = df[\"Category\"].map(\n        lambda x: canonicalize(x, allowed_categories, category_typos)\n    )\n    df[\"Region\"] = df[\"Region\"].map(\n        lambda x: canonicalize(x, allowed_regions)\n    )\n\n    df[\"Quantity\"] = pd.to_numeric(df[\"Quantity\"], errors=\"coerce\")\n    df[\"Price\"] = pd.to_numeric(df[\"Price\"], errors=\"coerce\")\n    df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n    return df\n\ndef answer(df):\n    cleaned = clean(df)\n    grouped = cleaned.groupby(\"Category\", dropna=True)[\"Revenue\"].sum()\n    result = {}\n    for key, value in grouped.items():\n        if pd.isna(key):\n            continue\n        number = value\n        if float(number).is_integer():\n            number = int(number)\n        result[str(key)] = number\n    return {k: result[k] for k in sorted(result)}\n"
+  },
+  "corrections": 10,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-beam-1-0",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

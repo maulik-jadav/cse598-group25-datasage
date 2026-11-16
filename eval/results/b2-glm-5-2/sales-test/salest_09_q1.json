@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 8.93,
+  "tokens": 2389,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 52.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Strip whitespace from Category\n    df['Category'] = df['Category'].astype(str).str.strip()\n    # Fix negative Quantity (units sold should be positive)\n    df['Quantity'] = df['Quantity'].abs()\n    # Fix Price text numbers with dollar signs\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False).str.strip()\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Recompute Revenue\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Drop rows with missing Region\n    df = df.dropna(subset=['Region'])\n    grouped = df.groupby('Region')['Quantity'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 6,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-2",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

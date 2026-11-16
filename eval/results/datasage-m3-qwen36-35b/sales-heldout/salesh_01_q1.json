@@ -1,0 +1,111 @@
+{
+  "task_id": "salesh_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 31.03,
+  "tokens": 29960,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed the following data quality issues:\n\n1. **Label variants in Category column**: 6 cells had leading/trailing spaces or misspellings (\" Furniture\", \" Office Supplies\", \"Furniture \", \"Accesories\", \"Furnture\"). Normalized all to the 4 allowed labels: Electronics, Accessories, Furniture, Office Supplies.\n\n2. **Duplicate rows**: 2 exact duplicate rows (rows 6 and 60) were removed to avoid double-counting.\n\n3. **Revenue formula check**: All rows satisfied Revenue = Quantity * Price \u2014 no issues found.\n\nAfter cleaning, the order counts per category are:\n- Accessories: 21\n- Electronics: 18\n- Furniture: 14\n- Office Supplies: 17\n\nTotal: 70 orders (from 72 original rows, minus 2 duplicates).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            " Office Supplies": "Office Supplies",
+            "Furniture ": "Furniture",
+            "Accesories": "Accessories",
+            "Furnture": "Furniture"
+          },
+          "reason": "Normalize category labels with leading/trailing spaces and misspellings to allowed values"
+        },
+        "reason": "Normalize category labels with leading/trailing spaces and misspellings to allowed values",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Category: merged 5 label variant(s), 6 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', ' Office Supplies': 'Office Supplies', 'Furniture ': 'Furniture', 'Accesories': 'Accessories', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            6,
+            60
+          ],
+          "reason": "Remove exact duplicate rows (later copies) to avoid double-counting orders"
+        },
+        "reason": "Remove exact duplicate rows (later copies) to avoid double-counting orders",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          60
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [6, 60]",
+        "code": "df = df.drop(index=[6, 60])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen36-35b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

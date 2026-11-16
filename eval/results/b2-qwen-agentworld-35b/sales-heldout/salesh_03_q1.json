@@ -1,0 +1,77 @@
+{
+  "task_id": "salesh_03_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 3,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 483.04,
+  "tokens": 9192,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 6440.0,
+    "2026-02": 3187.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Drop exact duplicates\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Category label variants\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].replace({'office supplies': 'Office Supplies'})\n    \n    # Fix Region label variants\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].replace({'Suoth': 'South', 'Eats': 'East'})\n    \n    # Convert Quantity, Price, Revenue to numeric\n    for col in ['Quantity', 'Price', 'Revenue']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col].astype(str).str.replace(',', '', regex=False), errors='coerce')\n    \n    # Parse Date to datetime and extract YYYY-MM\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n    \n    return df\n\ndef answer(df):\n    # Group by Month and sum Revenue\n    df_clean = df.dropna(subset=['Month', 'Revenue'])\n    result = df_clean.groupby('Month')['Revenue'].sum().to_dict()\n    return result"
+  },
+  "corrections": 10,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen-agentworld-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

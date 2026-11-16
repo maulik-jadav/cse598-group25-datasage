@@ -1,0 +1,63 @@
+{
+  "task_id": "salesh_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 20.34,
+  "tokens": 2465,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 13.0,
+    "Furniture ": 1.0,
+    "Office Supplies": 16.0,
+    "all": 69.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    \n    # Fix label variants in Category\n    cat_map = {\n        'Furnture': 'Furniture',\n        ' Furniture': 'Furniture',\n        ' Furniture ': 'Furniture',\n        'Accesories': 'Accessories',\n        ' Office Supplies': 'Office Supplies',\n        'Office Supplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].map(cat_map).fillna(df['Category'])\n    \n    # Fix label variants in Region\n    region_map = {\n        ' Office Supplies': None,  # This is likely a stray value from Category, but if present in Region, treat as missing\n        'Furniture ': None,\n        'Furniture': None,\n        'Accesories': None\n    }\n    df['Region'] = df['Region'].map(region_map).fillna(df['Region'])\n    df['Region'] = df['Region'].replace({'': pd.NA})\n    \n    # Enforce positive integers for Quantity\n    df['Quantity'] = df['Quantity'].astype(int)\n    df = df[df['Quantity'] > 0]\n    \n    # Enforce non-negative numbers for Price and Revenue\n    df['Price'] = df['Price'].clip(lower=0)\n    df['Revenue'] = df['Revenue'].clip(lower=0)\n    \n    # Validate Revenue == Quantity * Price\n    df['Revenue_expected'] = df['Quantity'] * df['Price']\n    # If mismatch, correct Revenue\n    mask = df['Revenue'] != df['Revenue_expected']\n    df.loc[mask, 'Revenue'] = df.loc[mask, 'Revenue_expected']\n    df = df.drop(columns=['Revenue_expected'])\n    \n    # Drop rows with missing Region (as per rules)\n    df = df.dropna(subset=['Region'])\n    \n    # Keep id column (Order_ID)\n    return df\n\ndef answer(df):\n    # Group by Category, aggregate count of orders\n    grouped = df.groupby('Category').size().to_dict()\n    # Also provide overall count under 'all'\n    grouped['all'] = len(df)\n    # Remove any group with zero count (shouldn't happen here)\n    cleaned = {k: v for k, v in grouped.items() if v > 0}\n    # For multi-column group labels, join with ' | ', but here only one column\n    return cleaned"
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

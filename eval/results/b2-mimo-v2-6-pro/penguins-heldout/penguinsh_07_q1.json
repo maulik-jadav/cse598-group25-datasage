@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_07_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 38.56,
+  "tokens": 3225,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 117250.0,
+    "Chinstrap": 59400.0,
+    "Gentoo": 80325.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\nALLOWED_ISLANDS = [\"Biscoe\", \"Dream\", \"Torgersen\"]\n\ndef clean(df):\n    d = df.copy()\n    # normalize island label variants (case / trailing spaces)\n    def norm_island(v):\n        if pd.isna(v):\n            return np.nan\n        s = str(v).strip()\n        for a in ALLOWED_ISLANDS:\n            if s.lower() == a.lower():\n                return a\n        return s\n    d[\"island\"] = d[\"island\"].map(norm_island)\n\n    # body_mass_g written as text with thousands separators\n    d[\"body_mass_g\"] = pd.to_numeric(\n        d[\"body_mass_g\"].astype(str).str.replace(\",\", \"\", regex=False).str.strip(),\n        errors=\"coerce\",\n    )\n    # enforce valid range for body mass\n    d.loc[~d[\"body_mass_g\"].between(2500, 6500), \"body_mass_g\"] = np.nan\n\n    # flipper_length_mm: sign errors (negatives) and out-of-range values\n    fl = pd.to_numeric(d[\"flipper_length_mm\"], errors=\"coerce\")\n    fl = fl.abs()  # fix sign errors like -228 -> 228\n    fl[~fl.between(170, 235)] = np.nan\n    d[\"flipper_length_mm\"] = fl\n\n    # bill_length_mm range check\n    bl = pd.to_numeric(d[\"bill_length_mm\"], errors=\"coerce\")\n    bl[~bl.between(30, 60)] = np.nan\n    d[\"bill_length_mm\"] = bl\n\n    # sex: leave missing as unknown (do not guess)\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=[\"species\", \"body_mass_g\"])\n    g = d.groupby(\"species\")[\"body_mass_g\"].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 9,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 117250.0,
+    "Chinstrap": 55625.0,
+    "Gentoo": 70175.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

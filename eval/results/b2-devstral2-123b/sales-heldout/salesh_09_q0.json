@@ -1,0 +1,60 @@
+{
+  "task_id": "salesh_09_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 38.47,
+  "tokens": 2583,
+  "stop_reason": "code_error",
+  "note": "AttributeError: Can only use .str accessor with string values, not floating. Did you mean: 'std'?",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Price to numeric, handling text numbers\n    df['Price'] = pd.to_numeric(df['Price'].str.replace('[^0-9.]', '', regex=True), errors='coerce')\n    \n    # Remove rows with negative Quantity or Revenue\n    df = df[(df['Quantity'] >= 0) & (df['Revenue'] >= 0)].copy()\n    \n    # Ensure Quantity is within valid range (min 1)\n    df = df[df['Quantity'] >= 1].copy()\n    \n    # Clean Region labels\n    region_mapping = {\n        'East ': 'East',\n        'Eats': 'East',\n        'Wst': 'West',\n        ' West': 'West'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Convert Date to datetime and format as YYYY-MM-DD\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d')\n    \n    return df\n\ndef answer(df):\n    cleaned_df = clean(df)\n    avg_price_by_category = cleaned_df.groupby('Category')['Price'].mean().to_dict()\n    return avg_price_by_category\n"
+  },
+  "corrections": 0,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-devstral2-123b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 201.1538,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

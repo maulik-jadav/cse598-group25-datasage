@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 47.74,
+  "tokens": 3422,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Fix Region label variants\n    region_map = {\n        'north': 'North',\n        'Nort': 'North',\n        'east': 'East',\n        'Suoth': 'South',\n        'Wst': 'West'\n    }\n    df['Region'] = df['Region'].replace(region_map)\n    # Fix Price: strip $ and convert to float\n    df['Price'] = df['Price'].str.replace('$', '', regex=False).astype(float)\n    # Fix invalid dates (e.g. 2026-14-01)\n    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce')\n    return df\n\ndef answer(df):\n    electronics = df[df['Category'] == 'Electronics']\n    result = electronics.groupby('Region')['Revenue'].sum()\n    return result.to_dict()"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen38-27b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

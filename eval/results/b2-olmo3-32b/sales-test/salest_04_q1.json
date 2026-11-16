@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_04_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 15.17,
+  "tokens": 2471,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories | East": 35.0,
+    "Accessories | North": 30.0,
+    "Accessories | South": 30.0,
+    "Accessories | West": 32.0,
+    "Electronics | East": 220.0,
+    "Electronics | North": 335.0,
+    "Electronics | South": 448.8888888888889,
+    "Electronics | West": 270.0,
+    "Furniture | East": 121.25,
+    "Furniture | North": 135.0,
+    "Furniture | South": 169.16666666666666,
+    "Furniture | West": 163.33333333333334,
+    "Office Supplies | East": 10.0,
+    "Office Supplies | North": 10.8,
+    "Office Supplies | South": 6.0,
+    "Office Supplies | West": 10.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix missing Region: fill with 'Unknown' (or drop if preferred, but keeping id and data)\n    df = df.copy()\n    df['Region'].fillna('Unknown', inplace=True)\n    # Standardize Price: remove $ sign and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'\\$', '', regex=True).astype(float)\n    # Remove duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    # Validate Category and Region against allowed lists\n    allowed_category = {'Electronics', 'Accessories', 'Furniture', 'Office Supplies'}\n    allowed_region = {'North', 'South', 'East', 'West'}\n    mask = df['Category'].isin(allowed_category) & df['Region'].isin(allowed_region)\n    # Drop rows that violate these constraints\n    df = df[mask].reset_index(drop=True)\n    # Validate Quantity and Price are positive and within reasonable range\n    df = df[(df['Quantity'] > 0) & (df['Price'] >= 0)]\n    # Compute Revenue if missing or inconsistent\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # Ensure Revenue matches formula\n    df = df[df['Revenue'] == (df['Quantity'] * df['Price'])].reset_index(drop=True)\n    # Keep id column (Order_ID)\n    return df\n\ndef answer(df):\n    # Group by Category, optionally by Region if present\n    group_cols = ['Category']\n    if 'Region' in df.columns:\n        group_cols.append('Region')\n    grouped = df.groupby(group_cols)['Price'].mean().reset_index()\n    result = {}\n    for _, row in grouped.iterrows():\n        key_parts = [str(row[col]) for col in group_cols]\n        key = ' | '.join(key_parts)\n        if key == ' | '.join([''] * len(group_cols)):\n            key = 'all'\n        result[key] = row['Price']\n    # Drop keys where group is empty (shouldn't happen with mean, but just in case)\n    result = {k: v for k, v in result.items() if not pd.isnull(v)}\n    return result"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 31.7857,
+    "Electronics": 351.4286,
+    "Furniture": 153.25,
+    "Office Supplies": 9.6923
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Price"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

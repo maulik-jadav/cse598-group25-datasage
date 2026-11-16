@@ -1,0 +1,193 @@
+{
+  "task_id": "salest_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 15,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 99.73,
+  "tokens": 74855,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "extra": {
+    "final_summary": "**Data\u2011quality fixes applied**\n\n| Fix | Details |\n|-----|---------|\n| Duplicate row removed | Row\u202f5 (exact copy of Row\u202f4) was dropped. |\n| Category label normalization | \u201cFurnture\u201d \u2192 \u201cFurniture\u201d, \u201cOffice\u202fSuplies\u201d \u2192 \u201cOffice\u202fSupplies\u201d. |\n| Region label normalization | Trimmed extra spaces: \u201c\u202fSouth\u201d \u2192 \u201cSouth\u201d, \u201c\u202fWest\u201d \u2192 \u201cWest\u201d, \u201cWest\u202f\u201d \u2192 \u201cWest\u201d. |\n| Invalid Quantity rows excluded | Rows\u202f1,\u202f34,\u202f51 had negative quantities (Quantity must be \u2265\u202f1). |\n| Revenue recomputed | Row\u202f64\u2019s Revenue corrected to `Quantity * Price` (75). |\n\nAll relevant columns (`Date`, `Revenue`) are now clean and consistent with the rules.\n\n**Answer \u2013 Total revenue per month**\n\n| Month (YYYY\u2011MM) | Total Revenue |\n|-----------------|--------------:|\n| 2026\u201101 | 4\u202f102 |\n| 2026\u201102 | 4\u202f325 |\n| 2026\u201103 | 3\u202f356 |\n| 2026\u201104 | 2\u202f981 |\n| 2026\u201105 | 5\u202f129 |\n| 2026\u201106 | 6\u202f668 |\n\n*No data remained for later months after cleaning.*",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Exact duplicate row (row 5) repeats earlier order"
+        },
+        "reason": "Exact duplicate row (row 5) repeats earlier order",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          5
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Correct misspelled Category labels"
+        },
+        "reason": "Correct misspelled Category labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " South": "South",
+            " West": "West",
+            "West ": "West"
+          },
+          "reason": "Trim extra spaces in Region labels"
+        },
+        "reason": "Trim extra spaces in Region labels",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: merged 3 label variant(s), 3 cells",
+        "code": "df['Region'] = df['Region'].replace({' South': 'South', ' West': 'West', 'West ': 'West'})"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            1,
+            34,
+            51
+          ],
+          "reason": "Quantity must be positive per rules"
+        },
+        "reason": "Quantity must be positive per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          1,
+          34,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [1, 34, 51]",
+        "code": "df = df.drop(index=[1, 34, 51])"
+      },
+      {
+        "version": 5,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            64
+          ],
+          "reason": "Fix Revenue mismatch for row 64"
+        },
+        "reason": "Fix Revenue mismatch for row 64",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[64], 'Revenue'] = [75.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 17
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

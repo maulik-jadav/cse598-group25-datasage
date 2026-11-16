@@ -1,0 +1,49 @@
+{
+  "task_id": "penguinst_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 273.8,
+  "tokens": 4440,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3857.6923076923076,
+    "male": 4485.227272727273
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # body_mass_g is text with commas (e.g. '3,900'); convert to numeric\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # drop out-of-range body mass (e.g. 3625000, max allowed 6500)\n    df = df[(df['body_mass_g'] >= 2500) & (df['body_mass_g'] <= 6500)]\n    # sex has missing values meaning unknown; do not guess -> drop\n    df = df.dropna(subset=['sex'])\n    return df\n\ndef answer(df):\n    result = {}\n    for sex, group in df.groupby('sex'):\n        result[sex] = group['body_mass_g'].mean()\n    return result"
+  },
+  "corrections": 4,
+  "planted": 9,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-ornith-1-5-35b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3876.0,
+    "male": 4485.2273
+  },
+  "issues_reported": [
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

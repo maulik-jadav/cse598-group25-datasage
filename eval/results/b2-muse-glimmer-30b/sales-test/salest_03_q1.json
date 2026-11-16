@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 151.85,
+  "tokens": 6483,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # strip whitespace from string columns\n    for col in df.select_dtypes(include='object').columns:\n        df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # normalise Category label variant\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].replace(r'^\\s+|\\s+$', '', regex=True)\n    # parse Price which contains $ and text numbers\n    if 'Price' in df.columns:\n        df['Price'] = pd.to_numeric(df['Price'].replace(r'[\\$,]', '', regex=True), errors='coerce')\n    # ensure numeric types\n    if 'Quantity' in df.columns:\n        df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    if 'Order_ID' in df.columns:\n        df['Order_ID'] = pd.to_numeric(df['Order_ID'], errors='coerce')\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # keep only allowed regions and drop missing\n    if 'Region' in df.columns:\n        df = df[df['Region'].isin(['North', 'South', 'East', 'West'])]\n    # fix cross-column Revenue = Quantity * Price\n    if {'Quantity', 'Price', 'Revenue'}.issubset(df.columns):\n        df['Revenue'] = df['Quantity'] * df['Price']\n    # parse dates, coerce invalid\n    if 'Date' in df.columns:\n        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    # sum units sold per region\n    sums = dfc.groupby('Region', dropna=True)['Quantity'].sum()\n    # return ints, drop missing group keys\n    return {region: int(sums[region]) for region in sums.index if pd.notna(region)}\n"
+  },
+  "corrections": 10,
+  "planted": 11,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

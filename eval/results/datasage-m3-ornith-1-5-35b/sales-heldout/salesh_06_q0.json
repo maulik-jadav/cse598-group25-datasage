@@ -1,0 +1,80 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 5,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 37.48,
+  "tokens": 21117,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "extra": {
+    "final_summary": "\n\n## Units Sold by Region\n\n| Region | Units Sold (Quantity) |\n|----------|----------------------:|\n| West     | 62                    |\n| South    | 53                    |\n| North    | 40                    |\n| East     | 28                    |\n\n**Total: 183 units across all 43 orders.**\n\n### Problems found & fixes applied\n- **Region label variants (6 cells):** The Region column had case variants (`north`, `east`) and misspellings (`Nort`, `Suoth`, `Wst`). These were merged into the canonical labels `North`, `South`, `East`, `West` per the rules file. Without this fix, these rows would have formed spurious separate \"regions\" and undercounted the real ones.\n- **Quantity column:** Clean \u2014 numeric, all positive whole numbers, no missing values. No fix needed.\n- **Price/Revenue columns:** These have text formatting (e.g. `$350.00`, `$6.00`) and some values don't satisfy `Revenue = Quantity * Price`, but the question only asks about units sold (Quantity), so these were left untouched.\n\n### Caveats\n- All numbers come from the `analyze` tool result.\n- The Region normalization was the only change made; the original data file was not modified (fixes run on a copy).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "north": "North",
+            "Nort": "North",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "Merge case variants and misspellings of Region into the allowed labels per rules file (North, South, East, West) so units are grouped correctly by region."
+        },
+        "reason": "Merge case variants and misspellings of Region into the allowed labels per rules file (North, South, East, West) so units are grouped correctly by region.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Region: merged 5 label variant(s), 6 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'north': 'North', 'Nort': 'North', 'Suoth': 'South', 'Wst': 'West'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-ornith-1-5-35b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

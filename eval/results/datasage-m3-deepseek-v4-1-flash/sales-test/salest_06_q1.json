@@ -1,0 +1,135 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 76.02,
+  "tokens": 30975,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "extra": {
+    "final_summary": "Units sold per region (55 rows used, after cleaning):\n\n- North: 90\n- West: 62\n- East: 46\n- South: 42\n\nProblems found and fixes applied:\n1. Region label misspelling \u2014 \"Nort\" (row 12) merged into \"North\" (approved). Without this, North's total would have been split.\n2. Impossible value \u2014 row 43 had Quantity = -2 (rules: units sold must be a positive whole number, min 1), with Revenue = -120. Excluded (approved).\n3. Exact duplicate row \u2014 row 46 was an identical copy of an earlier row; dropped (approved) so units aren't double-counted.\n\nCaveats / left alone:\n- Revenue = Quantity * Price is violated on rows 20, 27 and 49 (e.g. 2405 vs 24, 500 vs 50, 18000 vs 180). Revenue is not used by this question, so I did not change it \u2014 but those Revenue figures are unreliable if you need revenue analysis.\n- Date, Product, Category, Price and Order_ID were not needed for this question and were not modified.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Nort": "North"
+          },
+          "reason": "\"Nort\" is a misspelling of the allowed region label \"North\"; merging it so the region grouping is correct."
+        },
+        "reason": "\"Nort\" is a misspelling of the allowed region label \"North\"; merging it so the region grouping is correct.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: merged 1 label variant(s), 1 cells",
+        "code": "df['Region'] = df['Region'].replace({'Nort': 'North'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            43
+          ],
+          "reason": "Quantity = -2 violates the rule that units sold must be a positive whole number (min 1); the row is impossible and would distort units sold."
+        },
+        "reason": "Quantity = -2 violates the rule that units sold must be a positive whole number (min 1); the row is impossible and would distort units sold.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          43
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [43]",
+        "code": "df = df.drop(index=[43])"
+      },
+      {
+        "version": 3,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 46 is an exact duplicate of an earlier row; keeping it would double-count units sold."
+        },
+        "reason": "Row 46 is an exact duplicate of an earlier row; keeping it would double-count units sold.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          46
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

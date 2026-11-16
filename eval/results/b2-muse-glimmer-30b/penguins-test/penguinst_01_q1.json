@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 136.39,
+  "tokens": 5805,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3767.2413793103447,
+    "Chinstrap": 3726.785714285714,
+    "Gentoo": 4895.833333333333
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # normalise species label variants (extra spaces)\n    if 'species' in df.columns:\n        df['species'] = df['species'].astype(str).str.strip()\n    # normalise island label variants (case)\n    if 'island' in df.columns:\n        df['island'] = df['island'].astype(str).str.strip()\n        # simple case normalisation to allowed capitalisation\n        df['island'] = df['island'].str.capitalize()\n    # body_mass_g is stored as text with commas / written as text\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False)\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    # average body mass per species, drop missing group keys\n    means = dfc.groupby('species', dropna=False)['body_mass_g'].mean()\n    # keep only allowed species and drop NaN groups\n    result = {}\n    for sp, val in means.items():\n        if pd.isna(sp):\n            continue\n        if pd.isna(val):\n            continue\n        result[sp] = float(val)\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3767.2414,
+    "Chinstrap": 3726.7857,
+    "Gentoo": 4895.8333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

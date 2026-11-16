@@ -1,0 +1,61 @@
+{
+  "task_id": "penguinst_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 51.28,
+  "tokens": 3183,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 4038.3928571428573,
+    "male": 4962.5
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # drop exact duplicate rows\n    d = d.drop_duplicates()\n    # normalize text labels (whitespace/case variants)\n    for c in ['penguin_id', 'species', 'island', 'sex']:\n        if c in d.columns:\n            d[c] = d[c].astype('string').str.strip().str.capitalize() if c in ['species', 'island'] else d[c].astype('string').str.strip()\n    d['sex'] = d['sex'].astype('string').str.strip().str.lower()\n    d.loc[~d['sex'].isin(['male', 'female']), 'sex'] = pd.NA\n    # body_mass_g: numbers written as text (with commas) -> numeric\n    d['body_mass_g'] = pd.to_numeric(\n        d['body_mass_g'].astype('string').str.replace(',', '', regex=False).str.strip(),\n        errors='coerce')\n    # out-of-range body mass (rule: 2500-6500 g) -> invalid\n    d.loc[(d['body_mass_g'] < 2500) | (d['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # flipper_length_mm: negative / out of range (170-235) -> invalid\n    d['flipper_length_mm'] = pd.to_numeric(d['flipper_length_mm'], errors='coerce')\n    d.loc[(d['flipper_length_mm'] < 170) | (d['flipper_length_mm'] > 235), 'flipper_length_mm'] = pd.NA\n    return d\n\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['sex', 'body_mass_g'])\n    g = d.groupby('sex')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 7,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 4050.9259,
+    "male": 4962.5
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

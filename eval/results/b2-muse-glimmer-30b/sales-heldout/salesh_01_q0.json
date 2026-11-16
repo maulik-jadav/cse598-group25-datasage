@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 115.94,
+  "tokens": 5688,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # standardise string columns\n    for col in [\"Category\", \"Region\", \"Product\"]:\n        if col in df.columns:\n            df[col] = df[col].astype(object).apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # fix known Category variants / misspellings\n    cat_fix = {\n        \"Furnture\": \"Furniture\",\n        \"Accesories\": \"Accessories\",\n    }\n    df[\"Category\"] = df[\"Category\"].replace(cat_fix)\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # rows without a Region cannot be assigned to a region\n    df = df.dropna(subset=[\"Region\"])\n    # ensure numeric types\n    df[\"Quantity\"] = pd.to_numeric(df[\"Quantity\"], errors=\"coerce\")\n    df[\"Price\"] = pd.to_numeric(df[\"Price\"], errors=\"coerce\")\n    # enforce Revenue formula\n    df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    sums = dfc.groupby(\"Region\")[\"Quantity\"].sum()\n    # return ints per region\n    return {region: int(sums[region]) for region in sums.index}\n"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

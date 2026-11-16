@@ -1,0 +1,69 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 26.28,
+  "tokens": 2685,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 5420.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    \n    # Clean Price: remove $ and convert to numeric\n    df['Price'] = df['Price'].replace('[\\$,]', '', regex=True).astype(float)\n    \n    # Clean Quantity: handle negatives (assuming they should be absolute or removed)\n    # Based on rules: Quantity min 1. We'll take absolute value or treat as error.\n    # Given the context of 'total revenue', we should ensure Quantity > 0.\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recalculate Revenue based on rules: Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Clean Date\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    # Drop rows where date is missing as we can't group by month\n    df_clean = df_clean.dropna(subset=['Date'])\n    \n    # Create YYYY-MM format\n    df_clean['Month'] = df_clean['Date'].dt.strftime('%Y-%m')\n    \n    # Group by month and sum revenue\n    result = df_clean.groupby('Month')['Revenue'].sum().to_dict()\n    \n    return result"
+  },
+  "corrections": 6,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gemma4-31b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

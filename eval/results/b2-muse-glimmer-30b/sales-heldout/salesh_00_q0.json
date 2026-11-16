@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 116.42,
+  "tokens": 5695,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.65217391304348,
+    "Electronics": 259.2307692307692,
+    "Furniture": 251.94444444444446,
+    "Office Supplies": 9.23076923076923
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # remove exact duplicate rows\n    df = df.drop_duplicates()\n    # strip whitespace from object columns\n    obj_cols = [c for c in df.columns if df[c].dtype == object]\n    for c in obj_cols:\n        df[c] = df[c].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # fix known category label variants\n    cat_map = {\n        'Office Suplies': 'Office Supplies',\n        'Accesories': 'Accessories'\n    }\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].replace(cat_map)\n    # ensure numeric types for calculations\n    for c in ['Quantity', 'Price', 'Revenue', 'Order_ID']:\n        if c in df.columns:\n            df[c] = pd.to_numeric(df[c], errors='coerce')\n    return df\n\ndef answer(df):\n    cdf = clean(df)\n    # average unit price = mean of Price per Category\n    means = cdf.groupby('Category')['Price'].mean()\n    # return plain dict, drop NaN groups\n    return {str(k): float(v) for k, v in means.dropna().items()}\n"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.6522,
+    "Electronics": 259.2308,
+    "Furniture": 251.9444,
+    "Office Supplies": 9.2308
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

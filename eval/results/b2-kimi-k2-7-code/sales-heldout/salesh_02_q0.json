@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 126.9,
+  "tokens": 6527,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Standardize Region labels (case/space variants)\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].astype('string').str.strip().str.title()\n    # Parse dates, invalid dates become NaT\n    if 'Date' in df.columns:\n        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # Ensure numeric columns are numeric\n    for col in ['Quantity', 'Price', 'Revenue']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n    # Keep only allowed categories\n    allowed_categories = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    if 'Category' in df.columns:\n        df = df[df['Category'].isin(allowed_categories)].copy()\n    # Remove rows with invalid quantity or price\n    df = df[\n        df['Quantity'].notna()\n        & (df['Quantity'] >= 1)\n        & (df['Quantity'] % 1 == 0)\n    ].copy()\n    df = df[df['Price'].notna() & (df['Price'] >= 0)].copy()\n    # Recalculate revenue from the cleaned inputs\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    cleaned = clean(df)\n    cleaned = cleaned.dropna(subset=['Category'])\n    totals = cleaned.groupby('Category', dropna=True)['Revenue'].sum()\n    return {str(cat): float(val) for cat, val in totals.items()}\n"
+  },
+  "corrections": 18,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

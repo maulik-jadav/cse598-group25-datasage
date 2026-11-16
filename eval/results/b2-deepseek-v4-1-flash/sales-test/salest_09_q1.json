@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 331.44,
+  "tokens": 5143,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "South": 68.0,
+    "West": 52.0,
+    "East": 35.0,
+    "North": 53.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    d = df.copy()\n    d = d.drop_duplicates()\n\n    for col in d.select_dtypes(include=['object']).columns:\n        d[col] = d[col].map(lambda x: x.strip() if isinstance(x, str) else x)\n\n    if 'Price' in d.columns:\n        d['Price'] = (d['Price'].astype(str)\n                      .str.replace(r'[\\$,]', '', regex=True)\n                      .replace({'': None, 'nan': None, 'None': None}))\n        d['Price'] = pd.to_numeric(d['Price'], errors='coerce')\n\n    if 'Quantity' in d.columns:\n        d['Quantity'] = pd.to_numeric(d['Quantity'], errors='coerce')\n        d.loc[d['Quantity'] < 0, 'Quantity'] = d.loc[d['Quantity'] < 0, 'Quantity'].abs()\n\n    if all(c in d.columns for c in ['Quantity', 'Price', 'Revenue']):\n        d['Revenue'] = d['Quantity'] * d['Price']\n\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Region'])\n    d['Quantity'] = pd.to_numeric(d['Quantity'], errors='coerce')\n    d = d.dropna(subset=['Quantity'])\n    result = d.groupby('Region', sort=False)['Quantity'].sum()\n    return {str(k): (int(v) if float(v).is_integer() else float(v)) for k, v in result.items()}"
+  },
+  "corrections": 6,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

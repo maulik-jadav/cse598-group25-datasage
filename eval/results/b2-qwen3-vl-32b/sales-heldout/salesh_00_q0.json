@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_00_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 42.75,
+  "tokens": 2286,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 36.59090909090909,
+    "Electronics": 259.2307692307692,
+    "Furniture": 264.11764705882354,
+    "Office Supplies": 9.23076923076923
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix duplicates\n    df = df.drop_duplicates(subset=['Order_ID', 'Date', 'Product', 'Category', 'Quantity', 'Price', 'Region', 'Revenue'], keep='first')\n    \n    # Fix label variants in Category\n    df['Category'] = df['Category'].replace({'Office Suplies': 'Office Supplies', 'Accesories': 'Accessories'})\n    \n    # Fix label variant in Region\n    df['Region'] = df['Region'].str.strip() if df['Region'].dtype == 'object' else df['Region']\n    \n    # Fill missing Region with 'Unknown' or drop if needed (for average, we can drop)\n    df = df.dropna(subset=['Region'])\n    \n    # Ensure Price is numeric (though profile says it is)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    return df\n\n\ndef answer(df):\n    # Group by Category and compute average Price\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    \n    # Return as dict with keys as category names\n    return result"
+  },
+  "corrections": 4,
+  "planted": 9,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.6522,
+    "Electronics": 259.2308,
+    "Furniture": 251.9444,
+    "Office Supplies": 9.2308
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 68.45,
+  "tokens": 3070,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Price: remove $ signs and convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.strip().astype(float)\n    \n    # Fix Quantity: handle negatives (set to 1 as minimum valid value)\n    df['Quantity'] = df['Quantity'].astype(float)\n    df.loc[df['Quantity'] < 1, 'Quantity'] = 1\n    \n    # Fix Region: normalize case and fix misspellings\n    df['Region'] = df['Region'].astype(str).str.strip()\n    region_map = {\n        'west': 'West',\n        'south': 'South',\n        'wst': 'West',\n        'suoth': 'South'\n    }\n    df['Region'] = df['Region'].apply(lambda x: region_map.get(x.lower(), x) if pd.notna(x) and x != 'nan' else np.nan)\n    df['Region'] = df['Region'].apply(lambda x: x.title() if pd.notna(x) and x in ['north', 'south', 'east', 'west'] else x)\n    \n    # Recalculate Revenue\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Drop rows with missing Region (needed for grouping)\n    df = df.dropna(subset=['Region'])\n    \n    return df\n\ndef answer(df):\n    # Filter for Electronics category\n    electronics = df[df['Category'] == 'Electronics'].copy()\n    \n    # Group by Region and sum Revenue\n    result = electronics.groupby('Region')['Revenue'].sum().to_dict()\n    \n    return result"
+  },
+  "corrections": 6,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-397b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

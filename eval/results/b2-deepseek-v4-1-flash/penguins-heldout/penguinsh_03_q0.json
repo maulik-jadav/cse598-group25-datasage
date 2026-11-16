@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1822.1,
+  "tokens": 7066,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3738.0434782608695,
+    "Chinstrap": 3784.375,
+    "Gentoo": 5081.818181818182
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    d = df.copy()\n    for c in d.columns:\n        if d[c].dtype == object:\n            d[c] = d[c].astype(str).str.strip()\n            d[c] = d[c].replace({'nan': np.nan, 'None': np.nan, '': np.nan})\n    if 'species' in d.columns:\n        d['species'] = d['species'].replace({'Adeile': 'Adelie'})\n        d.loc[~d['species'].isin(['Adelie', 'Chinstrap', 'Gentoo']), 'species'] = np.nan\n    if 'island' in d.columns:\n        d.loc[~d['island'].isin(['Biscoe', 'Dream', 'Torgersen']), 'island'] = np.nan\n    if 'sex' in d.columns:\n        d['sex'] = d['sex'].str.lower()\n        d.loc[~d['sex'].isin(['male', 'female']), 'sex'] = np.nan\n    for c in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g', 'year']:\n        if c in d.columns:\n            d[c] = pd.to_numeric(d[c], errors='coerce')\n    if 'body_mass_g' in d.columns:\n        mask = d['body_mass_g'] > 6500\n        d.loc[mask, 'body_mass_g'] = d.loc[mask, 'body_mass_g'] / 1000.0\n        d.loc[(d['body_mass_g'] < 2500) | (d['body_mass_g'] > 6500), 'body_mass_g'] = np.nan\n    d = d.drop_duplicates()\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'body_mass_g'])\n    out = d.groupby('species', dropna=True)['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in out.items()}"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3738.0435,
+    "Chinstrap": 3784.375,
+    "Gentoo": 5105.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

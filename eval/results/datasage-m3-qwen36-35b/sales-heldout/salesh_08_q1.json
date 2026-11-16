@@ -1,0 +1,128 @@
+{
+  "task_id": "salesh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 37.64,
+  "tokens": 44058,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "extra": {
+    "final_summary": "Data quality issues found and fixed:\n1. **Duplicate row**: Row 23 was an exact duplicate of an earlier row \u2014 excluded it.\n2. **Misspelled Category label**: \"Furnture\" (2 occurrences) was merged into \"Furniture\".\n3. **Whitespace in Region**: Three Region values had leading/trailing spaces (\" North\", \"East \", \"West \") \u2014 trimmed to normalize.\n\nRevenue = Quantity * Price was verified correct for all rows (no cross-column mismatches).\n\nTotal revenue per month (2026):\n- January: $6,680\n- February: $4,424\n- March: $7,202\n- April: $5,260\n- May: $14,196\n- June: $3,640\n\nNote: One row (row 47) has a missing Region value, but it does not affect the monthly revenue aggregation.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "Remove leading/trailing spaces from Region values to normalize labels"
+        },
+        "reason": "Remove leading/trailing spaces from Region values to normalize labels",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: trimmed 3 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture"
+          },
+          "reason": "Fix misspelling of Furniture in Category column"
+        },
+        "reason": "Fix misspelling of Furniture in Category column",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 1 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            23
+          ],
+          "reason": "Remove exact duplicate row (row 23 is a copy of an earlier identical row)"
+        },
+        "reason": "Remove exact duplicate row (row 23 is a copy of an earlier identical row)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [23]",
+        "code": "df = df.drop(index=[23])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 8
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen36-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

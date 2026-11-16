@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 14.98,
+  "tokens": 2210,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.85714285714286,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix region label variant: 'Nort' -> 'North'\n    df['Region'] = df['Region'].replace('Nort', 'North')\n    \n    # Convert Quantity and Price to numeric (they may be strings)\n    df['Quantity'] = pd.to_numeric(df['Quantity'])\n    df['Price'] = pd.to_numeric(df['Price'])\n    \n    # Remove rows with negative Quantity (invalid per rules)\n    df = df[df['Quantity'] >= 1].copy()\n    \n    # Ensure Category is in allowed list (though profile shows no variants, just in case)\n    allowed_categories = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed_categories)]\n    \n    return df\n\ndef answer(df):\n    # Group by Category and compute average Price\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    return result\n"
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.8571,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

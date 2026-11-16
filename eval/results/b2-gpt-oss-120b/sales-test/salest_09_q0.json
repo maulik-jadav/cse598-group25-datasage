@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 22.23,
+  "tokens": 3114,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 9.0,
+    "Electronics": 12.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # 1. Drop exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n\n    # 2. Standardize Category values (strip spaces and normalize case)\n    # Allowed categories: Electronics, Accessories, Furniture, Office Supplies\n    df['Category'] = df['Category'].astype(str).str.strip().str.title()\n    # After stripping, ensure exact spelling for known variants\n    category_map = {\n        'Electronics': 'Electronics',\n        'Accessories': 'Accessories',\n        'Furniture': 'Furniture',\n        'Office Supplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].map(category_map).fillna(df['Category'])\n\n    # 3. Convert Quantity to numeric (it may be stored as text)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # Flag negative quantities \u2013 keep the row but set to absolute value for consistency\n    df.loc[df['Quantity'] < 0, 'Quantity'] = df.loc[df['Quantity'] < 0, 'Quantity'].abs()\n\n    # 4. Clean Price column (text) and convert to float\n    # Remove any currency symbols and commas, then cast\n    df['Price'] = df['Price'].astype(str).str.replace('[\\$,]', '', regex=True).str.strip()\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n\n    # 5. Re\u2011calculate Revenue to ensure it matches Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Count orders per cleaned Category\n    result = df.groupby('Category').size().to_dict()\n    return result"
+  },
+  "corrections": 6,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

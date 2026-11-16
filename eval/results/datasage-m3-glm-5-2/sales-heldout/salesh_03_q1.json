@@ -1,0 +1,151 @@
+{
+  "task_id": "salesh_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 53.58,
+  "tokens": 18470,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "extra": {
+    "final_summary": "## Total Revenue per Month\n\n| Month | Total Revenue |\n|-------|-------------|\n| 2026-01 | $6,440 |\n| 2026-02 | $2,237 |\n| 2026-03 | $4,187 |\n| 2026-04 | $2,726 |\n| 2026-05 | $14,612 |\n| 2026-06 | $10,022 |\n\n**59 rows used** (out of 64 original).\n\n### Data issues found and fixed:\n1. **Invalid dates (3 rows: 24, 39, 55)** \u2014 \"2026-14-01\" (impossible month) and \"2026-02-30\" (Feb 30 doesn't exist). Set to missing, so these rows are excluded from monthly totals.\n2. **Revenue mismatch (row 28)** \u2014 Revenue was 1,055 but Quantity \u00d7 Price = 105. Corrected per the rules formula.\n3. **Exact duplicate rows (2 rows: 12, 51)** \u2014 Removed to avoid double-counting revenue.\n4. **Category label variant** \u2014 \"office supplies\" normalized to \"Office Supplies\" (not directly relevant to this question but cleaned for consistency).\n\n### Caveats:\n- 3 rows with invalid dates were excluded from the monthly breakdown since they cannot be assigned to a valid month. If the correct dates are known, they could be added back.\n- Region misspellings (\"Suoth\" \u2192 South, \"Eats\" \u2192 East) and 2 missing Region values exist but don't affect this question.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "3 rows have invalid dates (2026-14-01, 2026-02-30) that cannot be assigned to a month; setting them to missing so they are excluded from monthly grouping."
+        },
+        "reason": "3 rows have invalid dates (2026-14-01, 2026-02-30) that cannot be assigned to a month; setting them to missing so they are excluded from monthly grouping.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            28
+          ],
+          "reason": "Row 28 Revenue is 1055 but Quantity*Price = 105; correcting per rules formula."
+        },
+        "reason": "Row 28 Revenue is 1055 but Quantity*Price = 105; correcting per rules formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[28], 'Revenue'] = [105.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 3,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "2 exact duplicate rows (12, 51) inflate revenue totals."
+        },
+        "reason": "2 exact duplicate rows (12, 51) inflate revenue totals.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          12,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 4,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "office supplies": "Office Supplies"
+          },
+          "reason": "Case variant of allowed label \"Office Supplies\"."
+        },
+        "reason": "Case variant of allowed label \"Office Supplies\".",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({'office supplies': 'Office Supplies'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 9,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-2",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ]
+  ]
+}

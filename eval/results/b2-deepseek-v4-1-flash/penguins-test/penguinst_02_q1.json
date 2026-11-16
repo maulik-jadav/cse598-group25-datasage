@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1599.14,
+  "tokens": 5995,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 28.0,
+    "Dream": 16.0,
+    "Torgersen": 8.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n\n    if \"island\" in df.columns:\n        df[\"island\"] = (\n            df[\"island\"].astype(\"string\").str.strip().str.title()\n            .replace({\"Torgerson\": \"Torgersen\", \"Bisco\": \"Biscoe\"})\n        )\n\n    if \"sex\" in df.columns:\n        df[\"sex\"] = (\n            df[\"sex\"].astype(\"string\").str.strip().str.lower()\n            .replace({\"female\": \"female\", \"male\": \"male\"})\n        )\n\n    if \"body_mass_g\" in df.columns:\n        df[\"body_mass_g\"] = pd.to_numeric(\n            df[\"body_mass_g\"].astype(\"string\").str.replace(\",\", \"\", regex=False),\n            errors=\"coerce\"\n        )\n\n    for col in [\"flipper_length_mm\", \"year\"]:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors=\"coerce\")\n\n    df = df.drop_duplicates()\n    if \"penguin_id\" in df.columns:\n        df = df.drop_duplicates(subset=[\"penguin_id\"], keep=\"first\")\n\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=[\"island\"])\n    counts = d.groupby(\"island\", dropna=True).size()\n    return {str(k): int(v) for k, v in counts.items()}"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "penguins-test",
+  "question": "How many penguins were measured on each island?",
+  "reference_answer": {
+    "Biscoe": 28.0,
+    "Dream": 16.0,
+    "Torgersen": 8.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

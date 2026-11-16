@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinst_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 201.1,
+  "tokens": 3356,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 40.93,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    df = df.copy()\n    # Standardize species names (label variants)\n    species_map = {\n        # Adelie variants\n        'adelie': 'Adelie',\n        'adeile': 'Adelie',\n        'adeli': 'Adelie',\n        # Chinstrap variants\n        'chinstrap': 'Chinstrap',\n        'chinstrap ': 'Chinstrap',\n        'chinstarp': 'Chinstrap',\n        # Gentoo variants\n        'gentoo': 'Gentoo',\n        'gentoo ': 'Gentoo',\n        'gentto': 'Gentoo'\n    }\n    # normalize: strip spaces and lower case\n    df['species'] = df['species'].astype(str).str.strip().str.lower().map(species_map).fillna(df['species'])\n    # Convert flipper_length_mm to numeric (text_number issue)\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'].astype(str).str.replace('[^0-9.-]', '', regex=True), errors='coerce')\n    # Convert body_mass_g to numeric (remove commas)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'].astype(str).str.replace(',', ''), errors='coerce')\n    # Remove negative flipper lengths (negative issue) and any out\u2011of\u2011range values per rules (170\u2011235)\n    df.loc[df['flipper_length_mm'] < 0, 'flipper_length_mm'] = pd.NA\n    df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = pd.NA\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Ensure data is clean\n    df = clean(df)\n    # Filter to Adelie species only\n    adelie = df[df['species'] == 'Adelie']\n    # Group by island and compute average bill length\n    result = adelie.groupby('island')['bill_length_mm'].mean().round(2)\n    # Convert to plain dict (keys are island names, values are numbers)\n    return result.to_dict()\n"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "penguins-test",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 40.9333,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 135.79,
+  "tokens": 5180,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "code": "import re\n\nCAT_FIX = {\n    'electronics': 'Electronics',\n    'electornics': 'Electronics',\n    'accessories': 'Accessories',\n    'accesories': 'Accessories',\n    'furniture': 'Furniture',\n    'office supplies': 'Office Supplies',\n    'office suplies': 'Office Supplies'\n}\n\ndef clean(df):\n    df = df.copy()\n\n    # Fix Category label variants (typos / case variants) -> allowed values\n    def fix_cat(x):\n        if pd.isna(x):\n            return x\n        key = re.sub(r'\\s+', ' ', str(x).strip().lower())\n        return CAT_FIX.get(key, str(x).strip())\n    df['Category'] = df['Category'].apply(fix_cat)\n\n    # Fix Region label variants (leading/trailing spaces)\n    df['Region'] = df['Region'].apply(lambda x: x if pd.isna(x) else str(x).strip())\n\n    # Parse dates: prefer ISO, fall back to flexible parsing; unparseable -> NaT\n    parsed = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce')\n    mask = parsed.isna()\n    if mask.any():\n        try:\n            alt = pd.to_datetime(df['Date'].astype(str).str.strip(), errors='coerce', format='mixed')\n        except (TypeError, ValueError):\n            alt = pd.to_datetime(df['Date'].astype(str).str.strip(), errors='coerce')\n        parsed = parsed.mask(mask, alt)\n    df['Date'] = parsed\n\n    # Enforce Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    return df\n\ndef answer(df):\n    d = df.dropna(subset=['Date'])\n    months = d['Date'].dt.strftime('%Y-%m')\n    out = d.groupby(months)['Revenue'].sum()\n    return {str(k): float(v) for k, v in out.items()}"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

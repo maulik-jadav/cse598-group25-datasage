@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 9.7,
+  "tokens": 2057,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 33.333333333333336,
+    "Electronics": 397.6923076923077,
+    "Furniture": 207.8125,
+    "Office Supplies": 12.666666666666666
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Standardize category label\n    df['Category'] = df['Category'].replace('Furnture', 'Furniture')\n    # Clean region labels (strip whitespace, case normalization)\n    df['Region'] = df['Region'].fillna('')\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    # Remove exact duplicate rows, keep first occurrence\n    df = df.drop_duplicates()\n    # Ensure numeric columns are numeric (already numeric per spec, but just in case)\n    for col in ['Quantity', 'Price', 'Revenue']:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    return df\n\ndef answer(df):\n    # Group by Category and compute average unit price (Price column)\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    # Convert to plain dict with category keys and average price values\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-granite41-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.3333,
+    "Electronics": 397.6923,
+    "Furniture": 207.8125,
+    "Office Supplies": 12.6667
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

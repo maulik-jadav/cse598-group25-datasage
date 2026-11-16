@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinst_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.27,
+  "tokens": 2527,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 193.0,
+    "Chinstrap": 196.76923076923077,
+    "Gentoo": 216.68421052631578
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Fix species label variants\n    species_map = {\n        'adelie': 'Adelie',\n        'gentoo': 'Gentoo',\n        'chinstrap': 'Chinstrap',\n        'Gentto': 'Gentoo',\n    }\n    df['species'] = df['species'].replace(species_map)\n    # Fix negative flipper lengths (sign error)\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Drop rows with missing species or out-of-range flipper lengths\n    df = df.dropna(subset=['species', 'flipper_length_mm'])\n    df = df[(df['flipper_length_mm'] >= 170) & (df['flipper_length_mm'] <= 235)]\n    result = df.groupby('species')['flipper_length_mm'].mean()\n    return {k: v for k, v in result.items()}"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-2",
+  "dataset": "penguins-test",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 193.1667,
+    "Chinstrap": 197.0909,
+    "Gentoo": 216.6842
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

@@ -1,0 +1,155 @@
+{
+  "task_id": "salest_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 20.81,
+  "tokens": 51699,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed: 1 missing Region value (set to missing), 1 label variant in Category (normalized), 2 Revenue mismatches (recomputed), and 2 exact duplicate rows (removed). No other issues affect the question. Answer: total units sold per region \u2013 North 87, West 74, East 52, South 45.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            44
+          ],
+          "reason": "Region is null; set to missing per rules (allowed values only)."
+        },
+        "reason": "Region is null; set to missing per rules (allowed values only).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 1 value(s) to missing",
+        "code": "df.loc[[44], 'Region'] = pd.NA"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture"
+          },
+          "reason": "Fix leading space variant to allowed label per rules."
+        },
+        "reason": "Fix leading space variant to allowed label per rules.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture'})"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            29,
+            46
+          ],
+          "reason": "Revenue does not match Quantity * Price per rule; correct it."
+        },
+        "reason": "Revenue does not match Quantity * Price per rule; correct it.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[29, 46], 'Revenue'] = [2700.0, 108.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 4,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Exact duplicate rows (rows 51 and 56) identified; remove to avoid double-counting units sold per region."
+        },
+        "reason": "Exact duplicate rows (rows 51 and 56) identified; remove to avoid double-counting units sold per region.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          51,
+          56
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 1,
+    "model_turns": 11
+  },
+  "corrections": 8,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-granite41-30b",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,121 @@
+{
+  "task_id": "salesh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 35.53,
+  "tokens": 22280,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "extra": {
+    "final_summary": "**Total Revenue per Month (2026)**\n\n| Month | Total Revenue |\n|-------|--------------|\n| January   | $6,680  |\n| February  | $4,424  |\n| March     | $7,202  |\n| April     | $5,260  |\n| May       | $14,196 |\n| June      | $3,640  |\n\n**Data quality issues found and fixed:**\n1. **Duplicate row** (row 23): An exact duplicate was removed to avoid double-counting revenue. (53 rows remain.)\n2. **Category misspelling**: \"Furnture\" (2 rows) was corrected to \"Furniture\" per the allowed labels in the rules file.\n3. **Region whitespace variants**: \"East \", \"West \", and \" North\" were trimmed to their canonical labels (\"East\", \"West\", \"North\").\n\n**Checks performed with no issues found:**\n- All 54 dates were valid YYYY-MM-DD format.\n- Revenue = Quantity \u00d7 Price held for all rows (no cross-column discrepancies).\n- No missing values in Date, Quantity, Price, or Revenue.\n\n**Caveat:** One row (row 47) has a missing Region value, but since the question is about revenue per month (not by region), this does not affect the result.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 23 is an exact duplicate of an earlier row; removing to avoid double-counting revenue."
+        },
+        "reason": "Row 23 is an exact duplicate of an earlier row; removing to avoid double-counting revenue.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture"
+          },
+          "reason": "\"Furnture\" is a misspelling of the allowed label \"Furniture\"."
+        },
+        "reason": "\"Furnture\" is a misspelling of the allowed label \"Furniture\".",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 1 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 3,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "Region has leading/trailing spaces causing label variants (\"East \", \"West \", \" North\"). Trimming to canonical labels."
+        },
+        "reason": "Region has leading/trailing spaces causing label variants (\"East \", \"West \", \" North\"). Trimming to canonical labels.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: trimmed 3 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-2",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "task_id": "salesh_04_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 6,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 19.85,
+  "tokens": 2482,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "all": 61.0,
+    "Accessories": 11.0,
+    "Electronics": 15.0,
+    "Furniture": 15.0,
+    "Office Supplies": 20.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate Order_ID rows, keep first occurrence\n    df = df.drop_duplicates(subset='Order_ID', keep='first').reset_index(drop=True)\n    \n    # Fix label variants in Category\n    df['Category'] = df['Category'].str.strip().replace({'accessories': 'Accessories', 'Furnture': 'Furniture', 'office supplies': 'Office Supplies'})\n    # Validate Category against allowed list\n    allowed_categories = {'Electronics', 'Accessories', 'Furniture', 'Office Supplies'}\n    df = df[df['Category'].isin(allowed_categories)]\n    \n    # Fill missing Region with 'Unknown' or drop if preferred; here we fill with 'Unknown'\n    df['Region'] = df['Region'].fillna('Unknown')\n    allowed_regions = {'North', 'South', 'East', 'West'}\n    df = df[df['Region'].isin(allowed_regions.union({'Unknown'}))]\n    \n    # Quantity must be positive integer >=1\n    df = df[(df['Quantity'].fillna(0).astype(int) >= 1) & (df['Quantity'].notna())]\n    df['Quantity'] = df['Quantity'].astype(int)\n    \n    # Price must be >=0\n    df = df[df['Price'] >= 0]\n    \n    # Compute Revenue if missing or inconsistent\n    df['Revenue'] = df.apply(lambda row: row['Quantity'] * row['Price'] if pd.isna(row['Revenue']) or abs(row['Quantity'] * row['Price'] - row['Revenue']) > 1e-6 else row['Revenue'], axis=1)\n    \n    # Drop rows where Revenue is negative (should not happen after above, but just in case)\n    df = df[df['Revenue'] >= 0]\n    \n    # Keep only id column as specified (here Order_ID is the id)\n    return df[['Order_ID'] + [col for col in df.columns if col != 'Order_ID']]\n\ndef answer(df):\n    # Group by Category, aggregate count of orders\n    grouped = df.groupby('Category').size().to_dict()\n    # Also provide overall count under 'all'\n    result = {'all': len(df)}\n    result.update({cat: int(cnt) for cat, cnt in grouped.items()})\n    # Remove any category with 0 count (shouldn't happen, but just in case)\n    result = {k: v for k, v in result.items() if v > 0}\n    return result"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 11.0,
+    "Electronics": 15.0,
+    "Furniture": 15.0,
+    "Office Supplies": 20.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "Order_ID"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Price"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Price"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

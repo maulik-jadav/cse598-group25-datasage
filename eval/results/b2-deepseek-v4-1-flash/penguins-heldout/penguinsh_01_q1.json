@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1637.48,
+  "tokens": 6572,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 78775.0,
+    "Chinstrap": 28400.0,
+    "Gentoo": 160050.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    d = df.copy()\n    d = d.drop_duplicates()\n\n    species_map = {'adelie': 'Adelie', 'chinstrap': 'Chinstrap', 'gentoo': 'Gentoo'}\n    d['species'] = (\n        d['species'].astype(str).str.strip().str.lower()\n        .map(species_map)\n        .fillna(d['species'].astype(str).str.strip())\n    )\n\n    d['island'] = (\n        d['island'].astype(str).str.strip()\n        .replace({'Bisco': 'Biscoe', 'Dram': 'Dream'})\n    )\n\n    d['flipper_length_mm'] = pd.to_numeric(d['flipper_length_mm'], errors='coerce').abs()\n    d['body_mass_g'] = pd.to_numeric(d['body_mass_g'], errors='coerce')\n    d['year'] = pd.to_numeric(d['year'], errors='coerce')\n\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['species'].isin(['Adelie', 'Chinstrap', 'Gentoo'])]\n    totals = d.groupby('species', dropna=True)['body_mass_g'].sum()\n    return {str(k): float(v) for k, v in totals.items()}"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 74875.0,
+    "Chinstrap": 24675.0,
+    "Gentoo": 155250.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ]
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinsh_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 19.66,
+  "tokens": 2604,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 30.0,
+    "Dream": 13.0,
+    "Torgersen": 4.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix label variants in species\n    df = df.copy()\n    df['species'] = df['species'].str.strip()\n    df['species'] = df['species'].replace({' Adelie': 'Adelie', 'Chinstarp': 'Chinstrap'})\n    \n    # Convert flipper_length_mm and body_mass_g to numeric, coerce errors to NaN\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    \n    # Remove rows with negative flipper_length_mm or out-of-range body_mass_g\n    df = df[(df['flipper_length_mm'] >= 0) & (df['body_mass_g'] >= 2500) & (df['body_mass_g'] <= 6500)]\n    \n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    return df\n\ndef answer(df):\n    # Count penguins by island\n    counts = df.groupby('island', dropna=False).size().to_dict()\n    # Return as dict with island names as keys\n    return {k: int(v) for k, v in counts.items()}"
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "penguins-heldout",
+  "question": "How many penguins were measured on each island?",
+  "reference_answer": {
+    "Biscoe": 30.0,
+    "Dream": 13.0,
+    "Torgersen": 4.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "body_mass_g"
+    ],
+    [
+      "invalid_date",
+      "flipper_length_mm"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

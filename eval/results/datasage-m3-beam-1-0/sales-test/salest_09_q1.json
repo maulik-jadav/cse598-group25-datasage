@@ -1,0 +1,111 @@
+{
+  "task_id": "salest_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 192.7,
+  "tokens": 29537,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "extra": {
+    "final_summary": "Question: units sold per region.\n\nProblems found:\n- 1 exact duplicate row (row 31) \u2014 dropped.\n- 1 row (row 40) with Quantity = -6, violating the rule that Quantity must be \u22651 \u2014 excluded.\n- Price stored as text in 2 rows (\"$300.00\") and Category has trailing-space variants; neither affects this question (units by region), so left untouched.\n- Region labels are clean (no variants).\n\nFixes applied: dropped duplicate row 31; excluded row 40.\n\nResult (sum of Quantity by Region, 46 rows used):\n- East: 35\n- North: 53\n- South: 68\n- West: 46",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 31 is an exact duplicate of an earlier row, violating Order_ID uniqueness."
+        },
+        "reason": "Row 31 is an exact duplicate of an earlier row, violating Order_ID uniqueness.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          31
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            40
+          ],
+          "reason": "Row 40 has Quantity -6, violating the rule that Quantity must be a positive whole number (min 1)."
+        },
+        "reason": "Row 40 has Quantity -6, violating the rule that Quantity must be a positive whole number (min 1).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          40
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [40]",
+        "code": "df = df.drop(index=[40])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 7
+  },
+  "corrections": 4,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-beam-1-0",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 85.48,
+  "tokens": 5709,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.0,
+    "Electronics": 277.33,
+    "Furniture": 191.05,
+    "Office Supplies": 11.1
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows so they don't double-count prices.\n    df = df.drop_duplicates().reset_index(drop=True)\n    # Normalize category labels to the allowed values.\n    category_map = {\n        'Office Suplies': 'Office Supplies',\n        'Furnture': 'Furniture'\n    }\n    df['Category'] = df['Category'].replace(category_map)\n    # Strip whitespace from Region (harmless even though it doesn't affect the answer).\n    df['Region'] = df['Region'].str.strip()\n    return df\n\ndef answer(df):\n    avg_price = df.groupby('Category')['Price'].mean()\n    return {str(cat): round(float(val), 2) for cat, val in avg_price.items()}\n"
+  },
+  "corrections": 8,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

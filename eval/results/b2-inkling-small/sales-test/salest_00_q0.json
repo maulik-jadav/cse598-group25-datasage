@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 68.42,
+  "tokens": 4720,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 37.142857142857146,
+    "Electronics": 369.0,
+    "Furniture": 169.16666666666666,
+    "Office Supplies": 13.636363636363637
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix Price: strip $ and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'[\\$,]', '', regex=True)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Fix Region label variants\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Suoth': 'South'})\n    # Fix Date: keep valid YYYY-MM-DD, set invalid to missing\n    valid = df['Date'].astype(str).str.match(r'^\\d{4}-\\d{2}-\\d{2}$')\n    df.loc[~valid, 'Date'] = pd.NA\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df = df.dropna(subset=['Category', 'Price'])\n    avg = df.groupby('Category')['Price'].mean()\n    return {str(k): float(v) for k, v in avg.items()}\n"
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 37.1429,
+    "Electronics": 369.0,
+    "Furniture": 169.1667,
+    "Office Supplies": 13.6364
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

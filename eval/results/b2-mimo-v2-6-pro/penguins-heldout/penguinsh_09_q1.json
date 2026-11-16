@@ -1,0 +1,67 @@
+{
+  "task_id": "penguinsh_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 3,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 50.24,
+  "tokens": 3331,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 77000.0,
+    "Chinstrap": 57275.0,
+    "Gentoo": 87700.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    d = df.copy()\n    # numbers stored as text -> numeric\n    for c in [\"bill_length_mm\", \"bill_depth_mm\", \"flipper_length_mm\", \"body_mass_g\", \"year\"]:\n        d[c] = pd.to_numeric(d[c].astype(str).str.strip().str.replace(\",\", \"\"), errors=\"coerce\")\n    # negative flipper lengths are sign errors -> absolute value\n    d[\"flipper_length_mm\"] = d[\"flipper_length_mm\"].abs()\n    # body mass magnitude/unit errors (e.g. 5050000 g) -> rescale into valid range\n    def fix_mass(v):\n        if pd.isna(v):\n            return v\n        while v > 6500 and v % 10 == 0:\n            v = v / 10.0\n        if v < 2500:\n            while v < 2500:\n                v = v * 10.0\n        return v\n    d[\"body_mass_g\"] = d[\"body_mass_g\"].apply(fix_mass)\n    # clip/normalize other numeric ranges\n    d[\"bill_length_mm\"] = d[\"bill_length_mm\"].where(d[\"bill_length_mm\"].between(30, 60), np.nan)\n    d[\"flipper_length_mm\"] = d[\"flipper_length_mm\"].where(d[\"flipper_length_mm\"].between(170, 235), np.nan)\n    d[\"body_mass_g\"] = d[\"body_mass_g\"].where(d[\"body_mass_g\"].between(2500, 6500), np.nan)\n    # sex label variants (whitespace/case) -> canonical; missing stays missing\n    s = d[\"sex\"].astype(str).str.strip().str.lower()\n    s = s.where(s.isin([\"male\", \"female\"]), np.nan)\n    d[\"sex\"] = s\n    # species label normalization\n    d[\"species\"] = d[\"species\"].astype(str).str.strip().str.capitalize()\n    d[\"species\"] = d[\"species\"].where(d[\"species\"].isin([\"Adelie\", \"Chinstrap\", \"Gentoo\"]), np.nan)\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=[\"species\", \"body_mass_g\"])\n    g = d.groupby(\"species\")[\"body_mass_g\"].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 4,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 66500.0,
+    "Chinstrap": 53225.0,
+    "Gentoo": 77600.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

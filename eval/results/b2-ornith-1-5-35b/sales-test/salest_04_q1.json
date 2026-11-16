@@ -1,0 +1,49 @@
+{
+  "task_id": "salest_04_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 61.99,
+  "tokens": 3614,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 31.79,
+    "Electronics": 351.43,
+    "Furniture": 153.25,
+    "Office Supplies": 9.69
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows (profile reports 2 exact duplicates)\n    df = df.drop_duplicates()\n    # Clean Price: strip currency symbols like '$6.00', '$50.00' then convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.strip()\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Only Category and Price matter for this question\n    df = df.dropna(subset=['Price', 'Category'])\n    result = {}\n    grouped = df.groupby('Category')['Price'].mean()\n    for category, value in grouped.items():\n        result[category] = round(float(value), 2)\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-ornith-1-5-35b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 31.7857,
+    "Electronics": 351.4286,
+    "Furniture": 153.25,
+    "Office Supplies": 9.6923
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

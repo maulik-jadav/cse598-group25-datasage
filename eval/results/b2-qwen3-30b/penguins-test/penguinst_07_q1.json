@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 7.26,
+  "tokens": 2694,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 40.93,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix species label variants\n    df = df.copy()\n    df['species'] = df['species'].str.strip().str.lower()\n    df['species'] = df['species'].replace({'adelie': 'Adelie', 'adeile': 'Adelie', 'gentto': 'Gentoo', 'chinstarp': 'Chinstrap', 'gentoo ': 'Gentoo'})\n    \n    # Convert flipper_length_mm to numeric, handle negative values (likely errors)\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['flipper_length_mm'] = df['flipper_length_mm'].clip(lower=170, upper=235)\n    \n    # Convert body_mass_g to numeric, handle comma formatting\n    df['body_mass_g'] = df['body_mass_g'].str.replace(',', '', regex=False)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    \n    return df\n\ndef answer(df):\n    # Filter for Adelie penguins\n    adelie_df = df[df['species'] == 'Adelie']\n    \n    # Group by island and calculate average bill length\n    result = adelie_df.groupby('island', as_index=False)['bill_length_mm'].mean()\n    \n    # Convert to dict with island as key and average bill length as value\n    return {row['island']: round(row['bill_length_mm'], 2) for _, row in result.iterrows()}"
+  },
+  "corrections": 9,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 24,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "penguins-test",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 40.9333,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "flipper_length_mm"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

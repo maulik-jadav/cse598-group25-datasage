@@ -1,0 +1,52 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 40.31,
+  "tokens": 2424,
+  "stop_reason": "code_error",
+  "note": "AttributeError: Can only use .str accessor with string values, not floating. Did you mean: 'std'?",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Make a copy of the dataframe to avoid modifying the original\n    cleaned_df = df.copy()\n    \n    # Convert Price from text to numeric, handling currency symbols\n    cleaned_df['Price'] = cleaned_df['Price'].str.replace('$', '').astype(float)\n    \n    # Remove rows with negative Quantity or Revenue\n    cleaned_df = cleaned_df[cleaned_df['Quantity'] >= 0]\n    cleaned_df = cleaned_df[cleaned_df['Revenue'] >= 0]\n    \n    # Standardize Region labels\n    cleaned_df['Region'] = cleaned_df['Region'].str.capitalize()\n    \n    return cleaned_df\n\ndef answer(df):\n    cleaned_df = clean(df)\n    # Calculate average unit price for each category\n    avg_price = cleaned_df.groupby('Category')['Price'].mean().to_dict()\n    return avg_price\n"
+  },
+  "corrections": 0,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-devstral2-123b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

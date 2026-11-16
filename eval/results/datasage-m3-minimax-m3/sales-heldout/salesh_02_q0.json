@@ -1,0 +1,124 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 123.64,
+  "tokens": 35369,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "extra": {
+    "final_summary": "**Total revenue by category** (after fixes):\n- Electronics: $29,070\n- Furniture: $16,505\n- Accessories: $2,450\n- Office Supplies: $972\n\n**Problems found and fixes applied:**\n1. **Revenue formula violations** (rows 10, 19, 61): Revenue did not equal Quantity \u00d7 Price. Recomputed Revenue = Quantity \u00d7 Price on those 3 rows.\n2. **Negative quantities** (rows 5, 14, 65): Rules require Quantity to be a positive whole number. Excluded these 3 rows from the analysis.\n3. **Invalid dates** (rows 48, 50, 64: \"TBD\", \"2026-14-01\", \"not-a-date\"): Not relevant to this question, left as-is.\n4. **Region label variants** (\" South\", \"North \", \"east\", \"north\", \"west\") and 3 missing Region values: Not relevant to this question, left as-is.\n\n**Caveats:** 3 rows were excluded due to negative quantities, which slightly reduces totals. The Revenue recompute on 3 rows changed their values to match Quantity \u00d7 Price.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            10,
+            19,
+            61
+          ],
+          "reason": "Revenue must equal Quantity * Price per rules; rows 10, 19, 61 violate this"
+        },
+        "reason": "Revenue must equal Quantity * Price per rules; rows 10, 19, 61 violate this",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[10, 19, 61], 'Revenue'] = [240.0, 24.0, 48.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            5,
+            14,
+            65
+          ],
+          "reason": "Quantity must be a positive whole number per rules; rows 5, 14, 65 have negative quantities"
+        },
+        "reason": "Quantity must be a positive whole number per rules; rows 5, 14, 65 have negative quantities",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          5,
+          14,
+          65
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [5, 14, 65]",
+        "code": "df = df.drop(index=[5, 14, 65])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 7
+  },
+  "corrections": 9,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-minimax-m3",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

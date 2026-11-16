@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 50.73,
+  "tokens": 4023,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3848.913043478261,
+    "Chinstrap": 3721.4285714285716,
+    "Gentoo": 5181.818181818182
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix island label variants\n    df['island'] = df['island'].str.strip().replace({'Torgerson': 'Torgersen', 'Bisco': 'Biscoe'})\n    # Fix sex case variants\n    df['sex'] = df['sex'].str.strip().str.lower()\n    # Convert body_mass_g from text (with commas) to numeric\n    s = df['body_mass_g'].astype(str).str.replace(',', '', regex=False)\n    df['body_mass_g'] = pd.to_numeric(s, errors='coerce')\n    # Remove out-of-range body masses\n    df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = float('nan')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    grouped = df.groupby('species')['body_mass_g'].mean()\n    grouped = grouped.dropna()\n    return grouped.to_dict()\n"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3848.913,
+    "Chinstrap": 3721.4286,
+    "Gentoo": 5181.8182
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

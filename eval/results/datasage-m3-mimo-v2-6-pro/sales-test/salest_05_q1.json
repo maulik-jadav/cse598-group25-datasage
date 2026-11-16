@@ -1,0 +1,71 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 7,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 47.6,
+  "tokens": 18982,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "extra": {
+    "final_summary": "**Total revenue by category** (all 43 rows):\n\n| Category | Revenue |\n|---|---|\n| Electronics | 10,700 |\n| Furniture | 9,635 |\n| Accessories | 3,255 |\n| Office Supplies | 222 |\n\n**Problems found and fixes applied:**\n- **Category label variants (fixed):** 3 rows had leading/trailing spaces (\"Furniture \", \" Furniture\", \"Accessories \"). I normalized them to the allowed labels from the rules file so revenue groups correctly \u2014 without this, Furniture and Accessories would each have been split into fragments.\n- **Revenue formula (verified, no issue):** all rows satisfy the rules-file formula `Revenue = Quantity * Price`.\n- **Duplicates (none):** no exact duplicate rows.\n\n**Caveats (not touched, since the question doesn't use these columns):**\n- Region has 2 missing values and 2 apparent misspellings (\"Suoth\", \"Nort\") \u2014 these would matter for a region breakdown but not for revenue by category.\n- Date has a few non-ISO values (~7%) \u2014 irrelevant here.\n\nAll 43 rows were included in the totals.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            "Accessories ": "Accessories",
+            "Furniture ": "Furniture"
+          },
+          "reason": "Category values with leading/trailing spaces are case/space variants of the allowed labels per the rules file; merging them so revenue is grouped into the correct categories."
+        },
+        "reason": "Category values with leading/trailing spaces are case/space variants of the allowed labels per the rules file; merging them so revenue is grouped into the correct categories.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 3 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', 'Accessories ': 'Accessories', 'Furniture ': 'Furniture'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mimo-v2-6-pro",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

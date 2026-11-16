@@ -1,0 +1,100 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 129.45,
+  "tokens": 26941,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "extra": {
+    "final_summary": "Total revenue per month computed: 2026-01: 5,335; 2026-02: 6,462; 2026-03: 6,058; 2026-04: 1,694; 2026-05: 4,619; 2026-06: 879. Fixed 3 unreadable dates (rows 5, 6, 44) by setting them to missing, and cast 3 text-formatted prices to numbers. Verified Revenue = Quantity * Price on all rows and found no duplicates. Caveat: the 3 rows with missing dates are excluded from the monthly totals since they cannot be assigned to a month; Region label variants were left alone as Region is not used in this question.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "3 values ('TBD', 'not-a-date', '13/45/2026') violate the YYYY-MM-DD rule and are unreadable; set to missing so they don't corrupt monthly grouping. Rows themselves stay."
+        },
+        "reason": "3 values ('TBD', 'not-a-date', '13/45/2026') violate the YYYY-MM-DD rule and are unreadable; set to missing so they don't corrupt monthly grouping. Rows themselves stay.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "3 prices written as text ('$350.00', '$18.00', '$45.00'); cast to numbers so Revenue = Quantity * Price can be verified. All parse cleanly, nothing becomes missing."
+        },
+        "reason": "3 prices written as text ('$350.00', '$18.00', '$45.00'); cast to numbers so Revenue = Quantity * Price can be verified. All parse cleanly, nothing becomes missing.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (47 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 6,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mimo-v2-6-pro",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "missing",
+      "Date"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

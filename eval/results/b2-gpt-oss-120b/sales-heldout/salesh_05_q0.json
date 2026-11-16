@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 18.01,
+  "tokens": 2912,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Standardize Region values: strip, lower, map known variants\n    region_map = {\n        'east': 'East',\n        'west': 'West',\n        'north': 'North',\n        'south': 'South',\n        'wst': 'West',   # misspelling\n        'suoth': 'South' # misspelling\n    }\n    # Ensure Region is string, strip spaces, lower case\n    df['Region'] = df['Region'].astype(str).str.strip().str.lower()\n    df['Region'] = df['Region'].map(region_map).where(df['Region'].isin(region_map), df['Region'])\n    # After mapping, any values not in map are set to NaN (invalid)\n    df['Region'].replace({None: pd.NA}, inplace=True)\n    # Drop rows with missing or invalid Region\n    df = df.dropna(subset=['Region'])\n\n    # Ensure Quantity is numeric (it may be object in some rows)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # Remove non\u2011positive quantities (negatives or zero)\n    df = df[df['Quantity'] > 0]\n\n    # Keep only needed columns (including id column)\n    return df\n\ndef answer(df):\n    # Assume df is already cleaned via clean()\n    # Group by Region and sum Quantity\n    result = df.groupby('Region', as_index=False)['Quantity'].sum()\n    # Build dictionary: region -> total units sold\n    out = {row['Region']: int(row['Quantity']) for _, row in result.iterrows()}\n    return out"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "task_id": "salesh_05_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 3,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 20.91,
+  "tokens": 2656,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 12539.0,
+    "North": 10960.0,
+    "South": 7794.0,
+    "West": 8725.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # 1. Fix missing Region: fill with 'Unknown' where NaN\n    df['Region'] = df['Region'].fillna('Unknown')\n    # 2. Normalize Region labels (case/space variants to 'North', 'South', 'East', 'West')\n    region_map = {\n        'west': 'West', 'West ': 'West', 'Wst': 'West',\n        'south': 'South', 'South ': 'South', 'Suoth': 'South',\n        'north': 'North', 'North ': 'North',\n        'east': 'East', 'East ': 'East'\n    }\n    df['Region'] = df['Region'].map(region_map).fillna(df['Region'])\n    # 3. Validate Region against allowed set; set invalid to 'Unknown'\n    allowed_regions = {'North', 'South', 'East', 'West'}\n    df.loc[~df['Region'].isin(allowed_regions), 'Region'] = 'Unknown'\n    # 4. Fix negative Quantity\n    df.loc[df['Quantity'] < 1, 'Quantity'] = None\n    # 5. Convert Price to numeric (handle text like $900.00 and 15)\n    df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'\\$', '').str.replace(r'\\.', ''), errors='coerce')\n    # 6. Fix invalid Dates (already ISO, but ensure no bad values)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.date\n    # 7. Compute Revenue correctly\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # 8. Drop rows where Quantity or Price is missing after cleaning\n    df = df.dropna(subset=['Quantity', 'Price', 'Region', 'Category'])\n    # Keep id column (Order_ID)\n    return df\n\ndef answer(df):\n    # Group by Region (and optionally Category if multi-column group label needed, but question is by Region)\n    # Months not needed as question is not time-based\n    # Drop rows with missing Region\n    df = df.dropna(subset=['Region'])\n    # Aggregate total revenue per Region\n    grouped = df.groupby('Region')['Revenue'].sum().reset_index()\n    # Build dict: region -> total revenue\n    result = {row['Region']: float(row['Revenue']) for _, row in grouped.iterrows() if row['Region'] != 'Unknown'}\n    # If all regions are 'Unknown', return 'all' key\n    if not result:\n        total = df['Revenue'].sum()\n        if pd.notna(total):\n            return {'all': float(total)}\n    return result"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

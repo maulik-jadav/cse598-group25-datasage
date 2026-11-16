@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 464.94,
+  "tokens": 5101,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    cat_map = {\n        'electronics': 'Electronics',\n        'electornics': 'Electronics',\n        'accessories': 'Accessories',\n        'accesories': 'Accessories',\n        'furniture': 'Furniture',\n        'office supplies': 'Office Supplies',\n        'office suplies': 'Office Supplies'\n    }\n    def norm_cat(x):\n        if pd.isna(x):\n            return x\n        s = str(x).strip()\n        key = ' '.join(s.lower().split())\n        return cat_map.get(key, s)\n    df['Category'] = df['Category'].map(norm_cat)\n    def norm_region(x):\n        if pd.isna(x):\n            return x\n        return str(x).strip().title()\n    df['Region'] = df['Region'].map(norm_region)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    for c in ['Quantity', 'Price', 'Revenue']:\n        if c in df.columns:\n            df[c] = pd.to_numeric(df[c], errors='coerce')\n    if 'Quantity' in df.columns and 'Price' in df.columns:\n        df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Category'])\n    out = d.groupby('Category', dropna=True)['Revenue'].sum()\n    return {str(k): float(v) for k, v in out.items()}"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 26.51,
+  "tokens": 2967,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 9858.0,
+    "2026-02": 23613.0,
+    "2026-03": 8246.0,
+    "2026-04": 1391.0,
+    "2026-05": 2346.0,
+    "2026-06": 4690.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # fix label variants (e.g. ' Furniture')\n    for c in ['Category', 'Region', 'Product']:\n        if c in df.columns:\n            df[c] = df[c].astype(str).str.strip().replace({'nan': None})\n    # parse prices written as text / with currency symbols\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False).str.strip(),\n        errors='coerce')\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # parse dates, tolerating non-ISO variants\n    d = pd.to_datetime(df['Date'], errors='coerce', format='%Y-%m-%d')\n    bad = d.isna()\n    if bad.any():\n        for fmt in ['%d/%m/%Y', '%m/%d/%Y', '%Y/%m/%d', '%d-%m-%Y', '%m-%d-%Y', '%d.%m.%Y']:\n            still = d.isna()\n            if not still.any():\n                break\n            d[still] = pd.to_datetime(df.loc[still, 'Date'], errors='coerce', format=fmt)\n        still = d.isna()\n        if still.any():\n            d[still] = pd.to_datetime(df.loc[still, 'Date'], errors='coerce')\n    df['Date'] = d\n    df = df[df['Date'].notna()]\n    # recompute revenue from the authoritative formula\n    df['Revenue'] = df['Quantity'] * df['Price']\n    df = df.dropna(subset=['Revenue'])\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n    g = df.groupby('Month')['Revenue'].sum()\n    return {k: float(v) for k, v in g.items() if pd.notna(k)}"
+  },
+  "corrections": 8,
+  "planted": 11,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 9858.0,
+    "2026-02": 23613.0,
+    "2026-03": 8246.0,
+    "2026-04": 1391.0,
+    "2026-05": 2346.0,
+    "2026-06": 4690.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

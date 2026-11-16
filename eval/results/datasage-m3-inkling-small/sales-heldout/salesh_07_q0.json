@@ -1,0 +1,186 @@
+{
+  "task_id": "salesh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 15,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 58.65,
+  "tokens": 62295,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "extra": {
+    "final_summary": "Average unit price (Price) by Category (after fixes): Accessories \u2248 30.67, Electronics = 360.00, Furniture = 205.00, Office Supplies \u2248 10.67. Fixes applied: trimmed Region whitespace; normalized Region case ('east'\u2192'East'); removed 2 exact duplicate rows (17, 23); excluded 2 rows with negative Quantity/Revenue (19, 34) per rules (Quantity min=1). Caveat: row 30 has Revenue=10000 vs expected 100 (Quantity*Price) \u2014 user rejected exclusion, so it remains; it does not affect Price average. Region has 2 missing values (not used in question).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "trim trailing/leading spaces in Region labels"
+        },
+        "reason": "trim trailing/leading spaces in Region labels",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: trimmed 2 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East"
+          },
+          "reason": "normalize case variant 'east' to 'East'"
+        },
+        "reason": "normalize case variant 'east' to 'East'",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: merged 1 label variant(s), 1 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            17,
+            23
+          ],
+          "reason": "duplicate rows (later copies of earlier identical rows)"
+        },
+        "reason": "duplicate rows (later copies of earlier identical rows)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          17,
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [17, 23]",
+        "code": "df = df.drop(index=[17, 23])"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            19
+          ],
+          "reason": "Quantity negative (-5) violates rule min=1; Revenue also negative"
+        },
+        "reason": "Quantity negative (-5) violates rule min=1; Revenue also negative",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          19
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [19]",
+        "code": "df = df.drop(index=[19])"
+      },
+      {
+        "version": 5,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            34
+          ],
+          "reason": "Quantity negative (-4) violates rule min=1; Revenue also negative"
+        },
+        "reason": "Quantity negative (-4) violates rule min=1; Revenue also negative",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [34]",
+        "code": "df = df.drop(index=[34])"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "summary": "excluded 1 row(s): [30]"
+      }
+    ],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": false,
+        "why": "removes row 30 (id 2029) that should be kept"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 15
+  },
+  "corrections": 9,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-inkling-small",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

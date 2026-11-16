@@ -1,0 +1,59 @@
+{
+  "task_id": "salesh_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 22.77,
+  "tokens": 2317,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    df = df.drop_duplicates()\n    # normalize region labels: strip spaces and fix case\n    df['Region'] = df['Region'].astype('string').str.strip()\n    allowed = {'North': 'North', 'South': 'South', 'East': 'East', 'West': 'West'}\n    df['Region'] = df['Region'].str.title().map(lambda x: x if x in allowed else (allowed.get(x) if isinstance(x, str) else x))\n    # drop rows with missing region (group key)\n    df = df[df['Region'].notna()]\n    # drop invalid negative quantities\n    df = df[df['Quantity'] > 0]\n    # recompute revenue from formula\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    elec = df[df['Category'] == 'Electronics']\n    g = elec.groupby('Region')['Revenue'].sum()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

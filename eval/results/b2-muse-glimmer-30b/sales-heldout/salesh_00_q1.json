@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 73.17,
+  "tokens": 5240,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    df = df.copy()\n    # strip whitespace from object columns\n    obj_cols = df.select_dtypes(include=\"object\").columns\n    for col in obj_cols:\n        df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # standardise Category label variants\n    cat_map = {\"Office Suplies\": \"Office Supplies\", \"Accesories\": \"Accessories\"}\n    df[\"Category\"] = df[\"Category\"].replace(cat_map)\n    # standardise Region label variant (leading space already stripped)\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # ensure numeric types\n    df[\"Quantity\"] = pd.to_numeric(df[\"Quantity\"], errors=\"coerce\")\n    df[\"Price\"] = pd.to_numeric(df[\"Price\"], errors=\"coerce\")\n    # enforce Revenue = Quantity * Price\n    df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n    # try to normalise dates, keep original string if unparsable\n    # (invalid dates will become NaT, which does not affect revenue by category)\n    try:\n        df[\"Date_parsed\"] = pd.to_datetime(df[\"Date\"], errors=\"coerce\", format=\"%Y-%m-%d\")\n        df[\"Date\"] = df[\"Date_parsed\"].dt.strftime(\"%Y-%m-%d\")\n        df.drop(columns=[\"Date_parsed\"], inplace=True)\n    except Exception:\n        pass\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    dfc = clean(df)\n    # total revenue by category, drop missing category keys\n    out = (\n        dfc.dropna(subset=[\"Category\"])\n        .groupby(\"Category\", as_index=False)[\"Revenue\"]\n        .sum()\n    )\n    # return mapping category -> total revenue\n    result = {row.Category: float(row.Revenue) for row in out.itertuples(index=False)}\n    return result\n"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

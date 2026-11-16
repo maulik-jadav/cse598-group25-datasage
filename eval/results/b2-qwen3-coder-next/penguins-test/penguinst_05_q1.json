@@ -1,0 +1,53 @@
+{
+  "task_id": "penguinst_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 13.4,
+  "tokens": 2540,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3733.653846153846,
+    "male": 4550.892857142857
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix island label variants: 'Bisco' -> 'Biscoe'\n    df['island'] = df['island'].replace('Bisco', 'Biscoe')\n    \n    # Fix sex label variants: strip spaces and standardize\n    df['sex'] = df['sex'].astype(str).str.strip().replace('nan', pd.NA)\n    \n    # Convert text numbers to numeric where needed\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    \n    # Drop rows with missing sex (as per rules: missing means unknown; do not guess)\n    df = df.dropna(subset=['sex'])\n    \n    return df\n\ndef answer(df):\n    # Group by sex and compute average body mass\n    result = df.groupby('sex')['body_mass_g'].mean().to_dict()\n    return result\n"
+  },
+  "corrections": 6,
+  "planted": 7,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3733.6538,
+    "male": 4550.8929
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

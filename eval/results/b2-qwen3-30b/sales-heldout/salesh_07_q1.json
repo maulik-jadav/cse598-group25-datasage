@@ -1,0 +1,71 @@
+{
+  "task_id": "salesh_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 5,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 43.49,
+  "tokens": 2512,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix data types: convert Quantity, Price, Revenue to numeric, coercing errors to NaN\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Fix negative values in Quantity and Revenue (set to NaN)\n    df['Quantity'] = df['Quantity'].where(df['Quantity'] >= 0)\n    df['Revenue'] = df['Revenue'].where(df['Revenue'] >= 0)\n    \n    # Fix Region label variants: strip whitespace and standardize case\n    df['Region'] = df['Region'].astype(str).str.strip().str.capitalize()\n    \n    # Drop rows with missing Region (since we need Region for grouping)\n    df = df.dropna(subset=['Region'])\n    \n    # Ensure Date is in proper YYYY-MM-DD format (already ISO, but ensure it's datetime)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Drop rows with invalid Date\n    df = df.dropna(subset=['Date'])\n    \n    # Re-check for any remaining invalid data\n    df = df.dropna(subset=['Quantity', 'Price', 'Revenue'])\n    \n    # Recalculate Revenue from Quantity and Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Keep only relevant columns and id\n    return df[['Order_ID', 'Date', 'Category', 'Region', 'Quantity', 'Price', 'Revenue']]\n\ndef answer(df):\n    # Filter for Electronics\n    df_electronics = df[df['Category'] == 'Electronics']\n    \n    # Group by Region and sum Revenue\n    result = df_electronics.groupby('Region', as_index=False)['Revenue'].sum()\n    \n    # Convert to dictionary with Region as key and total revenue as value\n    return {row['Region']: row['Revenue'] for _, row in result.iterrows()}\n"
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4860.0,
+    "North": 60.0,
+    "South": 7800.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

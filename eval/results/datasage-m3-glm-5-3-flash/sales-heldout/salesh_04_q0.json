@@ -1,0 +1,104 @@
+{
+  "task_id": "salesh_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 7,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 99.46,
+  "tokens": 17280,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 33.1818,
+    "Electronics": 568.6667,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "final_summary": "Average unit price (Price) by category, after cleaning:\n\n- Electronics: $568.67\n- Furniture: $203.00\n- Accessories: $33.18\n- Office Supplies: $12.00\n\nProblems found and fixed (both approved):\n1. Category label variants in 4 rows (rows 7, 9, 44, 50): \"accessories\" \u2192 \"Accessories\", \"office supplies\" \u2192 \"Office Supplies\", and the misspelling \"Furnture\" \u2192 \"Furniture\", per the rules file's allowed labels. Without this, Furniture and Accessories averages would have been split across wrong labels.\n2. One exact duplicate row (row 34) removed to avoid double-counting.\n\nCaveats: Region has 3 missing values, but Region is not used in this question so it was left untouched. All Price values were valid numbers within the allowed range (min 0), so no exclusions were needed. The averages are simple means of unit price per order row (61 rows after dedup), not quantity-weighted.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "accessories": "Accessories",
+            "office supplies": "Office Supplies",
+            "Furnture": "Furniture"
+          },
+          "reason": "Merge case/space variants and the misspelling 'Furnture' into the allowed category labels per the rules file."
+        },
+        "reason": "Merge case/space variants and the misspelling 'Furnture' into the allowed category labels per the rules file.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Category: merged 3 label variant(s), 4 cells",
+        "code": "df['Category'] = df['Category'].replace({'accessories': 'Accessories', 'office supplies': 'Office Supplies', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 34 is an exact duplicate of an earlier row; keep the first occurrence to avoid double-counting."
+        },
+        "reason": "Row 34 is an exact duplicate of an earlier row; keep the first occurrence to avoid double-counting.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.1818,
+    "Electronics": 568.6667,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

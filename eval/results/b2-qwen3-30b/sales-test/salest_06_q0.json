@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_06_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 4.84,
+  "tokens": 2157,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 33.0,
+    "Electronics": 382.5,
+    "Furniture": 177.86,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix negative quantities and revenues by removing or correcting them\n    df = df[df['Quantity'] >= 0]\n    df = df[df['Revenue'] >= 0]\n    \n    # Fix region label variant: 'Nort' -> 'North'\n    df['Region'] = df['Region'].replace('Nort', 'North')\n    \n    # Ensure numeric types\n    df['Quantity'] = pd.to_numeric(df['Quantity'])\n    df['Price'] = pd.to_numeric(df['Price'])\n    df['Revenue'] = pd.to_numeric(df['Revenue'])\n    \n    return df\n\ndef answer(df):\n    # Calculate average unit price per category\n    result = df.groupby('Category', as_index=False)['Price'].mean()\n    \n    # Convert to dict with category as key and average price as value\n    return dict(zip(result['Category'], result['Price'].round(2)))"
+  },
+  "corrections": 2,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.8571,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

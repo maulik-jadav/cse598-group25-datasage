@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 46.8,
+  "tokens": 2536,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Furniture": 14.0,
+    "Office Supplies": 12.0,
+    "Electronics": 11.0,
+    "Accessories": 9.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates(keep='first')\n    \n    # Clean Category: strip whitespace and standardize labels\n    df['Category'] = df['Category'].str.strip()\n    category_mapping = {\n        'Office Supplies ': 'Office Supplies',\n        ' Furniture': 'Furniture',\n        ' Electronics': 'Electronics'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Remove rows with negative Quantity\n    df = df[df['Quantity'] >= 0]\n    \n    # Convert Price to numeric (handle text numbers like '$300.00')\n    df['Price'] = df['Price'].replace('\\$', '', regex=True).astype(float)\n    \n    # Recalculate Revenue to ensure correctness\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    cleaned_df = clean(df)\n    # Count orders per category\n    category_counts = cleaned_df['Category'].value_counts().to_dict()\n    return category_counts\n"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-devstral2-123b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

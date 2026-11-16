@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 69.11,
+  "tokens": 3443,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Fix Region label variants and typos\n    region_map = {\n        'north': 'North', 'Nort': 'North',\n        'east': 'East',\n        'Suoth': 'South',\n        'Wst': 'West'\n    }\n    df['Region'] = df['Region'].apply(\n        lambda x: region_map.get(x, x) if isinstance(x, str) else x\n    )\n    # Parse Price (handles '$6.00' style text numbers)\n    df['Price'] = df['Price'].apply(\n        lambda x: float(str(x).replace('$', '').replace(',', '').strip())\n        if pd.notna(x) else np.nan\n    )\n    # Fix invalid dates like '2026-14-01' (month/day swapped) -> set NaT safely\n    def parse_date(v):\n        if pd.isna(v):\n            return pd.NaT\n        d = pd.to_datetime(v, errors='coerce', format='%Y-%m-%d')\n        if pd.isna(d):\n            # try swapping month/day for entries like 2026-14-01\n            parts = str(v).split('-')\n            if len(parts) == 3:\n                try:\n                    y, m, dd = int(parts[0]), int(parts[1]), int(parts[2])\n                    if m > 12 and dd <= 12:\n                        return pd.Timestamp(year=y, month=dd, day=min(m, 28))\n                except Exception:\n                    pass\n            return pd.NaT\n        return d\n    df['Date'] = df['Date'].apply(parse_date)\n    # Ensure Quantity numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    out = {}\n    for region, grp in df.groupby('Region'):\n        if pd.isna(region):\n            continue\n        out[str(region)] = float(grp['Quantity'].sum())\n    return out"
+  },
+  "corrections": 11,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

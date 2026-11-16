@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_03_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 27.54,
+  "tokens": 2294,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Office Supplies": 21.0,
+    "Accessories": 15.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix label variants in Category\n    df['Category'] = df['Category'].str.title()\n    df = df[df['Category'].isin(['Electronics', 'Accessories', 'Furniture', 'Office Supplies'])]\n    \n    # Fix invalid dates (assuming all dates are in 2026 and format is correct except for parsing)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n    \n    # Fix label variants in Region\n    region_mapping = {'Suoth': 'South', 'Eats': 'East'}\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    return df\n\ndef answer(df):\n    cleaned_df = clean(df)\n    category_counts = cleaned_df['Category'].value_counts().to_dict()\n    return category_counts\n"
+  },
+  "corrections": 7,
+  "planted": 11,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-devstral2-123b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

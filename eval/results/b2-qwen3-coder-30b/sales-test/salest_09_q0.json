@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 23.68,
+  "tokens": 2494,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix Category label variants\n    df['Category'] = df['Category'].str.strip()\n    category_mapping = {\n        'Office Supplies ': 'Office Supplies',\n        ' Furniture': 'Furniture',\n        ' Electronics': 'Electronics'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Fix Quantity column - convert to numeric and handle negatives\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # Remove rows with negative quantities\n    df = df[df['Quantity'] >= 1]\n    \n    # Fix Revenue column - ensure it matches Quantity * Price\n    df['Price'] = df['Price'].str.replace('$', '').str.strip()\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Group by Category and count orders\n    result = df.groupby('Category').size().to_dict()\n    \n    # Convert any non-string keys to string\n    result = {str(k): v for k, v in result.items()}\n    \n    return result"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-30b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

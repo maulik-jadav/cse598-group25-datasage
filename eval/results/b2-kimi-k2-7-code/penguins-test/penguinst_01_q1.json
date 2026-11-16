@@ -1,0 +1,47 @@
+{
+  "task_id": "penguinst_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 96.03,
+  "tokens": 6477,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3767.24,
+    "Chinstrap": 3726.79,
+    "Gentoo": 4895.83
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Standardize species labels (trim whitespace) and reject unknown values\n    df['species'] = df['species'].astype(str).str.strip()\n    allowed_species = ['Adelie', 'Chinstrap', 'Gentoo']\n    df['species'] = df['species'].where(df['species'].isin(allowed_species), np.nan)\n    # Convert body mass from text (with commas) to numeric\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False),\n        errors='coerce'\n    )\n    # Keep only the columns needed for the question, plus the id\n    df = df[['penguin_id', 'species', 'body_mass_g']]\n    # Drop rows that cannot contribute to a species average\n    df = df.dropna(subset=['species', 'body_mass_g'])\n    return df\n\ndef answer(df):\n    cleaned = clean(df)\n    avg = cleaned.groupby('species')['body_mass_g'].mean().round(2)\n    return avg.to_dict()\n"
+  },
+  "corrections": 6,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3767.2414,
+    "Chinstrap": 3726.7857,
+    "Gentoo": 4895.8333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

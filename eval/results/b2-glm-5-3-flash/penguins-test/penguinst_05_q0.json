@@ -1,0 +1,67 @@
+{
+  "task_id": "penguinst_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 3,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 82.08,
+  "tokens": 2609,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 91400.0,
+    "Chinstrap": 39575.0,
+    "Gentoo": 98775.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # drop exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    # convert numeric columns stored as text\n    for col in ['flipper_length_mm', 'body_mass_g', 'year']:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    # fix label variants\n    df['island'] = df['island'].astype(str).str.strip().replace({'Bisco': 'Biscoe'})\n    df['sex'] = df['sex'].astype(str).str.strip().replace({'nan': None})\n    df['species'] = df['species'].astype(str).str.strip()\n    # enforce valid ranges on body_mass_g\n    df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'body_mass_g'])\n    totals = d.groupby('species')['body_mass_g'].sum()\n    return {str(k): float(v) for k, v in totals.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "penguins-test",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 91400.0,
+    "Chinstrap": 39575.0,
+    "Gentoo": 98775.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

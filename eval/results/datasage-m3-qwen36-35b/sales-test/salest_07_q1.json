@@ -1,0 +1,158 @@
+{
+  "task_id": "salest_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 51.32,
+  "tokens": 41622,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "extra": {
+    "final_summary": "Data quality issues found and fixed:\n\n1. **Label variants in Category**: 2 rows had leading/trailing spaces (\" Electronics\", \"Office Supplies \") \u2014 normalized to canonical labels.\n2. **Exact duplicate rows**: 2 duplicate rows (rows 6 and 49) were removed.\n3. **Invalid Quantity**: Row 41 had Quantity = -4, violating the rule that Quantity must be \u2265 1. That row was excluded.\n4. **Revenue formula violations**: 3 rows (0, 7, 66) had Revenue values that didn't match Quantity \u00d7 Price. Revenue was recomputed using the formula.\n\nAfter fixes, total revenue by category:\n- Electronics: $47,580.00\n- Furniture: $14,685.00\n- Accessories: $1,780.00\n- Office Supplies: $444.00\n\nAll 67 remaining rows were used in the analysis.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Electronics": "Electronics",
+            "Office Supplies ": "Office Supplies"
+          },
+          "reason": "Merge label variants with leading/trailing spaces into canonical labels per rules file"
+        },
+        "reason": "Merge label variants with leading/trailing spaces into canonical labels per rules file",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({' Electronics': 'Electronics', 'Office Supplies ': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate rows (rows 6 and 49 are copies of earlier rows)"
+        },
+        "reason": "Remove exact duplicate rows (rows 6 and 49 are copies of earlier rows)",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          49
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            41
+          ],
+          "reason": "Row 41 has Quantity = -4, which violates the rule that Quantity must be >= 1 (units sold, always positive)"
+        },
+        "reason": "Row 41 has Quantity = -4, which violates the rule that Quantity must be >= 1 (units sold, always positive)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          41
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [41]",
+        "code": "df = df.drop(index=[41])"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            0,
+            7,
+            66
+          ],
+          "reason": "Fix Revenue values that don't match Quantity * Price per rules file formula"
+        },
+        "reason": "Fix Revenue values that don't match Quantity * Price per rules file formula",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[0, 7, 66], 'Revenue'] = [90.0, 24.0, 1200.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 8
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen36-35b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "task_id": "salesh_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 14,
+  "tool_errors": 1,
+  "recovered_errors": 1,
+  "approvals_asked": 3,
+  "seconds": 196.96,
+  "tokens": 56657,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "extra": {
+    "final_summary": "\n\nThe analysis is complete. Here's the summary.\n\n## Total Revenue per Month\n\n| Month | Total Revenue |\n|-------|--------------|\n| 2026-01 | $6,440 |\n| 2026-02 | $2,237 |\n| 2026-03 | $4,187 |\n| 2026-04 | $2,726 |\n| 2026-05 | $14,612 |\n| 2026-06 | $10,022 |\n\n**Total across all months: $40,224** (based on 59 of 62 rows)\n\n## Problems found & fixes applied\n\n1. **Invalid dates** (rows 24, 39, 55): `2026-14-01`, `2026-02-30`, `2026-14-01` \u2014 impossible dates that couldn't be grouped by month. Set to missing via `parse_dates`. These 3 rows are now excluded from the monthly totals.\n2. **Revenue formula violation** (row 28): Revenue was 1055 but Quantity \u00d7 Price = 105, violating the rule `Revenue = Quantity \u00d7 Price`. Recomputed to 105.\n3. **Exact duplicate rows** (rows 12 & 51): the same order was recorded twice, which would have double-counted that order's revenue. Removed the later copy.\n\n## Caveats\n- **3 rows excluded** from the monthly totals because their dates were invalid and are now missing (rows 24, 39, 55 \u2014 Mouse $125, Stapler $54, Pen Pack $12). Their revenue ($291 total) is not reflected in any month.\n- **Not fixed (not used by the question):** Category \"office supplies\" (row 58) and Region misspellings \"Suoth\"/\"Eats\" (rows 6, 9) are label variants, but since Category and Region aren't used in this question, I left them alone. They don't affect the revenue-per-month answer.\n\nAll numbers above come directly from the `analyze` tool result.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Rows 24, 39, 55 have invalid YYYY-MM-DD dates (2026-14-01, 2026-02-30) that cannot be grouped by month"
+        },
+        "reason": "Rows 24, 39, 55 have invalid YYYY-MM-DD dates (2026-14-01, 2026-02-30) that cannot be grouped by month",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            28
+          ],
+          "reason": "Revenue=1055 violates the rule Revenue = Quantity * Price (expected 105). Recomputing to match the formula."
+        },
+        "reason": "Revenue=1055 violates the rule Revenue = Quantity * Price (expected 105). Recomputing to match the formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[28], 'Revenue'] = [105.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 3,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 12 and 51 are exact duplicates (same order recorded twice). Row 51 is a later copy of row 12; removing it prevents double-counting revenue for the question."
+        },
+        "reason": "Rows 12 and 51 are exact duplicates (same order recorded twice). Row 51 is a later copy of row 12; removing it prevents double-counting revenue for the question.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          12,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 8
+  },
+  "corrections": 8,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-ornith-1-5-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

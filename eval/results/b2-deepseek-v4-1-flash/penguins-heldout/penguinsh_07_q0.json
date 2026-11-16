@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinsh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 306.13,
+  "tokens": 5587,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 190.1818181818182,
+    "Gentoo": 215.9375,
+    "Chinstrap": 199.53333333333333
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    d = df.copy()\n    if 'island' in d.columns:\n        d['island'] = d['island'].astype('string').str.strip().str.title()\n    if 'species' in d.columns:\n        d['species'] = d['species'].astype('string').str.strip().str.title()\n    if 'sex' in d.columns:\n        d['sex'] = d['sex'].astype('string').str.strip().str.lower()\n    if 'body_mass_g' in d.columns:\n        d['body_mass_g'] = pd.to_numeric(\n            d['body_mass_g'].astype('string').str.replace(',', '', regex=False),\n            errors='coerce'\n        )\n    if 'flipper_length_mm' in d.columns:\n        d['flipper_length_mm'] = pd.to_numeric(\n            d['flipper_length_mm'], errors='coerce'\n        ).abs()\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'flipper_length_mm'])\n    means = d.groupby('species', sort=False)['flipper_length_mm'].mean()\n    return {str(k): float(v) for k, v in means.items()}"
+  },
+  "corrections": 9,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "penguins-heldout",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 190.2812,
+    "Chinstrap": 199.6429,
+    "Gentoo": 215.1429
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 51.7,
+  "tokens": 26103,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "extra": {
+    "final_summary": "**Question:** Total revenue by category.\n\n**Data problems found & fixes applied:**\n- **Category label variants (3 cells, rows 8, 24, 39):** Values like \"Furniture \", \" Furniture\", and \"Accessories \" (extra spaces) would have created phantom categories. Fixed with `normalize_labels`, merging them into the canonical labels \"Furniture\" and \"Accessories\". (Low risk, auto-approved.)\n\n**Problems found but left alone (not relevant to this question):**\n- **Region misspellings** (\"Nort\"\u2192\"North\", \"Suoth\"\u2192\"South\", rows 20, 38) and **2 missing Region values** \u2014 Region is not used in this question.\n- **3 invalid Date values** (rows 14, 18, 36: \"TBD\", \"13/45/2026) \u2014 Date is not used in this question.\n\n**Revenue integrity check:** Cross-checked Revenue against the rule `Revenue = Quantity * Price` \u2014 0 mismatches, so the Revenue column is internally consistent and usable.\n\n**Answer \u2014 Total Revenue by Category:**\n- Electronics: $10,700.00\n- Furniture: $9,635.00\n- Accessories: $3,255.00\n- Office Supplies: $222.00\n\n(All 43 rows used; no rows excluded.)",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            "Accessories ": "Accessories",
+            "Furniture ": "Furniture"
+          },
+          "reason": "Merge space-variant category labels into allowed canonical labels so revenue aggregates by correct category"
+        },
+        "reason": "Merge space-variant category labels into allowed canonical labels so revenue aggregates by correct category",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 3 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', 'Accessories ': 'Accessories', 'Furniture ': 'Furniture'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-ornith-1-5-35b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}
