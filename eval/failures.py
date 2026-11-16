@@ -36,9 +36,10 @@ def diagnose(result: dict, trace: list[dict], planted: list[dict]) -> list[str]:
     reasons = []
     exclude_rows_planted = [p for p in planted if p["resolution"] == "exclude"]
     if exclude_rows_planted:
-        if any(e["name"] == "set_missing" for e in fixed) and not any(e["name"] == "exclude_rows" for e in fixed):
+        excluders = ("exclude_rows", "exclude_where")
+        if any(e["name"] == "set_missing" for e in fixed) and not any(e["name"] in excluders for e in fixed):
             reasons.append("rule-violating rows blanked with set_missing instead of excluded")
-        elif not any(e["name"] in ("exclude_rows", "set_missing") for e in fixed):
+        elif not any(e["name"] in excluders + ("set_missing",) for e in fixed):
             reasons.append("rule-violating rows left in the table")
     for p in planted:
         needed = CHECK_FOR[p["type"]]
@@ -58,10 +59,11 @@ def diagnose(result: dict, trace: list[dict], planted: list[dict]) -> list[str]:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--system", default="datasage")
+    parser.add_argument("--dataset", default="", help="only this dataset (e.g. sales-hard); writes failures_<system>_<dataset>.json")
     args = parser.parse_args()
     counts: Counter = Counter()
     rows = []
-    for path in sorted((ROOT / "results" / args.system).glob("*/*.json")):
+    for path in sorted((ROOT / "results" / args.system).glob(f"{args.dataset or '*'}/*.json")):
         result = json.loads(path.read_text())
         if result["analysis_correct"]:
             continue
@@ -78,7 +80,7 @@ def main() -> None:
     print("\nCounts:")
     for reason, n in counts.most_common():
         print(f"  {n:2d}  {reason}")
-    out = ROOT / "results" / f"failures_{args.system}.json"
+    out = ROOT / "results" / (f"failures_{args.system}_{args.dataset}.json" if args.dataset else f"failures_{args.system}.json")
     out.write_text(json.dumps({"tasks": rows, "counts": counts.most_common()}, indent=2))
 
 

@@ -1,0 +1,241 @@
+{
+  "task_id": "saleshard_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 7,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 17,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 283.8,
+  "tokens": 102213,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 50.0,
+    "Electricals": 1450.0,
+    "Electronics": 2400.0,
+    "Furniture": 1250.0,
+    "Office Supplies": 18.0,
+    "Outdoor Supplies": 1100.0
+  },
+  "extra": {
+    "final_summary": "Found and fixed: 3 duplicate rows (dropped); 7 Category label variants including misspellings (normalized); 16 Region label variants (normalized); 20 prices stored as text with $/commas (converted to numbers); 3 negative unit prices (excluded as invalid); 2 revenue values not matching Quantity * Price (corrected). Answer: For the East region, the highest unit price in each category is: Accessories: $50, Electricals: $1,450, Electronics: $2,400, Furniture: $1,250, Office Supplies: $18, Outdoor Supplies: $1,100.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "3 exact duplicate rows found; removing to avoid double-counting"
+        },
+        "reason": "3 exact duplicate rows found; removing to avoid double-counting",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          255,
+          345,
+          362
+        ],
+        "cells_changed": 0,
+        "summary": "removed 3 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "  Outdoor Supplies ": "Outdoor Supplies",
+            " Accessories": "Accessories",
+            "Elecrtonics": "Electronics",
+            "Electricalss": "Electricals",
+            "Furnniture": "Furniture",
+            "Office Supplie": "Office Supplies",
+            "utdoor Supplies": "Outdoor Supplies"
+          },
+          "reason": "7 label variants in Category, including misspellings, corrected to match allowed values"
+        },
+        "reason": "7 label variants in Category, including misspellings, corrected to match allowed values",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 7,
+        "summary": "Category: merged 7 label variant(s), 7 cells",
+        "code": "df['Category'] = df['Category'].replace({'  Outdoor Supplies ': 'Outdoor Supplies', ' Accessories': 'Accessories', 'Elecrtonics': 'Electronics', 'Electricalss': 'Electricals', 'Furnniture': 'Furniture', 'Office Supplie': 'Office Supplies', 'utdoor Supplies': 'Outdoor Supplies'})"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " East": "East",
+            " Northeast": "Northeast",
+            " Southeast": "Southeast",
+            " West": "West",
+            "East ": "East",
+            "South ": "South",
+            "Southeast ": "Southeast",
+            "eAST": "East",
+            "east": "East",
+            "north": "North",
+            "sOUTH": "South",
+            "south": "South",
+            "wEST": "West",
+            "west": "West"
+          },
+          "reason": "16 label variants in Region, all case or space differences, corrected to match allowed values"
+        },
+        "reason": "16 label variants in Region, all case or space differences, corrected to match allowed values",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 16,
+        "summary": "Region: merged 14 label variant(s), 16 cells",
+        "code": "df['Region'] = df['Region'].replace({' East': 'East', ' Northeast': 'Northeast', ' Southeast': 'Southeast', ' West': 'West', 'East ': 'East', 'South ': 'South', 'Southeast ': 'Southeast', 'eAST': 'East', 'east': 'East', 'north': 'North', 'sOUTH': 'South', 'south': 'South', 'wEST': 'West', 'west': 'West'})"
+      },
+      {
+        "version": 4,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "20 prices stored as text (e.g. with $ and commas); converting to numbers"
+        },
+        "reason": "20 prices stored as text (e.g. with $ and commas); converting to numbers",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (361 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 5,
+        "tool": "exclude_where",
+        "args": {
+          "column": "Price",
+          "minimum": 0.0,
+          "maximum": null,
+          "reason": "3 negative unit prices found; invalid per rules (min 0), excluding"
+        },
+        "reason": "3 negative unit prices found; invalid per rules (min 0), excluding",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          7,
+          105,
+          174
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s) where Price is below 0",
+        "code": "v = pd.to_numeric(df['Price'], errors='coerce')\ndf = df[~((v < 0.0))]"
+      },
+      {
+        "version": 6,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            141,
+            146
+          ],
+          "reason": "2 rows have Revenue not equal to Quantity * Price; correcting to match formula"
+        },
+        "reason": "2 rows have Revenue not equal to Quantity * Price; correcting to match formula",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[141, 146], 'Revenue'] = [220.0, 126.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_where",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 17
+  },
+  "corrections": 59,
+  "planted": 63,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-large",
+  "dataset": "sales-hard",
+  "question": "What is the highest unit price in each category in the East region?",
+  "reference_answer": {
+    "Accessories": 50.0,
+    "Electricals": 1450.0,
+    "Electronics": 2400.0,
+    "Furniture": 1250.0,
+    "Office Supplies": 18.0,
+    "Outdoor Supplies": 1100.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Price"
+    ],
+    [
+      "out_of_range",
+      "Price"
+    ],
+    [
+      "out_of_range",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}
