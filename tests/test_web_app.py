@@ -256,6 +256,40 @@ def test_stop_before_an_approval_does_not_wait(tmp_path):
     assert _time.time() - t0 < 1
 
 
+def test_event_stream_ends_when_the_run_is_done(tmp_path, monkeypatch):
+    import time as _time
+    run = Run(Path("x.csv"), "q", None, tmp_path / "r1", None, mode="auto")
+    run.emit({"type": "start"})
+    run.emit({"type": "done", "finished": True})
+    run.done = True
+    monkeypatch.setattr(server, "RUNS", {"r1": run})
+    httpd, base = _serve(tmp_path, monkeypatch)
+    try:
+        t0 = _time.time()
+        with urllib.request.urlopen(base + "/api/runs/r1/events", timeout=10) as res:
+            body = res.read().decode()  # returns only once the server closes the stream
+        assert _time.time() - t0 < 5
+        assert body.count("data: ") == 2 and '"done"' in body
+    finally:
+        httpd.shutdown()
+
+
+def test_change_log_says_why_a_fix_was_not_applied(tmp_path):
+    """In Auto mode a fix is only refused when Stop is pressed; the log must not claim the person chose Keep."""
+    from app.web.runner import change_log
+    run = Run(Path("x.csv"), "q", None, tmp_path, None, mode="auto")
+    d = Dispatcher(_session(), BrowserApprover(run))
+    _call(d, "drop_duplicates", reason="dup")  # nothing to remove, but still asks: approved at once in Auto
+    run.cancel()
+    _call(d, "exclude_rows", rows=[2], reason="Quantity below 1")  # Stop landed: refused without asking
+    assert run.refusals == ["stopped"]
+    log = change_log(d.session, run.mode, run.refusals)
+    assert [c["how"] for c in log] == ["approved automatically", "not applied because the run was stopped"]
+    ask = Run(Path("x.csv"), "q", None, tmp_path, None)
+    assert change_log(d.session, ask.mode, ["keep"])[-1]["how"] == "you chose Keep, so it is listed as a caveat"
+    assert change_log(d.session, ask.mode, ["timeout"])[-1]["how"].startswith("no answer within 10 minutes")
+
+
 def test_auto_mode_approves_without_waiting_and_says_so(tmp_path):
     run = Run(Path("x.csv"), "q", None, tmp_path, None, mode="auto")
     assert BrowserApprover(run).decide("drop_duplicates", {}, "medium", {"summary": "", "rows_removed": [1]}) is True
