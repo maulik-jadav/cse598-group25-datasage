@@ -67,7 +67,16 @@ document.querySelectorAll("[data-sample]").forEach((b) => b.addEventListener("cl
   $("#question").value = s.question;
   start();
 }));
-$("#askForm").addEventListener("submit", (e) => { e.preventDefault(); start(); });
+$("#askForm").addEventListener("submit", (e) => { e.preventDefault(); if (S.running && S.runId) stop(); else start(); });
+async function stop() {
+  $("#runBtn").disabled = true; setStatus("Stopping");
+  try { await fetch(`/api/runs/${S.runId}/cancel`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }); } catch { /* the run ends on its own */ }
+}
+// One id per browser, so a new run only replaces this browser's earlier run.
+const CLIENT_ID = (() => {
+  try { let id = localStorage.getItem("datasage-client"); if (!id) { id = crypto.randomUUID(); localStorage.setItem("datasage-client", id); } return id; }
+  catch { return (crypto.randomUUID && crypto.randomUUID()) || String(Math.random()).slice(2); }
+})();
 
 const toB64 = (file) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = rej; r.readAsDataURL(file); });
 
@@ -76,7 +85,7 @@ async function start() {
   const question = $("#question").value.trim();
   if (!S.sample && !S.file) { $("#fileChip").animate([{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(0)" }], { duration: 260 }); $("#fileInput").click(); return; }
   if (!question) { $("#question").focus(); return; }
-  const body = S.sample ? { sample: S.sample, question } : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules, sheet: S.sheet };
+  const body = S.sample ? { sample: S.sample, question, client_id: CLIENT_ID } : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules, sheet: S.sheet, client_id: CLIENT_ID };
   setRunning(true); setStatus("Uploading");
   let res;
   try { res = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
@@ -119,8 +128,9 @@ function reset() {
 
 function setRunning(on) {
   S.running = on;
-  $("#runBtn").disabled = on;
-  $("#runBtn").textContent = on ? "Running" : (S.runId ? "Run again" : "Run");
+  $("#runBtn").disabled = false;
+  $("#runBtn").textContent = on ? "Stop" : (S.runId ? "Run again" : "Run");
+  $("#runBtn").classList.toggle("stop", on);
   $("#spin").hidden = !on;
 }
 function setStatus(t) { $("#status").textContent = t; $("#status").classList.remove("error"); }
@@ -347,7 +357,7 @@ function finish(ev) {
   setRunning(false);
   if (S.es) S.es.close();
   document.querySelectorAll(".rail li").forEach((li) => { li.classList.remove("active"); li.classList.add("done"); });
-  setStatus(ev.finished ? `Done in ${ev.seconds} s` : `Stopped: ${ev.stop_reason}`);
+  setStatus(ev.finished ? `Done in ${ev.seconds} s` : ev.stop_reason === "cancelled" ? "Stopped" : `Stopped: ${ev.stop_reason}`);
   $("#waiting").hidden = true;
   const box = $("#answer"); box.hidden = false;
   box.style.animation = "none"; void box.offsetWidth; box.style.animation = "";

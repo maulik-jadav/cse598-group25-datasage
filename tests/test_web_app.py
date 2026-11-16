@@ -195,3 +195,62 @@ def test_inspect_reports_sheets_and_csv_format(tmp_path, monkeypatch):
         assert _post(base + "/api/inspect", {"file_name": "c.txt", "file_b64": "eA=="})[0] == 400
     finally:
         httpd.shutdown()
+
+
+def test_should_stop_ends_the_run_before_any_model_call(tmp_path):
+    from datasage.agent import run_agent
+
+    class NoCalls:
+        class chat:
+            class completions:
+                @staticmethod
+                def create(**kw):
+                    raise AssertionError("the model was called after stop")
+    f = tmp_path / "t.csv"
+    f.write_text("A,B\n1,2\n")
+    result = run_agent(f, "q", AutoApprover(), client=NoCalls(), should_stop=lambda: True)
+    assert result.stop_reason == "cancelled" and result.model_turns == 0
+
+
+def test_prune_drops_old_runs_and_folders(tmp_path, monkeypatch):
+    import os
+    import time as _time
+    monkeypatch.setattr(server, "OUT", tmp_path)
+    monkeypatch.setattr(server, "RUNS", {})
+    monkeypatch.setattr(server, "MAX_RUNS", 2)
+    for i in range(4):
+        folder = tmp_path / f"r{i}"
+        folder.mkdir()
+        run = Run(Path("x.csv"), "q", None, folder, None)
+        run.done = True
+        server.RUNS[folder.name] = run
+    stale = tmp_path / "stale"
+    stale.mkdir()
+    old = _time.time() - server.OUTPUT_TTL - 60
+    os.utime(stale, (old, old))
+    server.prune()
+    assert list(server.RUNS) == ["r2", "r3"]
+    assert not (tmp_path / "r0").exists() and not stale.exists() and (tmp_path / "r3").exists()
+
+
+def test_a_new_run_only_replaces_the_same_browsers_run(tmp_path, monkeypatch):
+    monkeypatch.setattr(server, "RUNS", {})
+    mine, theirs = Run(Path("x.csv"), "q", None, tmp_path / "a", None, client_id="me"), \
+        Run(Path("x.csv"), "q", None, tmp_path / "b", None, client_id="you")
+    server.RUNS.update({"a": mine, "b": theirs})
+    monkeypatch.setattr(server.Run, "start", lambda self: None)
+    httpd, base = _serve(tmp_path, monkeypatch)
+    try:
+        assert _post(base + "/api/runs", {"sample": "small", "question": "q", "client_id": "me"})[0] == 200
+        assert mine.cancelled and not theirs.cancelled
+    finally:
+        httpd.shutdown()
+
+
+def test_stop_before_an_approval_does_not_wait(tmp_path):
+    import time as _time
+    run = Run(Path("x.csv"), "q", None, tmp_path, None)
+    run.cancel()
+    t0 = _time.time()
+    assert BrowserApprover(run).decide("drop_duplicates", {}, "medium", {"summary": ""}) is False
+    assert _time.time() - t0 < 1

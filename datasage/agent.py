@@ -86,7 +86,8 @@ def make_client():
     base_url = os.environ.get("RC_LLM_BASE_URL")
     if not key:
         raise RuntimeError("set RC_LLM_API_KEY (and RC_LLM_BASE_URL) in .env")
-    return OpenAI(api_key=key, base_url=base_url)
+    # The client retries connection errors, timeouts, 429s and 5xx responses with exponential back-off.
+    return OpenAI(api_key=key, base_url=base_url, max_retries=int(os.environ.get("DATASAGE_MAX_RETRIES", "4")))
 
 
 def _first_message(session: Session) -> str:
@@ -122,9 +123,11 @@ def build_messages(head: list[dict], turns: list[list[dict]], session: Session, 
 def run_agent(path: str | Path, request: str, approver: Approver, *, rules_path=None, model: str = DEFAULT_MODEL,
               client=None, max_tool_calls: int = 30, use_validator: bool = True, verbose: bool = False,
               trace_path: str | Path | None = None, system_prompt: str = SYSTEM_PROMPT_V3, memory: str = "full",
-              coverage: bool = True, on_event=None, sheet: str | int | None = None) -> RunResult:
+              coverage: bool = True, on_event=None, sheet: str | int | None = None, should_stop=None) -> RunResult:
     """Run the planner loop. `on_event(event, session)`, if given, is called after every logged event, so a
-    caller such as the browser app can show progress live; the agent's behaviour does not change."""
+    caller such as the browser app can show progress live; the agent's behaviour does not change.
+    `should_stop()`, if given, is checked before every model call; when it returns True the run ends with
+    stop_reason "cancelled" (no further model calls)."""
     client = client or make_client()
     session = Session(load_table(path, sheet=sheet), source=str(path), request=request, rules=load_rules(rules_path))
     dispatcher = Dispatcher(session, approver, use_validator=use_validator, coverage=coverage)
@@ -144,6 +147,10 @@ def run_agent(path: str | Path, request: str, approver: Approver, *, rules_path=
             on_event(event, session)
 
     while True:
+        if should_stop and should_stop():
+            result.stop_reason = "cancelled"
+            log({"event": "cancelled"})
+            break
         if result.tool_calls >= max_tool_calls:
             result.stop_reason = "tool_budget_exhausted"
             break
