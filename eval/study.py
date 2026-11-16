@@ -16,6 +16,7 @@ import statistics
 from collections import Counter
 from pathlib import Path
 
+from datasage.analyze import answers_match, run_analysis
 from datasage.fixes import FIXES
 from datasage.session import load_table
 from datasage.values import comparable, is_missing
@@ -227,8 +228,18 @@ def handled(planted: dict, rows: list[dict]) -> bool:
     return bool(rows) and is_missing(rows[0].get(planted["column"]))
 
 
-def root_causes(dataset: str, task_id: str, result: dict) -> list[str]:
-    """Planted errors that could change this answer and were not handled, plus damage to clean data."""
+def same_question(spec: dict, args: dict) -> bool:
+    """Whether an analyze call asks the benchmark question (a count may name any metric column)."""
+    filters = lambda fs: sorted((f["column"], str(f["value"])) for f in fs or [])  # noqa: E731
+    return (list(args.get("group_by") or []) == list(spec["group_by"]) and args.get("agg") == spec["agg"]
+            and (spec["agg"] == "count" or args.get("metric") == spec["metric"])
+            and filters(args.get("filters")) == filters(spec.get("filters")))
+
+
+def root_causes(dataset: str, task_id: str, result: dict, trace: list[dict] | None = None) -> list[str]:
+    """Why an answer is wrong. If the cleaned table (rebuilt from the change log) gives the reference answer
+    to the benchmark question, the analyze call asked something else. Otherwise: the planted errors that
+    could change this answer and were not handled, plus damage to clean data."""
     table = task_id.rsplit("_", 1)[0]
     folder = ROOT / "datasets" / dataset / table
     planted = json.loads((folder / "planted.json").read_text())
@@ -236,11 +247,23 @@ def root_causes(dataset: str, task_id: str, result: dict) -> list[str]:
     cleaned = replay_cleaned(dataset, task_id, result)
     if cleaned is None:
         return ["no change log"]
-    cols = question_columns(task["spec"])
+    spec = task["spec"]
+    out = []
+    calls = [e["args"] for e in trace or [] if e.get("event") == "tool" and e.get("name") == "analyze"
+             and isinstance(e.get("output"), dict) and "result" in e["output"]]
+    if calls and not same_question(spec, calls[-1]):
+        out.append("analyze asked a different question (grouping, metric, aggregation or filters)")
+    try:
+        right = answers_match(run_analysis(cleaned, spec["group_by"], spec["metric"], spec["agg"],
+                                           spec.get("filters"))["result"], task["reference_answer"])
+    except ValueError as err:
+        return out + [f"the question cannot be answered on the cleaned table: {str(err).split(';')[0]}"]
+    if right:
+        return out or ["cleaned table is right; answer differs for another reason"]
+    cols = question_columns(spec)
     by_id: dict = {}
     for _, row in cleaned.iterrows():
         by_id.setdefault(id_key(row[planted["id_column"]]), []).append(row.to_dict())
-    out = []
     for p in planted["errors"]:
         if p["column"] not in cols and p["column"] != "*" and p["resolution"] != "exclude":
             continue  # cannot change this answer
@@ -251,7 +274,7 @@ def root_causes(dataset: str, task_id: str, result: dict) -> list[str]:
         out.append(f"{p['type']} ({p['resolution']}) on {where} not handled")
     if result.get("damaged_rows") or result.get("damaged_cells"):
         out.append("clean rows removed or clean cells changed")
-    return sorted(set(out)) or ["every relevant planted error handled (wrong analyze call?)"]
+    return sorted(set(out)) or ["every relevant planted error handled, yet the cleaned table gives another answer"]
 
 
 def answer_diff(result: dict) -> str:
@@ -289,7 +312,7 @@ def failure_section(keys: list[tuple[str, str]], runs: dict[str, Path]) -> dict:
             trace_path = root / system / dataset / "traces" / f"{task_id}.jsonl"
             trace = [json.loads(x) for x in trace_path.read_text().splitlines()] if trace_path.exists() else []
             out.append({"question": f"{dataset}/{task_id}", "trace_labels": diagnose(result, trace, planted["errors"]),
-                        "root_causes": root_causes(dataset, task_id, result), "answer_diff": answer_diff(result),
+                        "root_causes": root_causes(dataset, task_id, result, trace), "answer_diff": answer_diff(result),
                         "stop_reason": result["stop_reason"]})
         return out
 

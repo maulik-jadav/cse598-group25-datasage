@@ -1,0 +1,162 @@
+{
+  "task_id": "saless_04_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 15,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 33.04,
+  "tokens": 67822,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 10.0,
+    "Electronics": 9.0,
+    "Furniture": 15.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues: 3 invalid dates in the 'Date' column were fixed by setting them to missing; 2 label variants in 'Region' (\"Suoth\" and \"east\") were merged into \"South\" and \"East\"; 2 duplicate rows were excluded; and one row (row 23) had an incorrect 'Revenue' value that was corrected by recomputing it as Quantity * Price. After these fixes, the analysis shows 10 orders in Accessories, 9 in Electronics, 15 in Furniture, and 12 in Office Supplies.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Fix invalid dates to missing values to ensure valid date format for analysis"
+        },
+        "reason": "Fix invalid dates to missing values to ensure valid date format for analysis",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "Suoth": "South"
+          },
+          "reason": "Merge case and spelling variants into standard labels: 'east' to 'East', 'Suoth' to 'South'"
+        },
+        "reason": "Merge case and spelling variants into standard labels: 'east' to 'East', 'Suoth' to 'South'",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'Suoth': 'South'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            25,
+            36
+          ],
+          "reason": "Exact duplicate rows; keep only the first occurrence"
+        },
+        "reason": "Exact duplicate rows; keep only the first occurrence",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          25,
+          36
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [25, 36]",
+        "code": "df = df.drop(index=[25, 36])"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            23
+          ],
+          "reason": "Revenue value is incorrect; should be Quantity * Price"
+        },
+        "reason": "Revenue value is incorrect; should be Quantity * Price",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[23], 'Revenue'] = [360.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 15
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-compact",
+  "dataset": "sales-s505",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 9.0,
+    "Furniture": 15.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

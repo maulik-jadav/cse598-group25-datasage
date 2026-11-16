@@ -1,0 +1,180 @@
+{
+  "task_id": "saless_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 24,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 56.25,
+  "tokens": 111277,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 40.3571,
+    "Electronics": 460.0,
+    "Furniture": 156.5,
+    "Office Supplies": 11.5385
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the question: (1) 3 rows with negative Quantity (orders) were excluded as invalid; (2) 3 rows had incorrect Revenue values (not matching Quantity \u00d7 Price), which were recomputed; (3) one duplicate row was removed. The Category column had a trailing space in 'Accessories ', but it was already normalized. After fixes, the average unit price by category is: Accessories: 40.36, Electronics: 460.00, Furniture: 156.50, Office Supplies: 11.54. The Region column had 2 missing values, but they were not relevant to the question.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found one exact duplicate row (row 17), removing it to avoid double-counting."
+        },
+        "reason": "Found one exact duplicate row (row 17), removing it to avoid double-counting.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          17
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Accessories ": "Accessories"
+          },
+          "reason": "Merge 'Accessories ' (with trailing space) into the standard label 'Accessories' to ensure consistent grouping."
+        },
+        "reason": "Merge 'Accessories ' (with trailing space) into the standard label 'Accessories' to ensure consistent grouping.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({'Accessories ': 'Accessories'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            20,
+            41,
+            42
+          ],
+          "reason": "Rows 20, 41, and 42 have negative Quantity values, which are invalid for this context (quantity cannot be negative). These rows break the business rule that Quantity must be non-negative."
+        },
+        "reason": "Rows 20, 41, and 42 have negative Quantity values, which are invalid for this context (quantity cannot be negative). These rows break the business rule that Quantity must be non-negative.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          20,
+          41,
+          42
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [20, 41, 42]",
+        "code": "df = df.drop(index=[20, 41, 42])"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            12,
+            28,
+            33
+          ],
+          "reason": "Revenue does not match Quantity * Price in 3 rows, so recalculate it from the correct formula."
+        },
+        "reason": "Revenue does not match Quantity * Price in 3 rows, so recalculate it from the correct formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[12, 28, 33], 'Revenue'] = [50.0, 54.0, 240.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "summary": "excluded 3 row(s): [12, 28, 33]"
+      }
+    ],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": false,
+        "why": "removes row 12 (id 2013) that should be kept"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 24
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-compact",
+  "dataset": "sales-s505",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 40.3571,
+    "Electronics": 460.0,
+    "Furniture": 156.5,
+    "Office Supplies": 11.5385
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

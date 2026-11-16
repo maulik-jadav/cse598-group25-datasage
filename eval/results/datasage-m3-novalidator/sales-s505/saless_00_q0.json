@@ -1,0 +1,127 @@
+{
+  "task_id": "saless_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 16,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 28.33,
+  "tokens": 79975,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 1720.0,
+    "North": 11160.0,
+    "South": 7500.0,
+    "West": 6300.0
+  },
+  "extra": {
+    "final_summary": "The data had three main issues: (1) the 'Category' column had a lowercase variant 'office supplies' which was normalized to 'Office Supplies'; (2) the 'Region' column had space variants (' West', 'East ', 'West ') which were normalized to 'West' and 'East'; (3) one row (row 5) had an incorrect Revenue value (4800) that did not match Quantity * Price (48), so it was recomputed. No rows were excluded. The total revenue by region for Electronics is: East $1,720, North $11,160, South $7,500, West $6,300.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "office supplies": "Office Supplies"
+          },
+          "reason": "merge case and space variants into the allowed label 'Office Supplies'"
+        },
+        "reason": "merge case and space variants into the allowed label 'Office Supplies'",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({'office supplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " West": "West",
+            "East ": "East",
+            "West ": "West"
+          },
+          "reason": "merge space variants into the allowed labels: 'West', 'East', 'West'"
+        },
+        "reason": "merge space variants into the allowed labels: 'West', 'East', 'West'",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: merged 3 label variant(s), 3 cells",
+        "code": "df['Region'] = df['Region'].replace({' West': 'West', 'East ': 'East', 'West ': 'West'})"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            5
+          ],
+          "reason": "Revenue is inconsistent with Quantity * Price; fix the incorrect value"
+        },
+        "reason": "Revenue is inconsistent with Quantity * Price; fix the incorrect value",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[5], 'Revenue'] = [48.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 16
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-novalidator",
+  "dataset": "sales-s505",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1720.0,
+    "North": 11160.0,
+    "South": 7500.0,
+    "West": 6300.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

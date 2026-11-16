@@ -1,0 +1,146 @@
+{
+  "task_id": "saless_00_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 30,
+  "tool_errors": 6,
+  "recovered_errors": 3,
+  "approvals_asked": 2,
+  "seconds": 56.78,
+  "tokens": 138997,
+  "stop_reason": "tool_budget_exhausted",
+  "note": "",
+  "answer": null,
+  "extra": {
+    "final_summary": "",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "office supplies": "Office Supplies"
+          },
+          "reason": "merge case and space variants into the allowed label 'Office Supplies'"
+        },
+        "reason": "merge case and space variants into the allowed label 'Office Supplies'",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({'office supplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " West": "West",
+            "East ": "East",
+            "West ": "West"
+          },
+          "reason": "merge case and space variants into the allowed labels: 'West', 'East', 'North', 'South'"
+        },
+        "reason": "merge case and space variants into the allowed labels: 'West', 'East', 'North', 'South'",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: merged 3 label variant(s), 3 cells",
+        "code": "df['Region'] = df['Region'].replace({' West': 'West', 'East ': 'East', 'West ': 'West'})"
+      },
+      {
+        "version": 3,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            35
+          ],
+          "reason": "Missing value in Region for row 35, which has valid data in other columns"
+        },
+        "reason": "Missing value in Region for row 35, which has valid data in other columns",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 1 value(s) to missing",
+        "code": "df.loc[[35], 'Region'] = pd.NA"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            5
+          ],
+          "reason": "The Revenue value in row 5 is 4800, but Quantity (4) * Price (12) = 48. This is a clear calculation error that must be corrected."
+        },
+        "reason": "The Revenue value in row 5 is 4800, but Quantity (4) * Price (12) = 48. This is a clear calculation error that must be corrected.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[5], 'Revenue'] = [48.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 30
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-compact",
+  "dataset": "sales-s505",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1720.0,
+    "North": 11160.0,
+    "South": 7500.0,
+    "West": 6300.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

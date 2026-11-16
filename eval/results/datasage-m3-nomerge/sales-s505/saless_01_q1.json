@@ -1,0 +1,157 @@
+{
+  "task_id": "saless_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 41.17,
+  "tokens": 68776,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 69.0,
+    "North": 72.0,
+    "South": 78.0,
+    "West": 67.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the question: 2 duplicate rows were removed; 3 region labels with trailing spaces were normalized to standard names; 2 rows with negative Quantity values were excluded as they violate the rule that Quantity must be at least 1. The Price column had one value with a dollar sign, which was successfully converted to a number. After these fixes, the analysis shows that the total units sold were: East: 69, North: 72, South: 78, West: 67.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found 2 exact duplicate rows (35, 59) that are identical to earlier rows; keeping only the first occurrence."
+        },
+        "reason": "Found 2 exact duplicate rows (35, 59) that are identical to earlier rows; keeping only the first occurrence.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          35,
+          59
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "North ": "North",
+            "South ": "South",
+            "West ": "West"
+          },
+          "reason": "Standardize region labels by removing trailing spaces; these are valid variants of allowed region names."
+        },
+        "reason": "Standardize region labels by removing trailing spaces; these are valid variants of allowed region names.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: merged 3 label variant(s), 3 cells",
+        "code": "df['Region'] = df['Region'].replace({'North ': 'North', 'South ': 'South', 'West ': 'West'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            4,
+            38
+          ],
+          "reason": "Quantity is negative (-7, -2), but rules say Quantity must be at least 1 (positive whole number); these rows are invalid and should be excluded."
+        },
+        "reason": "Quantity is negative (-7, -2), but rules say Quantity must be at least 1 (positive whole number); these rows are invalid and should be excluded.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          4,
+          38
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [4, 38]",
+        "code": "df = df.drop(index=[4, 38])"
+      },
+      {
+        "version": 4,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains one value with a dollar sign ('$450.00') which is a valid number format; convert to numeric."
+        },
+        "reason": "Price contains one value with a dollar sign ('$450.00') which is a valid number format; convert to numeric.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (68 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 14
+  },
+  "corrections": 10,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-nomerge",
+  "dataset": "sales-s505",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 69.0,
+    "North": 72.0,
+    "South": 78.0,
+    "West": 67.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "task_id": "saless_04_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 30,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 5,
+  "seconds": 50.56,
+  "tokens": 138091,
+  "stop_reason": "tool_budget_exhausted",
+  "note": "",
+  "answer": {
+    "East": 3000.0,
+    "North": 450.0,
+    "South": 7970.0,
+    "West": 4500.0
+  },
+  "extra": {
+    "final_summary": "",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "3 rows have invalid dates: '13/45/2026', 'TBD', 'not-a-date'; convert to missing values."
+        },
+        "reason": "3 rows have invalid dates: '13/45/2026', 'TBD', 'not-a-date'; convert to missing values.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "Suoth": "South"
+          },
+          "reason": "Merge case and spelling variants into standard labels: 'east' \u2192 'East', 'Suoth' \u2192 'South'"
+        },
+        "reason": "Merge case and spelling variants into standard labels: 'east' \u2192 'East', 'Suoth' \u2192 'South'",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'Suoth': 'South'})"
+      },
+      {
+        "version": 3,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            33
+          ],
+          "reason": "Row 33 has missing Region; cannot be used in analysis."
+        },
+        "reason": "Row 33 has missing Region; cannot be used in analysis.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 1 value(s) to missing",
+        "code": "df.loc[[33], 'Region'] = pd.NA"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            23
+          ],
+          "reason": "Revenue value at row 23 is inconsistent with Quantity * Price (3600 vs 360)"
+        },
+        "reason": "Revenue value at row 23 is inconsistent with Quantity * Price (3600 vs 360)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[23], 'Revenue'] = [360.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 5,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found 2 exact duplicate rows (row ids 25 and 36) which are identical in all columns, including Revenue. Removing one to avoid double-counting in the sum."
+        },
+        "reason": "Found 2 exact duplicate rows (row ids 25 and 36) which are identical in all columns, including Revenue. Removing one to avoid double-counting in the sum.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          25,
+          36
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 1,
+    "model_turns": 30
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-compact",
+  "dataset": "sales-s505",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 3000.0,
+    "North": 450.0,
+    "South": 7970.0,
+    "West": 4500.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

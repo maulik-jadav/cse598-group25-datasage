@@ -50,7 +50,22 @@ def test_root_causes_lists_unhandled_errors_when_nothing_was_fixed():
     causes = study.root_causes("penguins-test", "penguinst_00_q1", untouched)
     assert causes == ["label_variant (restore) on a question column not handled",
                       "out_of_range (exclude) on a column the question does not use not handled"]
-    # salest_00_q0 (price by category) has no planted error that can change its answer
+    # salest_00_q0 asks for mean Price, which is still text when nothing was fixed
     assert study.root_causes("sales-test", "salest_00_q0", untouched) == [
-        "every relevant planted error handled (wrong analyze call?)"]
+        "the question cannot be answered on the cleaned table: metric column 'Price' is text, not numbers"]
+    # the committed run cleaned the table correctly, so a wrong answer could only come from the analyze call
+    result = json.loads(RESULT.read_text())
+    assert study.root_causes("sales-test", "salest_00_q0", result) == [
+        "cleaned table is right; answer differs for another reason"]
+    extra_filter = [{"event": "tool", "name": "analyze", "output": {"result": {}},
+                     "args": {"group_by": ["Category"], "metric": "Price", "agg": "mean",
+                              "filters": [{"column": "Region", "value": "North"}]}}]
+    assert study.root_causes("sales-test", "salest_00_q0", result, extra_filter) == [
+        "analyze asked a different question (grouping, metric, aggregation or filters)"]
+
+
+def test_same_question_ignores_the_metric_of_a_count():
+    spec = {"group_by": ["island"], "metric": None, "agg": "count"}
+    assert study.same_question(spec, {"group_by": ["island"], "metric": "penguin_id", "agg": "count", "filters": []})
+    assert not study.same_question(spec, {"group_by": ["species"], "metric": None, "agg": "count"})
     assert study.root_causes("sales-test", "salest_00_q0", {"extra": {}}) == ["no change log"]
