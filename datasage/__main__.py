@@ -11,7 +11,8 @@ from .report import write_outputs
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="datasage", description="Clean a messy table and answer a question about it.")
-    parser.add_argument("--input", required=True, help="CSV or XLSX file")
+    parser.add_argument("--input", required=True, nargs="+",
+                        help="CSV or XLSX file; several files with the same columns are stacked into one table")
     parser.add_argument("--request", required=True, help="question in plain English")
     parser.add_argument("--rules", help="optional JSON rules file (column meanings, ranges, formulas)")
     parser.add_argument("--approve", default="ask", choices=["ask", "auto", "reject", "script", "tools"],
@@ -31,7 +32,14 @@ def main() -> None:
     else:
         approver = {"ask": AskApprover, "auto": AutoApprover, "reject": RejectApprover}[args.approve]()
     sheet = int(args.sheet) if args.sheet and args.sheet.isdigit() else args.sheet
-    result = run_agent(args.input, args.request, approver, rules_path=args.rules, model=args.model,
+    source = args.input[0]
+    if len(args.input) > 1:
+        from pathlib import Path
+        from .stack import stack_files
+        source = str(Path(args.out) / "input_stacked.csv")
+        info = stack_files(args.input, Path(source))
+        print(f"stacked {len(info['files'])} files into {source}: " + ", ".join(f"{f['name']} ({f['rows']} rows)" for f in info["files"]))
+    result = run_agent(source, args.request, approver, rules_path=args.rules, model=args.model,
                        max_tool_calls=args.max_tool_calls, verbose=True, sheet=sheet)
     out = write_outputs(result, args.out)
     print(f"\nstop: {result.stop_reason} | tool calls: {result.tool_calls} | errors: {result.tool_errors} | "

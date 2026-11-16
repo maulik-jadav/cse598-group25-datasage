@@ -15,8 +15,18 @@ const S = { file: null, rules: null, sample: false, runId: null, es: null, lastS
 // ---------- inputs ----------
 const SEP_NAMES = { ";": "semicolon", "\t": "tab", "|": "pipe" };
 const ENC_NAMES = { cp1252: "Windows-1252", "latin-1": "Latin-1" };
+function setFiles(list) {
+  const files = [...list].filter((f) => /\.(csv|xlsx)$/i.test(f.name));
+  if (files.length <= 1) return setFile(files[0] || null);
+  S.file = null; S.files = files; S.sample = false; S.sheet = null;
+  $("#fileName").textContent = `${files.length} files`;
+  $("#fileChip").title = `Stacked into one table: ${files.map((f) => f.name).join(", ")}. They need the same columns.`;
+  $("#fileChip").classList.add("set");
+  $("#sheetChip").hidden = true;
+  $("#question").focus();
+}
 function setFile(file) {
-  S.file = file; S.sample = false; S.sheet = null;
+  S.file = file; S.files = null; S.sample = false; S.sheet = null;
   $("#fileName").textContent = file ? file.name : "Choose file";
   $("#fileChip").classList.toggle("set", !!file);
   $("#fileChip").title = "Choose a CSV or Excel file";
@@ -42,7 +52,7 @@ async function inspect(file) {
   } catch { /* the run itself will report a problem with the file */ }
 }
 $("#sheetSel").addEventListener("change", (e) => { S.sheet = e.target.value; });
-$("#fileInput").addEventListener("change", (e) => setFile(e.target.files[0] || null));
+$("#fileInput").addEventListener("change", (e) => setFiles(e.target.files));
 $("#rulesInput").addEventListener("change", async (e) => {
   const f = e.target.files[0];
   S.rules = f ? await f.text() : null;
@@ -53,15 +63,15 @@ const drop = $("#drop");
 ["dragenter", "dragover"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.add("over"); }));
 ["dragleave", "drop"].forEach((t) => drop.addEventListener(t, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
 drop.addEventListener("drop", (e) => {
-  for (const f of e.dataTransfer.files) {
-    if (/\.json$/i.test(f.name)) { $("#rulesInput").files = e.dataTransfer.files; f.text().then((t) => { S.rules = t; $("#rulesName").textContent = f.name; $("#rulesChip").classList.add("set"); }); }
-    else if (/\.(csv|xlsx)$/i.test(f.name)) setFile(f);
-  }
+  const all = [...e.dataTransfer.files];
+  const rules = all.find((f) => /\.json$/i.test(f.name));
+  if (rules) rules.text().then((t) => { S.rules = t; $("#rulesName").textContent = rules.name; $("#rulesChip").classList.add("set"); });
+  setFiles(all);
 });
 document.querySelectorAll("[data-sample]").forEach((b) => b.addEventListener("click", async () => {
   const size = b.dataset.sample;
   const s = await (await fetch(`/api/sample?size=${size}`)).json();
-  S.sample = size; S.file = null; $("#sheetChip").hidden = true;
+  S.sample = size; S.file = null; S.files = null; $("#sheetChip").hidden = true;
   $("#fileName").textContent = s.input; $("#fileChip").classList.add("set");
   $("#rulesName").textContent = s.rules; $("#rulesChip").classList.add("set");
   $("#question").value = s.question;
@@ -83,10 +93,15 @@ const toB64 = (file) => new Promise((res, rej) => { const r = new FileReader(); 
 // ---------- run ----------
 async function start() {
   const question = $("#question").value.trim();
-  if (!S.sample && !S.file) { $("#fileChip").animate([{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(0)" }], { duration: 260 }); $("#fileInput").click(); return; }
+  if (!S.sample && !S.file && !(S.files && S.files.length)) { $("#fileChip").animate([{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(0)" }], { duration: 260 }); $("#fileInput").click(); return; }
   if (!question) { $("#question").focus(); return; }
   const mode = (document.querySelector('input[name="mode"]:checked') || {}).value || "ask";
-  const body = S.sample ? { sample: S.sample, question, client_id: CLIENT_ID, approve: mode } : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules, sheet: S.sheet, client_id: CLIENT_ID, approve: mode };
+  const badge = $("#modeBadge");
+  badge.textContent = mode === "auto" ? "Auto" : "Ask me"; badge.classList.toggle("auto", mode === "auto"); badge.hidden = false;
+  const body = S.sample ? { sample: S.sample, question, client_id: CLIENT_ID, approve: mode }
+    : S.files && S.files.length > 1
+      ? { question, files: await Promise.all(S.files.map(async (f) => ({ file_name: f.name, file_b64: await toB64(f) }))), rules_text: S.rules, client_id: CLIENT_ID, approve: mode }
+      : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules, sheet: S.sheet, client_id: CLIENT_ID, approve: mode };
   setRunning(true); setStatus("Uploading");
   let res;
   try { res = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
@@ -138,6 +153,14 @@ function setRunning(on) {
 }
 function setStatus(t) { $("#status").textContent = t; $("#status").classList.remove("error"); }
 function fail(msg) { setRunning(false); setStatus(msg); $("#status").classList.add("error"); if (S.es) S.es.close(); }
+
+// ---------- home ----------
+$("#newRun").addEventListener("click", async () => {
+  if (S.running && S.runId) await stop();
+  if (S.es) S.es.close();
+  $("#work").hidden = true; $("#empty").hidden = false; $("#modeBadge").hidden = true;
+  $("#runBtn").textContent = "Run"; S.runId = null;
+});
 
 // ---------- views ----------
 const FILE_INFO = {
@@ -221,7 +244,12 @@ function buildTable(ev) {
   ev.rows.forEach((r) => { const row = makeRow(r.id, r.cells); table.append(row); S.ids.push(r.id); });
   S.total = ev.total_rows;
   refreshGaps();
-  if (ev.total_rows > ev.rows.length) { $("#more").hidden = false; $("#more").textContent = `Showing the first ${ev.rows.length} rows, plus every row with a problem as it is found. The agent works on all ${ev.total_rows.toLocaleString("en-US")}.`; }
+  if (ev.sources) {
+    $("#more").hidden = false;
+    $("#more").textContent = `Stacked ${ev.sources.files.length} files into one table: ` +
+      ev.sources.files.map((f) => `${f.name} (${f.rows.toLocaleString("en-US")} rows)`).join(", ") +
+      ". The source_file column says where each row came from.";
+  } else if (ev.total_rows > ev.rows.length) { $("#more").hidden = false; $("#more").textContent = `Showing the first ${ev.rows.length} rows, plus every row with a problem as it is found. The agent works on all ${ev.total_rows.toLocaleString("en-US")}.`; }
   setStatus("Reading the table");
 }
 
@@ -404,16 +432,19 @@ function finish(ev) {
     log.append(li);
   });
   if (!ev.changes.length) log.append(el("li", null, "No changes were needed."));
-  $("#aSummary").textContent = ev.summary || "";
+  renderSummary($("#aSummary"), ev.summary || "");
   const files = $("#aFiles"); files.textContent = "";
   ev.files.forEach((f) => {
     const info = FILE_INFO[f] || { title: f, text: "" };
     const li = el("li", "file");
     const text = el("div", "file-text");
     text.append(el("span", "file-title", info.title), el("span", "file-name", f), el("span", "file-desc", info.text));
+    const view = el("a", "ghost small", "View"); view.href = `/view?run=${S.runId}&file=${f}`; view.target = "_blank"; view.rel = "noopener";
+    view.setAttribute("aria-label", `View ${f} in a new tab`);
     const link = el("a", "ghost small", "Download"); link.href = `/api/runs/${S.runId}/files/${f}`; link.setAttribute("download", f);
     link.setAttribute("aria-label", `Download ${f}`);
-    li.append(text, link); files.append(li);
+    const acts = el("div", "file-acts"); acts.append(view, link);
+    li.append(text, acts); files.append(li);
   });
   const prof = el("li", "file");
   const ptext = el("div", "file-text");
@@ -551,6 +582,39 @@ function countUp(node, target) {
 }
 
 const vis = (v) => (v === "" || v == null ? "—" : String(v).replace(/^ +| +$/g, (m) => "␣".repeat(m.length)));  // stray spaces made visible
+// The agent's summary is often one long sentence joined with semicolons: show a lead line and one bullet per item.
+function withQuotes(text) {
+  const span = el("span");
+  text.split(/('[^']{1,40}')/g).forEach((part) => {
+    if (/^'[^']+'$/.test(part)) span.append(el("code", null, part.slice(1, -1)));
+    else if (part) span.append(document.createTextNode(part));
+  });
+  return span;
+}
+function renderSummary(box, text) {
+  box.textContent = "";
+  const sentences = text.replace(/\s+/g, " ").trim().split(/(?<=[.!?])\s+(?=[A-Z])/).filter(Boolean);
+  sentences.forEach((s) => {
+    const parts = s.split(/;\s+/);
+    const colon = parts[0].indexOf(": ");
+    if (parts.length < 2 && !/: .+, .+: /.test(s)) { const p = el("p"); p.append(withQuotes(s)); box.append(p); return; }
+    let items = parts;
+    if (colon > 0 && colon < 120) {
+      const p = el("p", "sum-lead"); p.append(withQuotes(parts[0].slice(0, colon + 1))); box.append(p);
+      items = [parts[0].slice(colon + 2), ...parts.slice(1)];
+    }
+    if (items.length === 1 && /, \S+: /.test(items[0])) items = items[0].split(/,\s+(?=\S+: )/);  // "a: 1, b: 2" lists
+    const ul = el("ul", "sum-list");
+    items.forEach((it) => {
+      const clean = it.replace(/^(and |finally,? |then,? )/i, "").replace(/[.;]$/, "");
+      if (!clean) return;
+      const text = /^[a-z]+ /.test(clean) ? clean.charAt(0).toUpperCase() + clean.slice(1) : clean;  // keep names like orders_07.csv
+      const li = el("li"); li.append(withQuotes(text)); ul.append(li);
+    });
+    box.append(ul);
+  });
+}
+
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
 function plain(text) {
   return text.replace(/^drop_duplicates: /, "").replace(/^normalize_labels: /, "").replace(/^exclude_rows: /, "")

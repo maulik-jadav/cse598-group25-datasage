@@ -22,7 +22,9 @@ SEPARATORS = ",;\t|"
 
 def detect_csv(path: str | Path) -> dict:
     """Text encoding and column separator of a CSV file, from its first 64 KB."""
-    raw = Path(path).read_bytes()[:65536]
+    with open(path, "rb") as fh:
+        raw = fh.read(65536)
+    truncated = len(raw) == 65536
     encoding, text = "latin-1", raw.decode("latin-1")
     for enc in ENCODINGS:
         try:
@@ -30,7 +32,7 @@ def detect_csv(path: str | Path) -> dict:
             encoding = enc
             break
         except UnicodeDecodeError as err:
-            if enc == "utf-8-sig" and err.start >= len(raw) - 3:  # a character cut at the 64 KB boundary
+            if enc == "utf-8-sig" and truncated and err.start >= len(raw) - 3:  # a character cut at the 64 KB boundary
                 text, encoding = raw[:err.start].decode(enc), enc
                 break
     lines = [ln for ln in text.splitlines()[:50] if ln.strip()]

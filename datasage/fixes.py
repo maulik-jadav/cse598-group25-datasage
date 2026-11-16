@@ -130,14 +130,17 @@ def recompute_column(df: pd.DataFrame, column: str, expression: str, rows: list[
     rows = _known_rows(df, rows)
     values = evaluate_expression(df.loc[rows], expression)
     new = df.copy()
-    if not pd.api.types.is_numeric_dtype(new[column]):
+    converted = not pd.api.types.is_numeric_dtype(new[column])
+    if converted:
         new[column] = new[column].map(loose_number)
     new.loc[rows, column] = values.round(6)
     changed = _count_changed(df[column], new[column])
     written = [float(v) for v in new.loc[rows, column]]
     return FixResult(new, [column], cells_changed=changed,
                      summary=f"{column}: recomputed as {expression} on {len(rows)} row(s)",
-                     code=f"df.loc[{rows!r}, {column!r}] = {written!r}  # {column} = {expression}")
+                     code=(f"df[{column!r}] = df[{column!r}].map(loose_number)  # the column held text; read it as numbers first\n"
+                           if converted else "") +
+                          f"df.loc[{rows!r}, {column!r}] = pd.Series({written!r}, index={rows!r})  # {column} = {expression}")
 
 
 def set_missing(df: pd.DataFrame, column: str, rows: list[int]) -> FixResult:

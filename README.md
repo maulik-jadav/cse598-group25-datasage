@@ -48,6 +48,10 @@ cp .env.example .env    # then put your ASU RC LLM key in .env
 python -m pytest -q tests
 ```
 
+An end-to-end check with the real model (needs the `.env` key, a few minutes): `python scripts/smoke_e2e.py`
+drives the browser app through every sample in Auto and Ask mode, uploads (CSV dialects, Excel sheets,
+several files), Stop, downloads, the file viewer and profile, replay.py and the command line.
+
 The tests also run on GitHub for every pull request (`.github/workflows/tests.yml`); they need no API key.
 
 The agent calls an OpenAI-compatible endpoint. We use ASU Research Computing
@@ -62,6 +66,12 @@ python -m datasage --input baseline/examples/messy_sales.csv \
   --rules examples/messy_sales_rules.json \
   --request "What was total revenue by category?"
 ```
+
+Several files with the same columns (for example monthly exports) can be given together:
+`--input jan.csv feb.csv mar.csv`. They are stacked into one table with a `source_file` column, so a
+question can be answered across all of them or per file ("What was total revenue in each monthly file?").
+Columns are matched by name (order and case can differ); files with different columns are refused with a
+list of what is missing or extra.
 
 Input files: CSV (the separator `,` `;` tab or `|` and the encoding UTF-8, Windows-1252 or Latin-1 are
 detected) or Excel `.xlsx` (`--sheet NAME` picks a sheet; default the first). The replay script reads the
@@ -80,12 +90,16 @@ python -m app.web.server          # then open http://127.0.0.1:8501
 ```
 
 Drop a CSV or Excel file (and optionally a JSON rules file), type a question and press Run, or pick one
-of the two samples: Vyshanth's 8-row `messy_sales.csv`, or `examples/large_sales.csv` (1,208 rows, about 50
-planted problems; rebuild it with `python examples/make_large_sales.py`). Both use
-`examples/messy_sales_rules.json` and the question "What was total revenue by category?".
+of the samples: Vyshanth's 8-row `messy_sales.csv`; `examples/large_sales.csv` (1,208 rows, about 50 planted
+problems; `python examples/make_large_sales.py`); the same orders as three monthly files
+(`examples/demo/monthly/`, stacked into one table); an HR table (407 rows, average salary by department) and
+an inventory table (606 rows, stock value by warehouse, with 18 rule-breaking rows), both made by
+`python examples/make_demo_files.py`, which also prints the right answers. You can also pick or drop
+several files with the same columns at once.
 
-- **Ask me or Auto.** Next to Run: *Ask me* (default) stops at every risky fix; *Auto* applies every fix
-  without asking, shows each one briefly, and still logs it as approved automatically.
+- **Ask me or Auto.** Chosen on the start screen: *Ask me* (default) stops at every risky fix; *Auto*
+  applies every fix without asking, shows each one briefly, and still logs it as approved automatically.
+  During a run the mode is locked and shown in the header; *New run* goes back to change it.
 - **Three tabs.** *Table* is the live run on one screen; *Answer* opens by itself when the run ends; *Data
   health* shows what the run found and did.
 - **Live table.** The first 40 rows show at once; any row with a problem, anywhere in the file, slides in
@@ -94,8 +108,10 @@ planted problems; rebuild it with `python examples/make_large_sales.py`). Both u
 - **Approvals on the row.** Each risky fix opens a card under the affected row, saying what it will do and
   showing the exact rows: removed rows in full, or each changed cell as old → new. Click a row number to
   jump to it. Keep or Apply decides it.
-- **Answer.** The result counts up, with every change and who approved it, and the four output files,
-  each with a line on what it is for (cleaned table, report, replay script, step log).
+- **Answer.** The result counts up, with every change and who approved it, the agent's summary as short
+  bullets, and the four output files, each with a line on what it is for. **View** opens any of them in a
+  new tab (the table, the report rendered, the replay script, the step log as a timeline) with its own
+  Download button; earlier runs stay viewable after a server restart.
 - **Data health.** After the run: rows before and after, every problem found by column (fixed, kept as a
   caveat, or not needed for the question), and the answer before cleaning next to the answer after.
 
