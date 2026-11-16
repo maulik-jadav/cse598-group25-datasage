@@ -66,3 +66,16 @@ def test_the_same_failing_call_twice_gets_a_plain_instruction():
     first, ok1 = _call(d, "check_out_of_range", column="Nope", minimum=1)
     second, ok2 = _call(d, "check_out_of_range", column="Nope", minimum=1)
     assert not ok1 and not ok2 and "repeat_failure" not in first and "Do not send it again" in second["repeat_failure"]
+
+
+def test_coverage_requires_the_metric_formula_check():
+    df = pd.DataFrame({"Id": [1, 2, 3], "Cat": ["A", "B", "A"], "Qty": [1, 2, 3], "Price": [10, 10, 10], "Rev": [10, 20, 300]})
+    s = Session(df, source="t.csv", request="q", rules={"Rev": {"formula": "Rev = Qty * Price"}})
+    d = Dispatcher(s, AutoApprover(), coverage=True)
+    needed = d.required_checks({"group_by": ["Cat"], "metric": "Rev", "agg": "sum", "filters": []})
+    assert ("check_cross_column", {"column": "Rev", "expression": "Qty * Price"}) in needed
+    out, ok = _call(d, "analyze", group_by=["Cat"], metric="Rev", agg="sum")
+    assert out.get("analyze_refused") and any(f["check"] == "check_cross_column" for f in out["open_findings"])
+    _call(d, "recompute_column", column="Rev", expression="Qty * Price", rows=[2], reason="formula")
+    out, ok = _call(d, "analyze", group_by=["Cat"], metric="Rev", agg="sum")
+    assert out["result"] == {"A": 40.0, "B": 20.0}

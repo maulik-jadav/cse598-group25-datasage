@@ -284,6 +284,9 @@ class Dispatcher:
                 needed.append(("check_dates", {"column": column}))
             if column == args.get("metric"):
                 needed.append(("check_numeric", {"column": column}))
+                formula = str(rule.get("formula") or "")
+                if "=" in formula:  # e.g. "Revenue = Quantity * Price": the metric must match its formula
+                    needed.append(("check_cross_column", {"column": column, "expression": formula.split("=", 1)[1].strip()}))
         return needed
 
     def _unresolved(self, name: str, result: dict) -> dict | None:
