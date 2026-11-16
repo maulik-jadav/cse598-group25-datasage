@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_01_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 35.9,
+  "tokens": 3070,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 39.0,
+    "Dream": 14.0,
+    "Torgersen": 7.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # drop exact duplicate rows (keep first occurrence)\n    d = d.drop_duplicates()\n    # normalize label variants: species case variants\n    d['species'] = d['species'].astype(str).str.strip().str.capitalize()\n    # normalize island typos/variants\n    island_map = {'Bisco': 'Biscoe', 'Biscoe': 'Biscoe',\n                  'Dram': 'Dream', 'Dream': 'Dream',\n                  'Torgersen': 'Torgersen'}\n    d['island'] = d['island'].astype(str).str.strip().map(lambda v: island_map.get(v, v))\n    # fix negative flipper lengths (sign errors) and coerce numerics\n    for c in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g', 'year']:\n        d[c] = pd.to_numeric(d[c], errors='coerce')\n    d.loc[d['flipper_length_mm'] < 0, 'flipper_length_mm'] = d['flipper_length_mm'].abs()\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['island'])\n    counts = d.groupby('island').size()\n    return {str(k): int(v) for k, v in counts.items()}"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-heldout",
+  "question": "How many penguins were measured on each island?",
+  "reference_answer": {
+    "Biscoe": 38.0,
+    "Dream": 12.0,
+    "Torgersen": 7.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ]
+  ]
+}

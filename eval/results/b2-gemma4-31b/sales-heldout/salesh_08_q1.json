@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 32.99,
+  "tokens": 2351,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix Category label variants\n    df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})\n    \n    # Fix Region label variants (strip whitespace)\n    df['Region'] = df['Region'].str.strip()\n    \n    # Ensure Date is datetime\n    df['Date'] = pd.to_datetime(df['Date'])\n    \n    # Ensure Revenue is numeric\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    # Create YYYY-MM format\n    df_clean['Month'] = df_clean['Date'].dt.strftime('%Y-%m')\n    \n    # Group by month and sum revenue\n    result = df_clean.groupby('Month')['Revenue'].sum().to_dict()\n    \n    return result"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gemma4-31b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,154 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 50.61,
+  "tokens": 23496,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "final_summary": "## Total Revenue per Month\n\n| Month | Total Revenue |\n|-------|-------------|\n| 2026-01 | $3,138 |\n| 2026-02 | $1,908 |\n| 2026-03 | $1,050 |\n| 2026-04 | $10,290 |\n| 2026-05 | $4,953 |\n| 2026-06 | $2,688 |\n\n(40 of 41 rows used; 1 row excluded due to invalid date.)\n\n## Data Quality Issues Found & Fixed\n\n1. **Invalid date (row 15):** The Date column had one value \"TBD\" instead of a valid YYYY-MM-DD date. Set to missing so the row is excluded from the monthly aggregation.\n\n2. **Revenue formula violations (rows 13, 29):** Two rows had Revenue values that didn't match Quantity \u00d7 Price (row 13: 450 vs expected 45; row 29: 1500 vs expected 15). Recomputed Revenue = Quantity \u00d7 Price for both rows per the rules file.\n\n3. **Category label variants (5 rows):** Misspellings and case/space variants (\"Accesories\", \"Electornics\", \"Office Suplies\", \"electronics\", \"office supplies\") were normalized to the allowed labels (\"Accessories\", \"Electronics\", \"Office Supplies\").\n\n4. **Region whitespace (3 rows):** Leading/trailing spaces (\"East \", \" North\", \"North \") were trimmed to match the allowed values.\n\n5. **No duplicate rows** were found.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Row 15 has 'TBD' which is not a valid YYYY-MM-DD date; setting it to missing so it won't be assigned to a month."
+        },
+        "reason": "Row 15 has 'TBD' which is not a valid YYYY-MM-DD date; setting it to missing so it won't be assigned to a month.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Date: 1 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            13,
+            29
+          ],
+          "reason": "Rows 13 and 29 have Revenue values that don't match Quantity * Price per the rules formula."
+        },
+        "reason": "Rows 13 and 29 have Revenue values that don't match Quantity * Price per the rules formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[13, 29], 'Revenue'] = [45.0, 15.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "electronics": "Electronics",
+            "office supplies": "Office Supplies",
+            "Accesories": "Accessories",
+            "Electornics": "Electronics",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Fixing case/space variants and misspellings to match the allowed Category labels from the rules file."
+        },
+        "reason": "Fixing case/space variants and misspellings to match the allowed Category labels from the rules file.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Category: merged 5 label variant(s), 5 cells",
+        "code": "df['Category'] = df['Category'].replace({'electronics': 'Electronics', 'office supplies': 'Office Supplies', 'Accesories': 'Accessories', 'Electornics': 'Electronics', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 4,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "Removing leading/trailing spaces from Region values (e.g. 'East ', ' North', 'North ') to match allowed labels."
+        },
+        "reason": "Removing leading/trailing spaces from Region values (e.g. 'East ', ' North', 'North ') to match allowed labels.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: trimmed 3 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-2",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

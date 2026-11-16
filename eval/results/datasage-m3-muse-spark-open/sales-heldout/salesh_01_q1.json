@@ -1,0 +1,107 @@
+{
+  "task_id": "salesh_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 104.8,
+  "tokens": 30614,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "extra": {
+    "final_summary": "Found 2 exact duplicate rows (rows 6 and 60) and 6 Category label variants: whitespace variants (\" Furniture\", \"Furniture \", \" Office Supplies\") and misspellings (\"Furnture\", \"Accesories\"). Fixed by normalizing all variants to allowed labels (Furniture, Office Supplies, Accessories) and removing duplicates. After cleaning, 70 orders remain: Accessories=21, Electronics=18, Office Supplies=17, Furniture=14.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            " Office Supplies": "Office Supplies",
+            "Furniture ": "Furniture",
+            "Accesories": "Accessories",
+            "Furnture": "Furniture"
+          },
+          "reason": "Merge misspellings and whitespace variants into allowed Category labels per rules file"
+        },
+        "reason": "Merge misspellings and whitespace variants into allowed Category labels per rules file",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Category: merged 5 label variant(s), 6 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', ' Office Supplies': 'Office Supplies', 'Furniture ': 'Furniture', 'Accesories': 'Accessories', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove 2 exact duplicate rows to avoid double-counting orders"
+        },
+        "reason": "Remove 2 exact duplicate rows to avoid double-counting orders",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          60
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-muse-spark-open",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 29.66,
+  "tokens": 2526,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Make a copy of the dataframe to avoid modifying the original\n    cleaned_df = df.copy()\n    \n    # Fix label variants in Region column\n    region_mapping = {\n        'west': 'West',\n        'south': 'South',\n        'Wst': 'West',\n        'Suoth': 'South'\n    }\n    cleaned_df['Region'] = cleaned_df['Region'].replace(region_mapping)\n    \n    # Convert Price from text to numeric, handling currency symbols\n    cleaned_df['Price'] = cleaned_df['Price'].replace('\\$', '', regex=True).astype(float)\n    \n    # Remove rows with negative Quantity or Revenue\n    cleaned_df = cleaned_df[cleaned_df['Quantity'] >= 0]\n    cleaned_df = cleaned_df[cleaned_df['Revenue'] >= 0]\n    \n    # Drop rows with missing Region values\n    cleaned_df = cleaned_df.dropna(subset=['Region'])\n    \n    return cleaned_df\n\ndef answer(df):\n    cleaned_df = clean(df)\n    # Group by Region and sum the Quantity\n    result = cleaned_df.groupby('Region')['Quantity'].sum().to_dict()\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-devstral2-123b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

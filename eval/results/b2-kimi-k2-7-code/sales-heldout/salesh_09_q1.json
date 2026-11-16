@@ -1,0 +1,69 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 131.16,
+  "tokens": 7710,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Parse dates and derive month\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df['Month'] = df['Date'].dt.to_period('M').astype(str)\n    # Clean Price\n    df['Price'] = df['Price'].astype(str).str.replace(r'[$,]', '', regex=True)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Clean Quantity\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # Recompute Revenue per rule\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # Keep only rows usable for monthly revenue\n    valid = (\n        df['Date'].notna()\n        & df['Quantity'].notna()\n        & df['Price'].notna()\n        & (df['Quantity'] > 0)\n        & (df['Revenue'] >= 0)\n    )\n    df = df[valid].copy()\n    # Standardize Region labels (not used in answer)\n    df['Region'] = df['Region'].astype('string').str.strip().str.title()\n    region_map = {'Wst': 'West', 'Eats': 'East'}\n    df['Region'] = df['Region'].replace(region_map)\n    return df\n\ndef answer(df):\n    grouped = df.groupby('Month', dropna=True)['Revenue'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}\n"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

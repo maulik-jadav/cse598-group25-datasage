@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 24.15,
+  "tokens": 3157,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # Work on a copy to avoid side\u2011effects\n    df = df.copy()\n\n    # ----- Category -----\n    # Strip surrounding whitespace and normalise case\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].astype(str).str.strip().str.title()\n        # Map known variants to the canonical values (if any remain)\n        category_map = {\n            'Accessories': 'Accessories',\n            'Electronics': 'Electronics',\n            'Furniture': 'Furniture',\n            'Office Supplies': 'Office Supplies'\n        }\n        df['Category'] = df['Category'].map(category_map).fillna(df['Category'])\n\n    # ----- Region -----\n    if 'Region' in df.columns:\n        # Strip whitespace and normalise case\n        df['Region'] = df['Region'].astype(str).str.strip().str.title()\n        # Correct common misspellings\n        region_corrections = {\n            'Suoth': 'South',\n            'Sout h': 'South',\n            'Nort': 'North',\n            'Nort h': 'North'\n        }\n        df['Region'] = df['Region'].replace(region_corrections)\n        # Keep only allowed region values; others become NaN\n        allowed_regions = {'North', 'South', 'East', 'West'}\n        df.loc[~df['Region'].isin(allowed_regions), 'Region'] = pd.NA\n        # Missing values stay as NaN (they will be dropped in the answer step)\n\n    # ----- Revenue consistency -----\n    # Re\u2011calculate Revenue to guarantee the formula holds\n    if {'Quantity', 'Price'}.issubset(df.columns):\n        df['Revenue'] = df['Quantity'] * df['Price']\n\n    # Ensure correct dtypes (Quantity and Price should be numeric, already are)\n    # No further action needed for this question.\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Clean the dataframe first\n    df = clean(df)\n    # Filter to Electronics category only\n    electronics = df[df['Category'] == 'Electronics']\n    # Drop rows where Region is missing because we cannot attribute revenue\n    electronics = electronics.dropna(subset=['Region'])\n    # Group by Region and sum Revenue\n    result_series = electronics.groupby('Region')['Revenue'].sum()\n    # Convert to plain dict with region as key and total revenue as value (float or int)\n    result = {region: float(value) if not value.is_integer() else int(value) for region, value in result_series.items()}\n    return result"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

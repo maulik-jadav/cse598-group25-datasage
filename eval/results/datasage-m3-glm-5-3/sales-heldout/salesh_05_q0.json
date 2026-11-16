@@ -1,0 +1,108 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 1,
+  "detect_fn": 3,
+  "tool_calls": 7,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 27.87,
+  "tokens": 23927,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "extra": {
+    "final_summary": "Units sold by region (after cleaning): East 94, South 78, West 72, North 37.\n\nData problems found and fixed:\n- Region label variants: merged \"west\"\u2192West, \"south\"\u2192South, \"Wst\"\u2192West, \"Suoth\"\u2192South into the allowed labels (4 rows).\n- Invalid row: row 44 had Quantity = -5 (rules say units sold must be positive) and negative Revenue; excluded it.\n- 3 rows have missing Region values (rows 8, 48, 57). These were not filled since the rules file gives no basis for guessing; their units (6, 4, 6) are excluded from the regional totals, so the 58 rows used sum to 281 units.\n- Price has 2 values stored as text (\"$900.00\", \"$45.00\") and Revenue has minor formatting issues, but these don't affect the units-sold question and were left alone.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "south": "South",
+            "west": "West",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "Merge case variants and misspellings into the allowed region labels per the rules file."
+        },
+        "reason": "Merge case variants and misspellings into the allowed region labels per the rules file.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Region: merged 4 label variant(s), 4 cells",
+        "code": "df['Region'] = df['Region'].replace({'south': 'South', 'west': 'West', 'Suoth': 'South', 'Wst': 'West'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            44
+          ],
+          "reason": "Row 44 has Quantity = -5, which violates the rules (units sold must be a positive whole number); its Revenue is also negative. Excluding this invalid row."
+        },
+        "reason": "Row 44 has Quantity = -5, which violates the rules (units sold must be a positive whole number); its Revenue is also negative. Excluding this invalid row.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          44
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [44]",
+        "code": "df = df.drop(index=[44])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

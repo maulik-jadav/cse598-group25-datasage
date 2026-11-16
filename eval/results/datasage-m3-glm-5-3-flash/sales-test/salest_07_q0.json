@@ -1,0 +1,123 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 131.26,
+  "tokens": 17609,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "final_summary": "**Orders per category (67 valid orders):**\n- Electronics: 24\n- Furniture: 20\n- Office Supplies: 13\n- Accessories: 10\n\n**Problems found and fixed:**\n1. **2 exact duplicate rows** (rows 6 and 49) \u2014 removed so orders aren't double-counted.\n2. **2 Category label variants** \u2014 \" Electronics\" (row 16) and \"Office Supplies \" (row 12) had stray spaces; normalized to the canonical labels \"Electronics\" and \"Office Supplies\" per the rules file.\n3. **Row 41 (Order 2041, Mouse)** had Quantity = -4 and Revenue = -100, violating the rule that Quantity is a positive whole number \u2014 excluded from the analysis.\n\n**Caveats:** Row 41 was excluded rather than corrected since the true quantity is unknown; if you can confirm the intended value, it could be restored. The Region column has 1 missing value, but Region isn't needed for this question so it was left untouched.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 6 and 49 are exact duplicates of earlier rows and would double-count orders."
+        },
+        "reason": "Rows 6 and 49 are exact duplicates of earlier rows and would double-count orders.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          49
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Electronics": "Electronics",
+            "Office Supplies ": "Office Supplies"
+          },
+          "reason": "Case/space variants of allowed labels; merge into canonical labels per rules file."
+        },
+        "reason": "Case/space variants of allowed labels; merge into canonical labels per rules file.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({' Electronics': 'Electronics', 'Office Supplies ': 'Office Supplies'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            41
+          ],
+          "reason": "Row 41 has Quantity = -4, violating the rule that Quantity is a positive whole number (units sold)."
+        },
+        "reason": "Row 41 has Quantity = -4, violating the rule that Quantity is a positive whole number (units sold).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          41
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [41]",
+        "code": "df = df.drop(index=[41])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3-flash",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

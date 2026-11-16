@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinsh_05_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 2,
+  "detect_fp": 3,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 81.31,
+  "tokens": 3566,
+  "stop_reason": "code_error",
+  "note": "NameError: name 'np' is not defined",
+  "answer": null,
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    \n    # Fix sex label variant (FEMALE -> female)\n    df['sex'] = df['sex'].replace({'FEMALE': 'female'})\n    \n    # Convert text numbers to numeric for flipper_length_mm and body_mass_g\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    \n    # Fix out of range flipper_length_mm (set to NaN if outside 170-235)\n    df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = np.nan\n    \n    # Fix out of range body_mass_g (values > 6500 likely in wrong unit, divide by 1000)\n    df.loc[df['body_mass_g'] > 6500, 'body_mass_g'] = df.loc[df['body_mass_g'] > 6500, 'body_mass_g'] / 1000\n    \n    # Set body_mass_g to NaN if still out of range (2500-6500)\n    df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = np.nan\n    \n    return df\n\ndef answer(df):\n    # Group by species and calculate average body mass\n    result = df.groupby('species')['body_mass_g'].mean().to_dict()\n    # Remove any NaN keys\n    result = {k: v for k, v in result.items() if pd.notna(k)}\n    return result"
+  },
+  "corrections": 0,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-qwen35-397b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3687.5,
+    "Chinstrap": 3726.6667,
+    "Gentoo": 5253.5714
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

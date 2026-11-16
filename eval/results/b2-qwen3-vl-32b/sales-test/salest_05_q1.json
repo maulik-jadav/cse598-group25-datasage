@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 36.59,
+  "tokens": 2340,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2975.0,
+    "Electronics": 8900.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Quantity and Price to numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Fix Category label variants\n    df['Category'] = df['Category'].str.strip()\n    \n    # Fix Region label variants\n    df['Region'] = df['Region'].str.strip()\n    df['Region'] = df['Region'].replace({'Suoth': 'South', 'Nort': 'North'})\n    \n    # Drop rows with missing Region (as per rules, Region is required)\n    df = df.dropna(subset=['Region'])\n    \n    # Recalculate Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Ensure Category is in allowed list (drop invalid)\n    allowed_categories = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed_categories)]\n    \n    return df\n\n\ndef answer(df):\n    # Group by Category and sum Revenue\n    result = df.groupby('Category')['Revenue'].sum().to_dict()\n    \n    # Return as dict with keys as category names\n    return result"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

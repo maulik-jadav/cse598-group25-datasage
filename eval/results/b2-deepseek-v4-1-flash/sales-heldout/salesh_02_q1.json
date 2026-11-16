@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 97.83,
+  "tokens": 5165,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    d = df.copy()\n    if 'Region' in d.columns:\n        d['Region'] = d['Region'].astype('string').str.strip().str.title()\n        d['Region'] = d['Region'].replace({'': pd.NA, 'Nan': pd.NA, 'None': pd.NA})\n    if 'Category' in d.columns:\n        d['Category'] = d['Category'].astype('string').str.strip()\n    for col in ['Quantity', 'Price', 'Revenue']:\n        if col in d.columns:\n            d[col] = pd.to_numeric(d[col], errors='coerce')\n    if 'Quantity' in d.columns:\n        d['Quantity'] = d['Quantity'].abs()\n    if 'Quantity' in d.columns and 'Price' in d.columns:\n        d['Revenue'] = d['Quantity'] * d['Price']\n    if 'Date' in d.columns:\n        d['Date'] = pd.to_datetime(d['Date'], errors='coerce').dt.strftime('%Y-%m-%d')\n    return d\n\ndef answer(df):\n    d = clean(df)\n    mask = d['Category'].astype('string').str.strip().str.casefold().eq('electronics').fillna(False)\n    d = d[mask].dropna(subset=['Region'])\n    out = d.groupby('Region', dropna=True)['Revenue'].sum()\n    return {str(k): float(v) for k, v in out.items()}"
+  },
+  "corrections": 15,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

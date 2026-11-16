@@ -1,0 +1,105 @@
+{
+  "task_id": "salest_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 130.12,
+  "tokens": 34318,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "extra": {
+    "final_summary": "\n\nThe analysis is complete. Here's a summary of what I found and did.\n\n## Problems found & fixes applied\n\n| Issue | Rows | Fix |\n|---|---|---|\n| Category labels with stray spaces (` Furniture`, `Accessories `, `Furniture `) | 8, 24, 39 | `normalize_labels` merged into allowed labels (low-risk, auto-approved) |\n| Region misspellings (`Nort`\u2192`North`, `Suoth`\u2192`South`) | 20, 38 | `normalize_labels` merged into allowed labels (approved) |\n| Region missing values | 15, 17 | **Left as-is** \u2014 rules file doesn't specify what they should be, so I did not invent values |\n| Revenue \u2260 Quantity \u00d7 Price | 0 | None needed \u2014 all rows satisfy the formula |\n\n## Answer: Total revenue by region for Electronics\n\n| Region | Revenue |\n|---|---|\n| East | $1,140 |\n| North | $260 |\n| South | $4,800 |\n| West | $2,700 |\n\n## Caveat\nOne Electronics row (**row 15** \u2014 Monitor, Revenue $1,800) has a **missing Region**, so it is excluded from the by-region breakdown. The rules file does not state what a missing Region should be, so I could not assign it. If you can supply that region, I can add the $1,800 to the correct group. The other missing Region row (row 17) is Accessories and doesn't affect this question.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            "Accessories ": "Accessories",
+            "Furniture ": "Furniture"
+          },
+          "reason": "Remove leading/trailing spaces to match allowed Category labels; low-risk space/case normalization."
+        },
+        "reason": "Remove leading/trailing spaces to match allowed Category labels; low-risk space/case normalization.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 3 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', 'Accessories ': 'Accessories', 'Furniture ': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Nort": "North",
+            "Suoth": "South"
+          },
+          "reason": "Fix misspellings of allowed Region labels (Nort\u2192North, Suoth\u2192South) so rows are grouped correctly."
+        },
+        "reason": "Fix misspellings of allowed Region labels (Nort\u2192North, Suoth\u2192South) so rows are grouped correctly.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'Nort': 'North', 'Suoth': 'South'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-ornith-1-5-35b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

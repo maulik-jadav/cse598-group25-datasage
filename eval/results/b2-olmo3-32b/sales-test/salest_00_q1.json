@@ -1,0 +1,54 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 16.99,
+  "tokens": 2502,
+  "stop_reason": "code_error",
+  "note": "ValueError: could not convert string to float: '$35000'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix invalid dates\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n    df['Date'] = df['Date'].dt.strftime('%Y-%m')\n    \n    # Normalize Region labels (trim spaces and correct typo)\n    df['Region'] = df['Region'].str.strip()\n    df = df[df['Region'].isin(['North', 'South', 'East', 'West'])]\n    \n    # Convert Price to numeric (handle $ and .00)\n    df['Price'] = df['Price'].str.replace(r'\\$', '').str.replace(r'\\.', '', regex=True).astype(float)\n    \n    # Ensure Revenue is consistent (should already be numeric, but coerce)\n    df['Revenue'] = df['Revenue'].astype(float)\n    \n    # Remove rows where Quantity is not a positive integer\n    df = df[df['Quantity'].apply(lambda x: isinstance(x, (int, float)) and x > 0 and x.is_integer())]\n    df['Quantity'] = df['Quantity'].astype(int)\n    \n    # Validate Category\n    allowed_cat = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed_cat)]\n    \n    return df\n\ndef answer(df):\n    # Group by month and Region (since question asks for total revenue per month, but Region is present; if only month, drop Region)\n    # But question says 'per month', so group by month only\n    df = df.groupby('Date').agg({'Revenue': 'sum'}).reset_index()\n    # Drop rows with missing group (shouldn't happen after clean)\n    df = df.dropna(subset=['Date'])\n    # Prepare output dict\n    result = {}\n    for _, row in df.iterrows():\n        month_key = row['Date']\n        if month_key in result:\n            # Shouldn't happen after grouping\n            pass\n        else:\n            result[month_key] = row['Revenue']\n    # If only one month, use 'all' key\n    if len(result) == 1:\n        only_month = list(result.keys())[0]\n        result['all'] = result.pop(only_month)\n    return result"
+  },
+  "corrections": 0,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 15.59,
+  "tokens": 2851,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.33,
+    "Electronics": 396.43,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    df = df.copy()\n    # ---- Price: strip currency symbols, convert to float ----\n    df['Price'] = df['Price'].astype(str).str.replace(r'[^0-9\\.]+', '', regex=True)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # ---- Quantity: keep only positive whole numbers ----\n    df = df[df['Quantity'] > 0]\n    # ---- Region: normalize case (title case) to fix variants like \"south\"/\"east\" ----\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    # ---- Revenue: recompute to ensure consistency (optional, but cleans cross\u2011column issue) ----\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Assume df is already cleaned via clean()\n    # Compute average unit price per Category\n    avg_price = df.groupby('Category', as_index=False)['Price'].mean()\n    # Round to two decimal places for readability\n    avg_price['Price'] = avg_price['Price'].round(2)\n    # Build result dict\n    result = {row['Category']: row['Price'] for _, row in avg_price.iterrows()}\n    return result"
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

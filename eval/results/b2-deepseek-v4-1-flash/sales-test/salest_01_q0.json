@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 116.01,
+  "tokens": 4795,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 36.25,
+    "Electronics": 396.42857142857144,
+    "Furniture": 161.07142857142858,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n\n    if \"Price\" in df.columns:\n        df[\"Price\"] = (\n            df[\"Price\"].astype(str)\n            .str.replace(r\"[$,]\", \"\", regex=True)\n            .str.strip()\n        )\n        df[\"Price\"] = pd.to_numeric(df[\"Price\"], errors=\"coerce\")\n\n    if \"Quantity\" in df.columns:\n        df[\"Quantity\"] = pd.to_numeric(df[\"Quantity\"], errors=\"coerce\")\n        df[\"Quantity\"] = df[\"Quantity\"].abs().round().astype(\"Int64\")\n\n    if \"Region\" in df.columns:\n        df[\"Region\"] = df[\"Region\"].astype(str).str.strip().str.title()\n\n    if \"Category\" in df.columns:\n        df[\"Category\"] = df[\"Category\"].astype(str).str.strip()\n\n    if all(c in df.columns for c in [\"Quantity\", \"Price\", \"Revenue\"]):\n        df[\"Revenue\"] = df[\"Quantity\"].astype(float) * df[\"Price\"]\n\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=[\"Category\", \"Price\"])\n    result = d.groupby(\"Category\", dropna=True)[\"Price\"].mean()\n    return {str(k): float(v) for k, v in result.items()}"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

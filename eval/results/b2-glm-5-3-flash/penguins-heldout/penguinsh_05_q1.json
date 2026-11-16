@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_05_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 149.35,
+  "tokens": 3045,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3667.86,
+    "Chinstrap": 3726.67,
+    "Gentoo": 5210.29
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # flipper_length_mm stored as text with negative sign errors\n    d['flipper_length_mm'] = pd.to_numeric(d['flipper_length_mm'], errors='coerce')\n    d['flipper_length_mm'] = d['flipper_length_mm'].abs()\n    d.loc[~d['flipper_length_mm'].between(170, 235), 'flipper_length_mm'] = pd.NA\n    # body_mass_g: fix unit error (grams vs kilograms scale)\n    d['body_mass_g'] = pd.to_numeric(d['body_mass_g'], errors='coerce')\n    big = d['body_mass_g'] > 6500\n    d.loc[big, 'body_mass_g'] = d.loc[big, 'body_mass_g'] / 1000.0\n    d.loc[~d['body_mass_g'].between(2500, 6500), 'body_mass_g'] = pd.NA\n    # normalize sex label variants; keep missing as unknown\n    d['sex'] = d['sex'].str.strip().str.lower()\n    return d\n\ndef answer(df):\n    d = clean(df)\n    g = d.dropna(subset=['species', 'body_mass_g']).groupby('species')['body_mass_g'].mean()\n    return {str(k): round(float(v), 2) for k, v in g.items()}"
+  },
+  "corrections": 6,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3687.5,
+    "Chinstrap": 3726.6667,
+    "Gentoo": 5253.5714
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 24.25,
+  "tokens": 2833,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.67,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.67
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # 1. Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n\n    # 2. Standardise Region values (strip spaces and title\u2011case)\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].astype(str).str.strip().str.title()\n        # Preserve NaN where Region was missing\n        df.loc[df['Region'].isin(['Nan', 'None', '']), 'Region'] = pd.NA\n\n    # 3. Keep only rows with a positive Quantity (rule: Quantity >= 1)\n    df = df[df['Quantity'] > 0].reset_index(drop=True)\n\n    # 4. Re\u2011calculate Revenue to satisfy the formula Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    # 5. Ensure Category values are within the allowed list; drop any that are not\n    allowed_categories = {\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"}\n    df = df[df['Category'].isin(allowed_categories)].reset_index(drop=True)\n\n    # 6. Keep the identifier column (Order_ID) and all other columns needed for analysis\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Compute average unit price per Category\n    avg_price = df.groupby('Category')['Price'].mean()\n    # Convert to plain python dict with Category as key and float as value\n    result = {cat: round(val, 2) for cat, val in avg_price.items()}\n    return result"
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 349.1,
+  "tokens": 7128,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 28.0,
+    "Dream": 16.0,
+    "Torgersen": 8.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # strip whitespace from object columns\n    obj_cols = df.select_dtypes(include='object').columns\n    for col in obj_cols:\n        df[col] = df[col].astype(str).str.strip()\n    # standardise island label variants\n    island_map = {\n        'Torgerson': 'Torgersen',\n        'Bisco': 'Biscoe'\n    }\n    df['island'] = df['island'].replace(island_map)\n    # standardise sex label variants\n    if 'sex' in df.columns:\n        df['sex'] = df['sex'].str.lower()\n    # parse body_mass_g which is text with commas / numbers written as text\n    if 'body_mass_g' in df.columns and df['body_mass_g'].dtype == object:\n        df['body_mass_g'] = df['body_mass_g'].str.replace(',', '', regex=False)\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # ensure numeric columns are numeric\n    for col in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'year']:\n        if col in df.columns and df[col].dtype == object:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n    # remove exact duplicate rows and duplicate penguin_id\n    df = df.drop_duplicates()\n    if 'penguin_id' in df.columns:\n        df = df.drop_duplicates(subset=['penguin_id'], keep='first')\n    return df\n\ndef answer(df):\n    df_c = clean(df)\n    # count penguins per island after cleaning\n    df_c = df_c.dropna(subset=['island'])\n    counts = df_c.groupby('island').size()\n    return {str(k): int(v) for k, v in counts.items()}\n"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "penguins-test",
+  "question": "How many penguins were measured on each island?",
+  "reference_answer": {
+    "Biscoe": 28.0,
+    "Dream": 16.0,
+    "Torgersen": 8.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

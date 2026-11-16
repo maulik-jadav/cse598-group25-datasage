@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 64.53,
+  "tokens": 3405,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.333333333333336,
+    "Electronics": 396.42857142857144,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Remove rows with invalid negative quantities (Quantity must be >= 1)\n    df = df[df['Quantity'] >= 1].reset_index(drop=True)\n    \n    # Convert Price from text to numeric (remove $ and convert to float)\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).astype(float)\n    \n    # Fix Region case variants (capitalize to match allowed values)\n    df['Region'] = df['Region'].str.strip().str.capitalize()\n    \n    return df\n\ndef answer(df):\n    # Calculate average unit price per Category\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    return result"
+  },
+  "corrections": 7,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-122b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

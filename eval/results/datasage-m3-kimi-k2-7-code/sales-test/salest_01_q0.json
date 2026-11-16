@@ -1,0 +1,148 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 74.49,
+  "tokens": 31401,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "final_summary": "Average unit price by category (after cleaning):\n- Accessories: $35.33\n- Electronics: $396.43\n- Furniture: $155.00\n- Office Supplies: $12.00\n\nData-quality fixes applied:\n1. Cast Price to numeric (two values were text like \"$6.00\" and \"$180.00\").\n2. Excluded 3 rows (20, 35, 58) with negative Quantity, which violated the rule that Quantity must be positive.\n3. Recomputed Revenue for row 52 to match Quantity * Price (was 14,405, should be 144).\n4. Normalized Region case variants ('south' \u2192 'South', 'east' \u2192 'East'); this does not affect the category price averages but was a safe cleanup.\n\nCaveat: The average is computed over the remaining 58 valid rows after removing the 3 invalid negative-quantity records.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains two text-formatted dollar values ($6.00, $180.00) that need to be numeric for analysis."
+        },
+        "reason": "Price contains two text-formatted dollar values ($6.00, $180.00) that need to be numeric for analysis.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (61 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            20,
+            35,
+            58
+          ],
+          "reason": "Quantity is negative (-7, -2, -7) but rules say Quantity must be a positive whole number (min 1). These rows also have negative Revenue, making them invalid sales records."
+        },
+        "reason": "Quantity is negative (-7, -2, -7) but rules say Quantity must be a positive whole number (min 1). These rows also have negative Revenue, making them invalid sales records.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          20,
+          35,
+          58
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [20, 35, 58]",
+        "code": "df = df.drop(index=[20, 35, 58])"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            52
+          ],
+          "reason": "Revenue at row 52 is 14405 but should equal Quantity * Price = 144 per the rules formula."
+        },
+        "reason": "Revenue at row 52 is 14405 but should equal Quantity * Price = 144 per the rules formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[52], 'Revenue'] = [144.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 4,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "south": "South",
+            "east": "East"
+          },
+          "reason": "Region has two case-variant labels ('south', 'east') that should match the allowed values."
+        },
+        "reason": "Region has two case-variant labels ('south', 'east') that should match the allowed values.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'south': 'South', 'east': 'East'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 8
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-kimi-k2-7-code",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

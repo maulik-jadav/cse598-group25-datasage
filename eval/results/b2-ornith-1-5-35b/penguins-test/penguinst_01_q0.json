@@ -1,0 +1,45 @@
+{
+  "task_id": "penguinst_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 69.1,
+  "tokens": 3979,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3765.625,
+    "male": 4312.5
+  },
+  "extra": {
+    "code": "import pandas as pd\n\n\ndef clean(df):\n    df = df.copy()\n    # body_mass_g is stored as text with thousands separators (e.g. '3,450')\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # sex has missing values meaning 'unknown'; do not guess, drop them\n    df = df.dropna(subset=['sex'])\n    return df\n\n\ndef answer(df):\n    result = {}\n    grouped = df.groupby('sex')['body_mass_g'].mean()\n    for sex, value in grouped.items():\n        result[sex] = float(value)\n    return result"
+  },
+  "corrections": 3,
+  "planted": 7,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-ornith-1-5-35b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3765.625,
+    "male": 4312.5
+  },
+  "issues_reported": [
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

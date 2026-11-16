@@ -1,0 +1,67 @@
+{
+  "task_id": "penguinsh_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 3,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 160.77,
+  "tokens": 7587,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 78775.0,
+    "Chinstrap": 28400.0,
+    "Gentoo": 160050.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # standardise species label variants\n    df['species'] = df['species'].astype(str).str.strip()\n    species_map = {'gentoo': 'Gentoo', 'adelie': 'Adelie'}\n    df['species'] = df['species'].replace(species_map)\n    df['species'] = df['species'].str.title()\n    # standardise island label variants / typos\n    df['island'] = df['island'].astype(str).str.strip()\n    island_map = {'Bisco': 'Biscoe', 'Dram': 'Dream'}\n    df['island'] = df['island'].replace(island_map)\n    # numeric columns may be stored as text\n    num_cols = ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g', 'year']\n    for col in num_cols:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    # fix negative flipper lengths\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    # keep only allowed species\n    allowed = {'Adelie', 'Chinstrap', 'Gentoo'}\n    dfc = dfc[dfc['species'].isin(allowed)]\n    totals = dfc.groupby('species', dropna=True)['body_mass_g'].sum()\n    # return plain dict with numeric totals\n    result = {}\n    for k, v in totals.items():\n        if pd.isna(v):\n            continue\n        # keep int when possible\n        if float(v).is_integer():\n            result[k] = int(v)\n        else:\n            result[k] = float(v)\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 74875.0,
+    "Chinstrap": 24675.0,
+    "Gentoo": 155250.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

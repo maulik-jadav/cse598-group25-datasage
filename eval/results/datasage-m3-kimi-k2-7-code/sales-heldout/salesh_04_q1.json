@@ -1,0 +1,108 @@
+{
+  "task_id": "salesh_04_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 58.34,
+  "tokens": 25541,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 11.0,
+    "Electronics": 15.0,
+    "Furniture": 15.0,
+    "Office Supplies": 20.0
+  },
+  "extra": {
+    "final_summary": "After cleaning, the order counts by category are: Office Supplies 20, Electronics 15, Furniture 15, Accessories 11 (61 rows used). I fixed Category label variants ('accessories'\u2192'Accessories', 'office supplies'\u2192'Office Supplies', 'Furnture'\u2192'Furniture') and removed 1 exact duplicate row. Two invalid dates remain (rows 30 and 35, '13/45/2026'), but they do not affect the category count.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "accessories": "Accessories",
+            "office supplies": "Office Supplies",
+            "Furnture": "Furniture"
+          },
+          "reason": "Merge case/space variants and the misspelling 'Furnture' into the allowed Category labels per rules file."
+        },
+        "reason": "Merge case/space variants and the misspelling 'Furnture' into the allowed Category labels per rules file.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Category: merged 3 label variant(s), 4 cells",
+        "code": "df['Category'] = df['Category'].replace({'accessories': 'Accessories', 'office supplies': 'Office Supplies', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove 1 exact duplicate row (row 34) so order counts are not inflated."
+        },
+        "reason": "Remove 1 exact duplicate row (row 34) so order counts are not inflated.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 7
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-kimi-k2-7-code",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 11.0,
+    "Electronics": 15.0,
+    "Furniture": 15.0,
+    "Office Supplies": 20.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

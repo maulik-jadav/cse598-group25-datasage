@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinst_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 37.95,
+  "tokens": 3475,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 191.09,
+    "Chinstrap": 199.31,
+    "Gentoo": 217.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    # Fix sign errors in flipper_length_mm: negatives become positive (within valid 170-235 range)\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df.loc[df['flipper_length_mm'] < 0, 'flipper_length_mm'] = df.loc[df['flipper_length_mm'] < 0, 'flipper_length_mm'].abs()\n    # Drop any flipper values still out of valid range\n    df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = np.nan\n    # Parse body_mass_g written as text (e.g. '3,075')\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'].astype(str).str.replace(',', '', regex=False), errors='coerce')\n    # Normalize sex label variants\n    df['sex'] = df['sex'].astype(str).str.strip().str.lower()\n    df.loc[~df['sex'].isin(['male', 'female']), 'sex'] = np.nan\n    return df\n\ndef answer(df):\n    df = clean(df)\n    d = df.dropna(subset=['species', 'flipper_length_mm'])\n    g = d.groupby('species')['flipper_length_mm'].mean()\n    return {k: round(v, 2) for k, v in g.items()}"
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "penguins-test",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 190.8182,
+    "Chinstrap": 200.1333,
+    "Gentoo": 217.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

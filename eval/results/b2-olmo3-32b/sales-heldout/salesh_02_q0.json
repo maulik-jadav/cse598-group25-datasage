@@ -1,0 +1,80 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 15.5,
+  "tokens": 2279,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "all": 47429.0,
+    "Accessories | ": 330.0,
+    "Accessories | East": 675.0,
+    "Accessories | North": 200.0,
+    "Accessories | South": 255.0,
+    "Accessories | West": 840.0,
+    "Electronics | ": 5400.0,
+    "Electronics | East": 7580.0,
+    "Electronics | North": 3750.0,
+    "Electronics | South": 10540.0,
+    "Electronics | West": 1800.0,
+    "Furniture | East": 3750.0,
+    "Furniture | North": 4070.0,
+    "Furniture | South": 3435.0,
+    "Furniture | West": 3850.0,
+    "Office Supplies | East": 240.0,
+    "Office Supplies | North": 306.0,
+    "Office Supplies | South": 258.0,
+    "Office Supplies | West": 150.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix invalid dates\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df[df['Date'].notna()]\n    # Normalize Region (trim spaces and standardize case)\n    df['Region'] = df['Region'].fillna('').astype(str).str.strip().str.title()\n    # Remove rows with invalid Category\n    valid_cats = {'Electronics', 'Accessories', 'Furniture', 'Office Supplies'}\n    df = df[df['Category'].isin(valid_cats)]\n    # Remove rows with negative Quantity\n    df = df[df['Quantity'] >= 1]\n    # Remove rows with negative Revenue (or recalc if needed)\n    df = df[df['Revenue'] >= 0]\n    # Optionally recalculate Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # Drop rows with any remaining missing Region\n    df = df.dropna(subset=['Region'])\n    return df\n\ndef answer(df):\n    # Group by Category and Region, sum revenue\n    grouped = df.groupby(['Category', 'Region'])['Revenue'].sum().reset_index()\n    # Also provide overall total\n    overall = {'all': grouped['Revenue'].sum()}\n    # Build dict: keys are 'Category | Region' or 'all'\n    result = {**overall}\n    for _, row in grouped.iterrows():\n        key = f\"{row['Category']} | {row['Region']}\"\n        result[key] = row['Revenue']\n    # Drop keys with NaN group labels\n    result = {k: v for k, v in result.items() if pd.notna(k) and pd.notna(v)}\n    return result"
+  },
+  "corrections": 15,
+  "planted": 18,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Category"
+    ]
+  ]
+}

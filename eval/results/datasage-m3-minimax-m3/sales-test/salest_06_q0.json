@@ -1,0 +1,135 @@
+{
+  "task_id": "salest_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 72.53,
+  "tokens": 29757,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.8571,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "final_summary": "**Average unit price by category** (after fixes, 55 rows used):\n\n- Accessories: $32.50\n- Electronics: $382.50\n- Furniture: $177.86\n- Office Supplies: $14.00\n\n**Problems found and fixed:**\n1. Region misspelling \"Nort\" \u2192 \"North\" (row 12) \u2014 normalized via label fix.\n2. Exact duplicate row (row 46) \u2014 dropped.\n3. Negative Quantity = -2 (row 43) \u2014 excluded because the rules require Quantity \u2265 1.\n\n**Caveats:**\n- Three rows (20, 27, 49) have Revenue that does not match Quantity \u00d7 Price (e.g., row 49: Revenue 18000 vs expected 180). These do not affect the Price column used here, so they were left as-is. If you want Revenue cleaned up, those rows can be recomputed.\n- Price itself was clean (no negatives, no out-of-range values, no text-as-number issues), so the averages above are reliable.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Nort": "North"
+          },
+          "reason": "Fix misspelling \"Nort\" \u2192 \"North\" per rules allowed labels"
+        },
+        "reason": "Fix misspelling \"Nort\" \u2192 \"North\" per rules allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: merged 1 label variant(s), 1 cells",
+        "code": "df['Region'] = df['Region'].replace({'Nort': 'North'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 46 is an exact duplicate of an earlier row; would skew averages"
+        },
+        "reason": "Row 46 is an exact duplicate of an earlier row; would skew averages",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          46
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            43
+          ],
+          "reason": "Row 43 has Quantity=-2, violating the rule that Quantity must be a positive whole number (min 1)"
+        },
+        "reason": "Row 43 has Quantity=-2, violating the rule that Quantity must be a positive whole number (min 1)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          43
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [43]",
+        "code": "df = df.drop(index=[43])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-minimax-m3",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.8571,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

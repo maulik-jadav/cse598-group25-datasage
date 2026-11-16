@@ -1,0 +1,158 @@
+{
+  "task_id": "salest_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 91.57,
+  "tokens": 41515,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "extra": {
+    "final_summary": "Total revenue by category (67 rows used, after cleaning): Accessories $1,780, Electronics $47,580, Furniture $14,685, Office Supplies $444.\n\nProblems found and fixes applied:\n1. Category label variants \u2014 \" Electronics\" (row 16) and \"Office Supplies \" (row 12) were merged into the allowed labels Electronics / Office Supplies (normalize_labels, approved).\n2. Exact duplicate rows \u2014 rows 6 and 49 were identical copies of earlier rows (e.g. row 6 duplicated Order_ID 2006); dropped so revenue isn't double-counted (approved).\n3. Impossible Quantity \u2014 row 41 had Quantity = -4 (rules require a positive whole number, min 1) with Revenue -100; row excluded (approved).\n4. Revenue formula violations \u2014 rows 0, 7 and 66 did not equal Quantity * Price (905 vs 90, 2400 vs 24, 120000 vs 1200); Revenue recomputed as Quantity * Price (approved).\n\nCaveats: Region is missing for one row (row 9) \u2014 not used by this question, so left as is. Order_ID has 68 distinct values for 70 rows, consistent with the two duplicate rows removed. All figures come from the analyze tool on the cleaned copy.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Electronics": "Electronics",
+            "Office Supplies ": "Office Supplies"
+          },
+          "reason": "Merge whitespace variants into the allowed Category labels so the group-by doesn't split Electronics and Office Supplies into extra groups."
+        },
+        "reason": "Merge whitespace variants into the allowed Category labels so the group-by doesn't split Electronics and Office Supplies into extra groups.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({' Electronics': 'Electronics', 'Office Supplies ': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 6 and 49 are exact copies of earlier rows (e.g. row 6 duplicates row 5, Order_ID 2006); keeping them would double-count revenue."
+        },
+        "reason": "Rows 6 and 49 are exact copies of earlier rows (e.g. row 6 duplicates row 5, Order_ID 2006); keeping them would double-count revenue.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          49
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            41
+          ],
+          "reason": "Row 41 has Quantity = -4, which breaks the rule that Quantity must be a positive whole number (min 1); its Revenue of -100 is impossible."
+        },
+        "reason": "Row 41 has Quantity = -4, which breaks the rule that Quantity must be a positive whole number (min 1); its Revenue of -100 is impossible.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          41
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [41]",
+        "code": "df = df.drop(index=[41])"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            0,
+            7,
+            66
+          ],
+          "reason": "Rows 0, 7 and 66 break the rule Revenue = Quantity * Price (905 vs 90, 2400 vs 24, 120000 vs 1200); recomputing from Quantity and Price."
+        },
+        "reason": "Rows 0, 7 and 66 break the rule Revenue = Quantity * Price (905 vs 90, 2400 vs 24, 120000 vs 1200); recomputing from Quantity and Price.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[0, 7, 66], 'Revenue'] = [90.0, 24.0, 1200.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 8
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 1780.0,
+    "Electronics": 47580.0,
+    "Furniture": 14685.0,
+    "Office Supplies": 444.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

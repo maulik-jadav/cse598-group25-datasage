@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 36.16,
+  "tokens": 3306,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 92.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Fix region label variant\n    df['Region'] = df['Region'].replace('Nort', 'North')\n    # Fix negative / out-of-range quantity (must be positive whole number)\n    df['Quantity'] = df['Quantity'].abs().astype(int)\n    # Recalculate revenue to match formula\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = df.copy()\n    # Apply same minimal fixes in case answer is called on raw data\n    df = df.drop_duplicates()\n    df['Region'] = df['Region'].replace('Nort', 'North')\n    df['Quantity'] = df['Quantity'].abs().astype(int)\n    df = df.dropna(subset=['Region'])\n    result = df.groupby('Region')['Quantity'].sum().to_dict()\n    return result\n"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

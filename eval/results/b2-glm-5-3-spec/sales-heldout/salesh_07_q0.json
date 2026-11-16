@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 91.06,
+  "tokens": 3244,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.67,
+    "Electronics": 360.0,
+    "Furniture": 191.67,
+    "Office Supplies": 11.4
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep='first')\n    # Normalize Region label variants (extra spaces / lowercase)\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].astype('string').str.strip().str.capitalize().replace({pd.NA: pd.NA})\n    # Recompute Revenue from Quantity * Price for consistency\n    if {'Quantity', 'Price', 'Revenue'}.issubset(df.columns):\n        df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Average unit price per category; negative quantities don't affect unit price\n    g = df.dropna(subset=['Category']).groupby('Category')['Price'].mean()\n    return {k: round(float(v), 2) for k, v in g.items()}"
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

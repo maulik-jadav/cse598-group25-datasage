@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 49.0,
+  "tokens": 3513,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 77000.0,
+    "Chinstrap": 57275.0,
+    "Gentoo": 87700.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Fix negative flipper lengths (sign error)\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    # Fix body mass unit error: values far above 6500 g appear to be grams scaled by 1000\n    mask = df['body_mass_g'] > 6500\n    df.loc[mask, 'body_mass_g'] = df.loc[mask, 'body_mass_g'] / 1000.0\n    # Normalize sex labels (strip whitespace); missing stays NaN (unknown)\n    df['sex'] = df['sex'].astype(str).str.strip()\n    df.loc[df['sex'].isin(['nan', 'None', '']), 'sex'] = np.nan\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Keep only valid body mass values within plausible range\n    valid = df[(df['body_mass_g'] >= 2500) & (df['body_mass_g'] <= 6500)]\n    valid = valid.dropna(subset=['species'])\n    grouped = valid.groupby('species')['body_mass_g'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 4,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 66500.0,
+    "Chinstrap": 53225.0,
+    "Gentoo": 77600.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ]
+  ]
+}

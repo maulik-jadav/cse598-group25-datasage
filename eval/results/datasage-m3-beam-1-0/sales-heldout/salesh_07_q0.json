@@ -1,0 +1,139 @@
+{
+  "task_id": "salesh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 133.58,
+  "tokens": 31609,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "extra": {
+    "final_summary": "Average unit price by category (after cleaning): Accessories 30.67, Electronics 360.00, Furniture 205.00, Office Supplies 10.67. Fixes: removed 2 duplicate rows, excluded 2 rows with negative Quantity, recomputed Revenue on 1 row. Category and Price were clean.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 17 and 23 are exact duplicates of earlier rows; removing keeps first occurrence."
+        },
+        "reason": "Rows 17 and 23 are exact duplicates of earlier rows; removing keeps first occurrence.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          17,
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            19,
+            34
+          ],
+          "reason": "Rows 19 and 34 have negative Quantity, violating the rule that Quantity must be a positive whole number (min 1)."
+        },
+        "reason": "Rows 19 and 34 have negative Quantity, violating the rule that Quantity must be a positive whole number (min 1).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          19,
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [19, 34]",
+        "code": "df = df.drop(index=[19, 34])"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            30
+          ],
+          "reason": "Row 30 Revenue (10000) does not equal Quantity * Price (100); recompute to correct data-entry error."
+        },
+        "reason": "Row 30 Revenue (10000) does not equal Quantity * Price (100); recompute to correct data-entry error.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[30], 'Revenue'] = [100.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 8
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-beam-1-0",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

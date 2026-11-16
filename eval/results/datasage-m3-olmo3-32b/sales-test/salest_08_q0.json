@@ -1,0 +1,211 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 20,
+  "tool_errors": 1,
+  "recovered_errors": 1,
+  "approvals_asked": 5,
+  "seconds": 31.54,
+  "tokens": 101206,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "final_summary": "Problems found and fixed: 1) Category labels had 5 variant spellings/casings; merged them into canonical labels. 2) Region labels had 3 spacing variants; normalized them. 3) One invalid date (row 15) was set to missing. 4) Two Revenue values did not match Quantity \u00d7 Price; they were recalculated. No other missing values or duplicates. The total revenue per month is: 2026-01 $3,138; 2026-02 $1,908; 2026-03 $1,050; 2026-04 $10,290; 2026-05 $4,953; 2026-06 $2,688.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "electronics": "Electronics",
+            "office supplies": "Office Supplies",
+            "Accesories": "Accessories",
+            "Electornics": "Electronics",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Apply canonical labels to Category to unify spelling and casing."
+        },
+        "reason": "Apply canonical labels to Category to unify spelling and casing.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Category: merged 5 label variant(s), 5 cells",
+        "code": "df['Category'] = df['Category'].replace({'electronics': 'Electronics', 'office supplies': 'Office Supplies', 'Accesories': 'Accessories', 'Electornics': 'Electronics', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " North": "North",
+            "East ": "East",
+            "North ": "North"
+          },
+          "reason": "Apply canonical labels to Region to unify casing and spacing."
+        },
+        "reason": "Apply canonical labels to Region to unify casing and spacing.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: merged 3 label variant(s), 3 cells",
+        "code": "df['Region'] = df['Region'].replace({' North': 'North', 'East ': 'East', 'North ': 'North'})"
+      },
+      {
+        "version": 3,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Set invalid date to missing so downstream calculations are not affected."
+        },
+        "reason": "Set invalid date to missing so downstream calculations are not affected.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Date: 1 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            13,
+            29
+          ],
+          "reason": "Fix Revenue where it does not match Quantity * Price."
+        },
+        "reason": "Fix Revenue where it does not match Quantity * Price.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[13, 29], 'Revenue'] = [45.0, 15.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 5,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            15
+          ],
+          "reason": "Date is invalid and was parsed to missing; keep it missing rather than filling."
+        },
+        "reason": "Date is invalid and was parsed to missing; keep it missing rather than filling.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Date: set 1 value(s) to missing",
+        "code": "df.loc[[15], 'Date'] = pd.NA"
+      },
+      {
+        "version": 6,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "No exact duplicate rows were found, but the tool is not available; skipping."
+        },
+        "reason": "No exact duplicate rows were found, but the tool is not available; skipping.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "removed 0 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 20
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-olmo3-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Date"
+    ]
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 161.03,
+  "tokens": 22965,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "final_summary": "Total revenue per month (2026): Jan $3,138; Feb $1,908; Mar $1,050; Apr $10,290; May $4,953; Jun $2,688 (40 of 41 rows used). Problems found and fixed: (1) rows 13 and 29 had Revenue values violating the rules-file formula Revenue = Quantity * Price (450\u219245 and 1500\u219215), recomputed per the formula; (2) row 15 had an invalid date 'TBD', marked as missing so it is excluded from the monthly grouping but its revenue is not counted in any month. No duplicate rows; Revenue column was fully numeric with no negatives; Quantity within [1, \u221e). Caveat: row 15's revenue ($ amount) is omitted from all monthly totals because its date is unknown. Category/Region label variants exist but do not affect this question.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            13,
+            29
+          ],
+          "reason": "Rules file states Revenue = Quantity * Price; rows 13 and 29 violate this formula (450 vs 45, 1500 vs 15)."
+        },
+        "reason": "Rules file states Revenue = Quantity * Price; rows 13 and 29 violate this formula (450 vs 45, 1500 vs 15).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[13, 29], 'Revenue'] = [45.0, 15.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 2,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            15
+          ],
+          "reason": "Row 15 has 'TBD' which is not a valid YYYY-MM-DD date; the row is otherwise valid, so mark the date as missing rather than excluding the row."
+        },
+        "reason": "Row 15 has 'TBD' which is not a valid YYYY-MM-DD date; the row is otherwise valid, so mark the date as missing rather than excluding the row.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Date: set 1 value(s) to missing",
+        "code": "df.loc[[15], 'Date'] = pd.NA"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 3,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mistral-large-4",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ]
+  ]
+}

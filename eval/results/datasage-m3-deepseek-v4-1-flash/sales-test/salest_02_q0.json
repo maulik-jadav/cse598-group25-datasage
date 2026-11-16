@@ -1,0 +1,136 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 4,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 68.94,
+  "tokens": 31385,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "extra": {
+    "final_summary": "Average unit price by category (66 rows used, after cleaning):\n\n- Accessories: $32.50\n- Electronics: $275.71\n- Furniture: $191.05\n- Office Supplies: $11.37\n\nProblems found and fixed:\n1. Category label misspellings \u2014 \"Furnture\" (row 9) and \"Office Suplies\" (row 20) were merged into \"Furniture\" and \"Office Supplies\" (approved). Without this, the averages would have been split across two fake categories.\n2. Exact duplicate row \u2014 row 5 was an identical copy of row 4 (Order_ID 2005); removed (approved) so that order isn't counted twice.\n3. Impossible quantities \u2014 rows 1, 34 and 51 had Quantity of -8, -6 and -2, which breaks the rule that Quantity is always a positive whole number (min 1) and also produced negative Revenue. These rows were excluded (approved).\n\nChecks that came back clean: Price has no text-stored numbers, no non-numeric values, no negatives and nothing below 0; Date is fully valid YYYY-MM-DD.\n\nCaveats: Region has 2 missing values and some whitespace/case variants (\" West\", \" South\", \"West \"), but Region isn't used by this question so I left it untouched. Price is a per-product unit price, so these averages are unweighted means of the order lines, not quantity-weighted average selling prices.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Two misspelled category labels (\"Furnture\", \"Office Suplies\") are variants of allowed labels; merging them so the per-category averages are not split across fake categories."
+        },
+        "reason": "Two misspelled category labels (\"Furnture\", \"Office Suplies\") are variants of allowed labels; merging them so the per-category averages are not split across fake categories.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 5 is an exact duplicate of row 4 (same Order_ID 2005 and all fields); keeping one copy avoids double-counting that order."
+        },
+        "reason": "Row 5 is an exact duplicate of row 4 (same Order_ID 2005 and all fields); keeping one copy avoids double-counting that order.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          5
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            1,
+            34,
+            51
+          ],
+          "reason": "Quantity must be a positive whole number (rules: min 1); these three rows have negative quantities (-8, -6, -2), which are impossible and also produce negative Revenue."
+        },
+        "reason": "Quantity must be a positive whole number (rules: min 1); these three rows have negative quantities (-8, -6, -2), which are impossible and also produce negative Revenue.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          1,
+          34,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [1, 34, 51]",
+        "code": "df = df.drop(index=[1, 34, 51])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 8,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

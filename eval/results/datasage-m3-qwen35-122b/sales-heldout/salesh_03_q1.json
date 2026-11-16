@@ -1,0 +1,184 @@
+{
+  "task_id": "salesh_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 105.87,
+  "tokens": 81357,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "extra": {
+    "final_summary": "Fixed 5 data quality issues: (1) 3 invalid dates set to missing, (2) Category label \"office supplies\" normalized to \"Office Supplies\", (3) Region labels \"Eats\" and \"Suoth\" normalized to \"East\" and \"South\", (4) 2 duplicate rows removed, (5) Revenue formula error in row 28 corrected. Total revenue per month: 2026-01: $6,440, 2026-02: $2,237, 2026-03: $4,187, 2026-04: $2,726, 2026-05: $14,612, 2026-06: $10,022. Analysis used 59 rows (3 rows with invalid dates excluded from monthly grouping).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Invalid dates (2026-14-01, 2026-02-30) set to missing"
+        },
+        "reason": "Invalid dates (2026-14-01, 2026-02-30) set to missing",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "office supplies": "Office Supplies"
+          },
+          "reason": "Normalize case variant to allowed label"
+        },
+        "reason": "Normalize case variant to allowed label",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({'office supplies': 'Office Supplies'})"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Eats": "East",
+            "Suoth": "South"
+          },
+          "reason": "Normalize misspelled region names to allowed labels"
+        },
+        "reason": "Normalize misspelled region names to allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'Eats': 'East', 'Suoth': 'South'})"
+      },
+      {
+        "version": 4,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate rows to avoid double-counting"
+        },
+        "reason": "Remove exact duplicate rows to avoid double-counting",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          12,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 5,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            28
+          ],
+          "reason": "Fix Revenue value that doesn't match Quantity * Price formula"
+        },
+        "reason": "Fix Revenue value that doesn't match Quantity * Price formula",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[28], 'Revenue'] = [105.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 14
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen35-122b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

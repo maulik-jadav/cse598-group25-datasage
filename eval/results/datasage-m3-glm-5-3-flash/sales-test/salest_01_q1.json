@@ -1,0 +1,148 @@
+{
+  "task_id": "salest_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 162.38,
+  "tokens": 23986,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "extra": {
+    "final_summary": "**Total revenue by category** (58 rows used after cleaning):\n\n| Category | Total Revenue |\n|---|---|\n| Electronics | $27,140 |\n| Furniture | $7,665 |\n| Accessories | $2,390 |\n| Office Supplies | $780 |\n\n**Problems found and fixed:**\n1. **Price stored as text** (rows 11, 22: `$6.00`, `$180.00`) \u2014 cast to numeric so the Revenue formula and sums work correctly.\n2. **Region label variants** (rows 6, 53: `east`, `south`) \u2014 normalized to `East`/`South` per the allowed labels. (Region isn't used in this answer, but it was a rules violation.)\n3. **Revenue formula violation** (row 52): Revenue was 14,405 but Quantity \u00d7 Price = 144. Recomputed per the rules formula `Revenue = Quantity * Price`.\n4. **Negative quantities** (rows 20, 35, 58): Quantity was negative, violating the rule \"Quantity: min 1, always a positive whole number.\" These rows were excluded from the analysis (they look like returns/refunds, not sales).\n\n**Caveats:** Excluding the 3 negative-quantity rows was a judgment call based on the rules file; if those represent legitimate refund transactions you want counted, the totals would change. No other missing values or duplicate rows were found.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Two values written as text with dollar signs ($6.00, $180.00); convert to numbers so Revenue = Quantity * Price can be validated and revenue summed correctly."
+        },
+        "reason": "Two values written as text with dollar signs ($6.00, $180.00); convert to numbers so Revenue = Quantity * Price can be validated and revenue summed correctly.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (61 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "south": "South"
+          },
+          "reason": "Case-only variants of allowed region labels; merge into canonical North/South/East/West."
+        },
+        "reason": "Case-only variants of allowed region labels; merge into canonical North/South/East/West.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'south': 'South'})"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            52
+          ],
+          "reason": "Row 52 Revenue (14405) does not match Quantity * Price (144); recompute per the rules formula."
+        },
+        "reason": "Row 52 Revenue (14405) does not match Quantity * Price (144); recompute per the rules formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[52], 'Revenue'] = [144.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            20,
+            35,
+            58
+          ],
+          "reason": "Rows 20, 35, 58 have negative Quantity, violating the rule that Quantity is always a positive whole number (min 1). These appear to be returns/refunds, not sales, and would distort total revenue by category."
+        },
+        "reason": "Rows 20, 35, 58 have negative Quantity, violating the rule that Quantity is always a positive whole number (min 1). These appear to be returns/refunds, not sales, and would distort total revenue by category.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          20,
+          35,
+          58
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [20, 35, 58]",
+        "code": "df = df.drop(index=[20, 35, 58])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

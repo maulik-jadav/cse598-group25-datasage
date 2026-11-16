@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 4,
+  "detect_fn": 4,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 16.67,
+  "tokens": 2625,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 190.18,
+    "Chinstrap": 199.64,
+    "Gentoo": 215.14
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix case and space variants in island\n    df['island'] = df['island'].str.strip().str.title()\n    \n    # Fix case variants in species and sex\n    df['species'] = df['species'].str.title()\n    df['sex'] = df['sex'].str.lower() if df['sex'].dtype == 'object' else df['sex']\n    \n    # Convert flipper_length_mm to numeric, coercing errors to NaN\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    \n    # Remove rows with invalid flipper_length_mm (outside allowed range)\n    df = df[(df['flipper_length_mm'] >= 170) & (df['flipper_length_mm'] <= 235)]\n    \n    # Drop rows with missing species (though none are missing per profile)\n    df = df.dropna(subset=['species'])\n    \n    return df\n\ndef answer(df):\n    # Group by species and calculate average flipper length\n    result = df.groupby('species', as_index=False)['flipper_length_mm'].mean()\n    \n    # Convert to dictionary with species as key and average as value\n    return {row['species']: round(row['flipper_length_mm'], 2) for _, row in result.iterrows()}"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 190.2812,
+    "Chinstrap": 199.6429,
+    "Gentoo": 215.1429
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "flipper_length_mm"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

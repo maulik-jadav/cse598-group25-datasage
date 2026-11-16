@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 73.61,
+  "tokens": 3869,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Normalize Category (strip stray spaces: 'Furniture ', ' Furniture', 'Accessories ')\n    df['Category'] = df['Category'].astype(str).str.strip()\n    df.loc[df['Category'].str.lower().isin(['nan', 'none']), 'Category'] = None\n    # Normalize Region: strip and fix typos\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Suoth': 'South', 'Nort': 'North'})\n    df.loc[~df['Region'].isin(['North', 'South', 'East', 'West']), 'Region'] = None\n    # Enforce Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['Category'] == 'Electronics']\n    d = d[d['Region'].notna()]\n    g = d.groupby('Region')['Revenue'].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

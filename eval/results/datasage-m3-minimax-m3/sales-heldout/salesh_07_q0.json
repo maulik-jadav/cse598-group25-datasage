@@ -1,0 +1,143 @@
+{
+  "task_id": "salesh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 60.91,
+  "tokens": 34389,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "extra": {
+    "final_summary": "**Average unit price by category:**\n\n| Category | Average Price |\n|---|---|\n| Accessories | $30.67 |\n| Electronics | $360.00 |\n| Furniture | $205.00 |\n| Office Supplies | $10.67 |\n\n**Data quality issues found and fixed:**\n1. **Region whitespace** \u2014 2 values had trailing spaces (\"West \", \"South \"). Fixed with `trim_whitespace`.\n2. **Region case variant** \u2014 1 value \"east\" was normalized to \"East\" via `normalize_labels`.\n3. **Duplicate rows** \u2014 2 exact duplicate rows (17, 23) were removed with `drop_duplicates`.\n4. **Negative Quantity** \u2014 Rows 19 (Quantity = -5) and 34 (Quantity = -4) violated the rule that Quantity must be a positive whole number. These rows were excluded since the values are clearly invalid (and also produced negative Revenue).\n\n**Caveats:** The question asks for average unit price, which is a property of the product, not the transaction. Since each row represents an order line with a Price, the mean of Price within each category is a reasonable proxy. After cleaning, 43 rows were used in the analysis.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "Region has trailing spaces (\"West \", \"South \") that need to be trimmed before label normalization"
+        },
+        "reason": "Region has trailing spaces (\"West \", \"South \") that need to be trimmed before label normalization",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: trimmed 2 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East"
+          },
+          "reason": "Region has case variant \"east\" that should be normalized to \"East\" per allowed labels"
+        },
+        "reason": "Region has case variant \"east\" that should be normalized to \"East\" per allowed labels",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: merged 1 label variant(s), 1 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East'})"
+      },
+      {
+        "version": 3,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Two exact duplicate rows (17, 23) inflate counts and averages"
+        },
+        "reason": "Two exact duplicate rows (17, 23) inflate counts and averages",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          17,
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            19,
+            34
+          ],
+          "reason": "Rows 19 and 34 have negative Quantity (-5 and -4), violating the rule that Quantity must be a positive whole number. These also produce negative Revenue."
+        },
+        "reason": "Rows 19 and 34 have negative Quantity (-5 and -4), violating the rule that Quantity must be a positive whole number. These also produce negative Revenue.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          19,
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [19, 34]",
+        "code": "df = df.drop(index=[19, 34])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 7
+  },
+  "corrections": 9,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-minimax-m3",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

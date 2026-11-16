@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 26.25,
+  "tokens": 2251,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.85714285714286,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix Region label variant\n    df['Region'] = df['Region'].replace('Nort', 'North')\n    \n    # Handle negative quantities and revenues\n    # Based on rules, Quantity must be >= 1. \n    # Rows with negative quantity are likely errors/returns and should be removed for avg price calculation\n    df = df[df['Quantity'] > 0]\n    \n    return df\n\ndef answer(df):\n    # Calculate average unit price per category\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    return result"
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gemma4-31b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.8571,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 723.0,
+  "tokens": 6986,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n\n    # Normalize text fields and fix category label variants.\n    for col in [\"Product\", \"Category\", \"Region\"]:\n        if col in df.columns:\n            df[col] = df[col].astype(\"string\").str.strip()\n\n    if \"Category\" in df.columns:\n        df[\"Category\"] = df[\"Category\"].replace({\n            \"Furnture\": \"Furniture\",\n            \"Accesories\": \"Accessories\"\n        })\n\n    # Remove exact duplicate rows, then enforce unique order numbers.\n    df = df.drop_duplicates()\n    if \"Order_ID\" in df.columns:\n        df = df.drop_duplicates(subset=[\"Order_ID\"], keep=\"first\")\n\n    # Drop rows without a region because region is the grouping key.\n    if \"Region\" in df.columns:\n        df = df.dropna(subset=[\"Region\"])\n\n    # Ensure numeric types and consistent revenue.\n    if \"Quantity\" in df.columns:\n        df[\"Quantity\"] = pd.to_numeric(df[\"Quantity\"], errors=\"coerce\")\n    if \"Price\" in df.columns:\n        df[\"Price\"] = pd.to_numeric(df[\"Price\"], errors=\"coerce\")\n    if {\"Quantity\", \"Price\", \"Revenue\"}.issubset(df.columns):\n        df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n\n    return df\n\ndef answer(df):\n    df = clean(df)\n    grouped = df.groupby(\"Region\", dropna=True)[\"Quantity\"].sum()\n    return {str(region): int(units) for region, units in grouped.items()}\n"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-beam-1-0",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

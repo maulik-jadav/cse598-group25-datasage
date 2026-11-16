@@ -1,0 +1,60 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 76.69,
+  "tokens": 3667,
+  "stop_reason": "code_error",
+  "note": "AttributeError: 'float' object has no attribute 'title'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\nREGION_FIX = {'west': 'West', 'south': 'South', 'wst': 'West', 'suoth': 'South'}\nALLOWED_REGIONS = ['North', 'South', 'East', 'West']\n\ndef clean(df):\n    df = df.copy()\n    # Price: strip currency symbols/text and convert to numeric\n    df['Price'] = (df['Price'].astype(str)\n                   .str.replace(r'[^0-9.\\-]', '', regex=True)\n                   .replace('', np.nan)\n                   .astype(float))\n    # Region: normalize case/space variants and fix typos\n    df['Region'] = (df['Region'].astype(str).str.strip()\n                    .apply(lambda v: v if v == 'nan' else v.title()))\n    df['Region'] = df['Region'].replace({'nan': np.nan})\n    df['Region'] = df['Region'].replace(REGION_FIX)\n    df.loc[~df['Region'].isin(ALLOWED_REGIONS), 'Region'] = np.nan\n    # Quantity must be a positive whole number; drop invalid rows\n    df = df[df['Quantity'] >= 1].copy()\n    df['Quantity'] = df['Quantity'].astype(int)\n    # Recompute Revenue for consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Region'])\n    g = d.groupby('Region')['Quantity'].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 0,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

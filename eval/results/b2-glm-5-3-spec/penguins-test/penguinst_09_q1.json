@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 26.67,
+  "tokens": 3309,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3688.157894736842,
+    "Chinstrap": 322688.46153846156,
+    "Gentoo": 5081.578947368421
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Normalize species labels (case variants and typo 'Gentto')\n    sp = df['species'].astype(str).str.strip().str.lower()\n    df['species'] = sp.map({'adelie': 'Adelie', 'chinstrap': 'Chinstrap', 'gentoo': 'Gentoo', 'gentto': 'Gentoo'})\n    # Parse body_mass_g written as text (e.g. '3,900')\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'].astype(str).str.replace(',', '', regex=False), errors='coerce')\n    # Fix sign errors in flipper_length_mm\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    return df\n\ndef answer(df):\n    df = clean(df)\n    g = df.dropna(subset=['species', 'body_mass_g']).groupby('species')['body_mass_g'].mean()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3701.3889,
+    "Chinstrap": 3754.5455,
+    "Gentoo": 5081.5789
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

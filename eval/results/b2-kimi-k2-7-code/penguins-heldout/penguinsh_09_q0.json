@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 126.0,
+  "tokens": 7893,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3666.67,
+    "Chinstrap": 3801.79,
+    "Gentoo": 5173.33
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Normalize sex labels without guessing missing values\n    df['sex'] = df['sex'].astype('string').str.strip().str.lower()\n    # Body mass: numeric and within the allowed gram range\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # Flipper length: numeric and within the allowed mm range\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = pd.NA\n    return df\n\ndef answer(df):\n    cleaned = clean(df)\n    valid = cleaned.dropna(subset=['species', 'body_mass_g'])\n    avg = valid.groupby('species')['body_mass_g'].mean().round(2)\n    return {str(k): float(v) for k, v in avg.items()}\n"
+  },
+  "corrections": 4,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3694.4444,
+    "Chinstrap": 3801.7857,
+    "Gentoo": 5173.3333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ]
+  ]
+}

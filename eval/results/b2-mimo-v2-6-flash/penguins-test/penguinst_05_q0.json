@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 16.52,
+  "tokens": 2598,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 91400.0,
+    "Chinstrap": 39575.0,
+    "Gentoo": 98775.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # strip whitespace in text columns and normalize label variants\n    for c in df.select_dtypes(include='object').columns:\n        df[c] = df[c].str.strip()\n    df['island'] = df['island'].replace({'Bisco': 'Biscoe'})\n    # drop exact duplicate rows (and duplicate ids)\n    df = df.drop_duplicates()\n    df = df.drop_duplicates(subset=['penguin_id'], keep='first')\n    # ensure body mass is numeric\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    g = df.dropna(subset=['species']).groupby('species')['body_mass_g'].sum()\n    return {k: float(v) for k, v in g.items()}\n"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-flash",
+  "dataset": "penguins-test",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 91400.0,
+    "Chinstrap": 39575.0,
+    "Gentoo": 98775.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "duplicates",
+      "penguin_id"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ]
+  ]
+}

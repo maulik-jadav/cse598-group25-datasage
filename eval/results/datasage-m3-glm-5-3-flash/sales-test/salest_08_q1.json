@@ -1,0 +1,110 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 7,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 81.59,
+  "tokens": 17609,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "extra": {
+    "final_summary": "Total revenue by category (after cleaning, 41 rows):\n\n- Electronics: $15,730\n- Furniture: $6,085\n- Accessories: $2,140\n- Office Supplies: $552\n\nProblems found and fixed:\n1. Category label variants (5 rows): \"electronics\", \"office supplies\", \"Accesories\", \"Electornics\", \"Office Suplies\" \u2014 normalized to the four allowed labels from the rules file (Electronics, Accessories, Furniture, Office Supplies).\n2. Revenue formula violations (rows 13 and 29): Revenue did not equal Quantity \u00d7 Price (e.g., row 13 had 450 instead of 45). Recomputed Revenue = Quantity \u00d7 Price per the rules file.\n\nNo duplicate rows, missing values, or invalid dates affected the analysis. All figures come from the cleaned dataset (version 2).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "electronics": "Electronics",
+            "office supplies": "Office Supplies",
+            "Accesories": "Accessories",
+            "Electornics": "Electronics",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Rules file allows only Electronics, Accessories, Furniture, Office Supplies; these are case/space variants and misspellings of allowed labels."
+        },
+        "reason": "Rules file allows only Electronics, Accessories, Furniture, Office Supplies; these are case/space variants and misspellings of allowed labels.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Category: merged 5 label variant(s), 5 cells",
+        "code": "df['Category'] = df['Category'].replace({'electronics': 'Electronics', 'office supplies': 'Office Supplies', 'Accesories': 'Accessories', 'Electornics': 'Electronics', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            13,
+            29
+          ],
+          "reason": "Rules file defines Revenue = Quantity * Price; rows 13 and 29 violate this formula."
+        },
+        "reason": "Rules file defines Revenue = Quantity * Price; rows 13 and 29 violate this formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[13, 29], 'Revenue'] = [45.0, 15.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 7,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

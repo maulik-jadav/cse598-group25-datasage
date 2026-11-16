@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinst_07_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 40.66,
+  "tokens": 3762,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 40.93333333333334,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix species label variants and whitespace\n    df['species'] = df['species'].astype(str).str.strip()\n    species_map = {\n        'adelie': 'Adelie',\n        'Adeile': 'Adelie',\n        'Gentoo ': 'Gentoo',\n        'Gentto': 'Gentoo',\n        'Chinstarp': 'Chinstrap',\n        'Chinstrap ': 'Chinstrap'\n    }\n    df['species'] = df['species'].replace(species_map)\n    # Convert text numbers to numeric and clean commas\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '').astype(float)\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    # Remove invalid / out-of-range flipper values\n    df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = float('nan')\n    # Ensure year is numeric\n    df['year'] = pd.to_numeric(df['year'], errors='coerce')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    sub = df[df['species'] == 'Adelie']\n    grouped = sub.groupby('island')['bill_length_mm'].mean()\n    grouped = grouped.dropna()\n    return {str(k): float(v) for k, v in grouped.items()}\n"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "penguins-test",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 40.9333,
+    "Dream": 38.75,
+    "Torgersen": 40.7
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

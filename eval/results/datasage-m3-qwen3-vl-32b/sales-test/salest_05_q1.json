@@ -1,0 +1,131 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 152.12,
+  "tokens": 47809,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "extra": {
+    "final_summary": "Found 3 whitespace variants in Category ('Furniture ', 'Accessories ', ' Furniture') and 2 misspellings in Region ('Nort', 'Suoth'), which were normalized. Also found 3 invalid dates in Date column ('TBD', '13/45/2026'), which were set to missing. All fixes applied. Total revenue by category: Accessories: 3255.0, Electronics: 10700.0, Furniture: 9635.0, Office Supplies: 222.0.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            "Accessories ": "Accessories",
+            "Furniture ": "Furniture"
+          },
+          "reason": "Correcting whitespace variants in Category to match allowed labels per rules."
+        },
+        "reason": "Correcting whitespace variants in Category to match allowed labels per rules.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 3 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', 'Accessories ': 'Accessories', 'Furniture ': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Nort": "North",
+            "Suoth": "South"
+          },
+          "reason": "Correcting misspellings in Region to match allowed labels per rules."
+        },
+        "reason": "Correcting misspellings in Region to match allowed labels per rules.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'Nort': 'North', 'Suoth': 'South'})"
+      },
+      {
+        "version": 3,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            14,
+            18,
+            36
+          ],
+          "reason": "Set invalid dates (TBD, 13/45/2026) to missing per rules requiring valid YYYY-MM-DD format."
+        },
+        "reason": "Set invalid dates (TBD, 13/45/2026) to missing per rules requiring valid YYYY-MM-DD format.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: set 3 value(s) to missing",
+        "code": "df.loc[[14, 18, 36], 'Date'] = pd.NA"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 10
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen3-vl-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

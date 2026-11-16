@@ -1,0 +1,54 @@
+{
+  "task_id": "salest_03_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 42.63,
+  "tokens": 2541,
+  "stop_reason": "code_error",
+  "note": "    - passing `format='mixed'`, and the format will be inferred for each element individually. You might want to use `dayfirst` alongside this.",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().copy()\n    \n    # Clean Category labels\n    df['Category'] = df['Category'].str.strip()\n    \n    # Clean Price column (remove $ and convert to numeric)\n    df['Price'] = df['Price'].replace('[$,]', '', regex=True).astype(float)\n    \n    # Ensure Quantity is numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'])\n    \n    # Recalculate Revenue based on rules to fix potential cross-column errors\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Convert Date to datetime\n    df['Date'] = pd.to_datetime(df['Date'])\n    \n    return df\n\ndef answer(df):\n    # Create YYYY-MM format for grouping\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n    \n    # Group by month and sum revenue\n    result = df.groupby('Month')['Revenue'].sum().to_dict()\n    \n    return result"
+  },
+  "corrections": 0,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-gemma4-31b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 9858.0,
+    "2026-02": 23613.0,
+    "2026-03": 8246.0,
+    "2026-04": 1391.0,
+    "2026-05": 2346.0,
+    "2026-06": 4690.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 686.68,
+  "tokens": 2555,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0,
+    "all": 24027.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert text numbers to numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Clean Category column: standardize variants\n    df['Category'] = df['Category'].replace({\n        'Accesories': 'Accessories',\n        'electronics': 'Electronics',\n        'Electornics': 'Electronics',\n        'office supplies': 'Office Supplies',\n        'Office Suplies': 'Office Supplies'\n    })\n    \n    # Clean Region column: standardize variants\n    df['Region'] = df['Region'].replace({\n        'East ': 'East',\n        ' North': 'North',\n        'North ': 'North'\n    })\n    \n    # Parse Date column to datetime\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Extract month as YYYY-MM\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n    \n    # Drop rows with invalid dates\n    df = df.dropna(subset=['Date'])\n    \n    # Ensure Revenue matches Quantity * Price (for validation, but not required for question)\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\n\ndef answer(df):\n    # Group by Month and sum Revenue\n    result = df.groupby('Month')['Revenue'].sum().to_dict()\n    \n    # Return as dict with key 'all' for overall total\n    result['all'] = df['Revenue'].sum()\n    \n    return result"
+  },
+  "corrections": 10,
+  "planted": 11,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

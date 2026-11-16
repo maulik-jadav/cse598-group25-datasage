@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinsh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 172.44,
+  "tokens": 2899,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 190.1818181818182,
+    "Chinstrap": 199.53333333333333,
+    "Gentoo": 215.9375
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # normalize island label variants (case + trailing spaces)\n    df['island'] = df['island'].astype(str).str.strip().str.capitalize().replace({'Nan': None})\n    # body_mass_g written as text with commas -> numeric\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip(),\n        errors='coerce')\n    # flipper_length_mm: coerce to numeric, fix sign errors (negatives), enforce valid range\n    fl = pd.to_numeric(df['flipper_length_mm'].astype(str).str.strip(), errors='coerce')\n    fl = fl.abs()  # sign errors like -215 -> 215\n    fl = fl.where((fl >= 170) & (fl <= 235))  # out-of-range -> NaN\n    df['flipper_length_mm'] = fl\n    # other numeric columns coercion for safety\n    for c in ['bill_length_mm', 'bill_depth_mm', 'year']:\n        df[c] = pd.to_numeric(df[c], errors='coerce')\n    # drop rows missing the key measurement or group key\n    df = df.dropna(subset=['species', 'flipper_length_mm'])\n    return df\n\ndef answer(df):\n    d = clean(df)\n    g = d.groupby('species')['flipper_length_mm'].mean()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 9,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-heldout",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 190.2812,
+    "Chinstrap": 199.6429,
+    "Gentoo": 215.1429
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

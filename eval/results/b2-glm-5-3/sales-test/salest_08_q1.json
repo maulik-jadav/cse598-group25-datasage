@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 30.95,
+  "tokens": 3191,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Normalize Category label variants to the allowed canonical values\n    cat_map = {\n        'accesories': 'Accessories',\n        'accessories': 'Accessories',\n        'electronics': 'Electronics',\n        'electornics': 'Electronics',\n        'furniture': 'Furniture',\n        'office supplies': 'Office Supplies',\n        'office suplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].astype(str).str.strip().map(\n        lambda v: cat_map.get(v.strip().lower(), v.strip())\n    )\n    # Normalize Region (strip stray whitespace)\n    df['Region'] = df['Region'].astype(str).str.strip()\n    # Ensure numeric types\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Recompute Revenue per the formula Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df = df.dropna(subset=['Category'])\n    grouped = df.groupby('Category')['Revenue'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 10,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

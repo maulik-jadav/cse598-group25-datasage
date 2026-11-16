@@ -1,0 +1,85 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 94.49,
+  "tokens": 27607,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "extra": {
+    "final_summary": "Total revenue per month (2026):\n\n- January: $5,335\n- February: $6,462\n- March: $6,058\n- April: $1,694\n- May: $4,619\n- June: $879\n\nData problems found and fixes applied:\n1. **Invalid dates (3 rows: 5, 6, 44)** \u2014 values \"TBD\", \"not-a-date\", and \"13/45/2026\" could not be assigned to a month. These were set to missing via parse_dates, so they are excluded from the monthly totals (44 of 47 rows used).\n2. **Revenue column** \u2014 verified consistent with the rule `Revenue = Quantity * Price` (0 violations), so no corrections needed.\n3. **Price column** \u2014 stored partly as text with `$` signs (rows 16, 25, 28), but not used directly since Revenue is already numeric and valid. Left as-is.\n4. **Region label variants** \u2014 \"North \" (trailing space) and \"Suoth\" (misspelling) exist, but Region is not used in this question, so left alone.\n\nCaveat: The 3 rows with invalid dates are excluded, so their revenue is not included in any month's total.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Rows 5, 6, 44 have invalid dates (TBD, not-a-date, 13/45/2026) that cannot be assigned to a month for the revenue-per-month analysis."
+        },
+        "reason": "Rows 5, 6, 44 have invalid dates (TBD, not-a-date, 13/45/2026) that cannot be assigned to a month for the revenue-per-month analysis.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 6,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-ornith-1-5-35b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

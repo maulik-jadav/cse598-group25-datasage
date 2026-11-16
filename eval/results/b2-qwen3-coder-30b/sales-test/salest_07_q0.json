@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 28.83,
+  "tokens": 2299,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix Category label variants\n    df['Category'] = df['Category'].str.strip()\n    df['Category'] = df['Category'].replace('Office Supplies ', 'Office Supplies')\n    df['Category'] = df['Category'].replace(' Electronics', 'Electronics')\n    \n    # Fix Quantity column - convert to numeric and handle negatives\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df = df[df['Quantity'] > 0]\n    \n    # Fix Revenue column - remove negative values\n    df = df[df['Revenue'] >= 0]\n    \n    # Handle missing Region values\n    df['Region'] = df['Region'].fillna('Unknown')\n    \n    return df\n\ndef answer(df):\n    # Group by Category and count orders\n    result = df.groupby('Category').size().to_dict()\n    \n    # Convert to required format\n    formatted_result = {}\n    for category, count in result.items():\n        formatted_result[category] = int(count)\n    \n    return formatted_result"
+  },
+  "corrections": 5,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-30b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 55.96,
+  "tokens": 4191,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Strip whitespace from text columns\n    for col in ['Category', 'Region', 'Product']:\n        if col in df.columns:\n            df[col] = df[col].str.strip()\n    # Fix region label variants\n    df['Region'] = df['Region'].replace({'Suoth': 'South', 'Nort': 'North'})\n    # Ensure numeric quantities and prices\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Recalculate Revenue per rule\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    sub = df[df['Category'] == 'Electronics'].copy()\n    # Drop missing group keys\n    sub = sub.dropna(subset=['Region'])\n    grouped = sub.groupby('Region', as_index=False)['Revenue'].sum()\n    result = {}\n    for _, row in grouped.iterrows():\n        result[str(row['Region'])] = float(row['Revenue'])\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

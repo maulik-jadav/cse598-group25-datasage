@@ -1,0 +1,69 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 133.34,
+  "tokens": 5153,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7142857142857,
+    "Furniture": 191.05263157894737,
+    "Office Supplies": 11.368421052631579
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # strip whitespace for text columns (fixes Region variants like ' West', ' South', 'West ')\n    for col in ['Category', 'Region']:\n        if col in df.columns:\n            df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # fix Category label variants\n    cat_map = {'Office Suplies': 'Office Supplies', 'Furnture': 'Furniture'}\n    if 'Category' in df.columns:\n        df['Category'] = df['Category'].replace(cat_map)\n    # remove exact duplicate rows (Order_ID 2005 duplicate)\n    df = df.drop_duplicates()\n    # ensure numeric types\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # filter invalid Quantity (min 1, positive whole number) and Price (min 0)\n    df = df[df['Quantity'] >= 1]\n    df = df[df['Price'] >= 0]\n    # keep only allowed categories after fixing variants\n    allowed_cat = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed_cat)]\n    # recompute Revenue for cross-column consistency Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    # drop missing group keys\n    df = df.dropna(subset=['Category'])\n    grouped = df.groupby('Category')['Price'].mean()\n    # multi-column labels would be joined with \" | \", single overall uses \"all\" - here single column\n    result = {str(k): float(v) for k, v in grouped.items()}\n    return result\n"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

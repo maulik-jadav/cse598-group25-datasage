@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 13.15,
+  "tokens": 2338,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix category label variant: strip leading space from ' Furniture'\n    df['Category'] = df['Category'].str.strip()\n    \n    # Convert Price from text to numeric (remove $ and convert)\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).astype(float)\n    \n    # Ensure Quantity is numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'])\n    \n    # Ensure Revenue is numeric\n    df['Revenue'] = pd.to_numeric(df['Revenue'])\n    \n    # Drop rows with missing Region (since question asks by region, missing region can't be grouped)\n    df = df.dropna(subset=['Region'])\n    \n    return df\n\ndef answer(df):\n    grouped = df.groupby('Region')['Quantity'].sum()\n    return grouped.to_dict()"
+  },
+  "corrections": 5,
+  "planted": 11,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

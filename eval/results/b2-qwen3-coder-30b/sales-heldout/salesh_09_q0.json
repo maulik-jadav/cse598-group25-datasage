@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 7.35,
+  "tokens": 2545,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 29.72,
+    "Electronics": 293.08,
+    "Furniture": 188.75,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    # Fix negative quantity\n    df = df[df['Quantity'] > 0]\n    \n    # Fix invalid dates\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n    \n    # Fix price format\n    df['Price'] = df['Price'].str.replace('$', '').astype(float)\n    \n    # Fix region label variants\n    region_mapping = {\n        'Wst': 'West',\n        'Eats': 'East',\n        ' West': 'West',\n        'East ': 'East'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Remove rows where Revenue doesn't match Quantity * Price\n    df['Calculated_Revenue'] = df['Quantity'] * df['Price']\n    df = df[df['Revenue'] == df['Calculated_Revenue']]\n    \n    return df[['Order_ID', 'Date', 'Product', 'Category', 'Quantity', 'Price', 'Region', 'Revenue']]\n\ndef answer(df):\n    result = {}\n    # Calculate average unit price by category\n    avg_prices = df.groupby('Category')['Price'].mean()\n    \n    # Convert to dictionary\n    for category, avg_price in avg_prices.items():\n        result[category] = round(avg_price, 2)\n    \n    return result"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.2632,
+    "Electronics": 277.8571,
+    "Furniture": 201.1538,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

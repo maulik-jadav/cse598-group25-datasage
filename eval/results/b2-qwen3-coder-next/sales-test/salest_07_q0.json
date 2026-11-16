@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 13.93,
+  "tokens": 2231,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 11.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean Category column: strip extra spaces and standardize case\n    df['Category'] = df['Category'].str.strip()\n    \n    # Fix negative Quantity values: set to NaN (invalid per rules)\n    df.loc[df['Quantity'] < 0, 'Quantity'] = pd.NA\n    \n    # Fix Revenue for rows where Quantity is valid: Revenue = Quantity * Price\n    valid_qty_mask = df['Quantity'].notna()\n    df.loc[valid_qty_mask, 'Revenue'] = df.loc[valid_qty_mask, 'Quantity'] * df.loc[valid_qty_mask, 'Price']\n    \n    # Drop rows where Category is not in allowed list (after cleaning)\n    allowed_categories = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed_categories)]\n    \n    return df\n\ndef answer(df):\n    # Count orders per category\n    counts = df.groupby('Category').size()\n    return counts.to_dict()"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

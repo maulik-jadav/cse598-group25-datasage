@@ -1,0 +1,53 @@
+{
+  "task_id": "penguinst_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.76,
+  "tokens": 2532,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3857.6923076923076,
+    "male": 4485.227272727273
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix island label variants (e.g., ' Biscoe' -> 'Biscoe')\n    df['island'] = df['island'].str.strip()\n    \n    # Convert body_mass_g from text to numeric (handle commas)\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '').astype(float)\n    \n    # Filter out invalid body_mass_g values (must be between 2500 and 6500)\n    df = df[(df['body_mass_g'] >= 2500) & (df['body_mass_g'] <= 6500)]\n    \n    # Drop rows with missing sex (as per rules: missing means unknown; do not guess)\n    df = df.dropna(subset=['sex'])\n    \n    return df\n\ndef answer(df):\n    # Group by sex and compute average body mass\n    result = df.groupby('sex')['body_mass_g'].mean().to_dict()\n    return result\n"
+  },
+  "corrections": 5,
+  "planted": 9,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3876.0,
+    "male": 4485.2273
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 13.48,
+  "tokens": 2140,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.65217391304348,
+    "Electronics": 259.2307692307692,
+    "Furniture": 251.94444444444446,
+    "Office Supplies": 9.23076923076923
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Standardize category labels\n    mapping = {\"Office Suplies\": \"Office Supplies\", \"Accesories\": \"Accessories\"}\n    df['Category'] = df['Category'].map(mapping).fillna(df['Category'])\n    # Convert Quantity and Price to numeric (they may be stored as strings)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Trim whitespace in Region and fill missing values with a placeholder\n    df['Region'] = df['Region'].astype(str).str.strip().fillna('Unknown')\n    # Ensure Date is in proper ISO format (YYYY-MM-DD)\n    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')\n    return df\n\ndef answer(df):\n    # Compute average unit price per category\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-granite41-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.6522,
+    "Electronics": 259.2308,
+    "Furniture": 251.9444,
+    "Office Supplies": 9.2308
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

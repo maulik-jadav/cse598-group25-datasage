@@ -1,0 +1,124 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 406.51,
+  "tokens": 20854,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "extra": {
+    "final_summary": "Units sold by region: East 94, North 37, South 78, West 72.\n\nProblems found and fixed:\n- Region had case variants (\"south\", \"west\") and misspellings (\"Suoth\", \"Wst\") \u2014 merged into the allowed labels North/South/East/West.\n- Row 44 (Order 2045) had Quantity = -5, impossible per the rules (Quantity must be a positive whole number) \u2014 excluded.\n\nCaveats:\n- 3 rows (8, 48, 57) have no Region value. I proposed excluding them, but that fix was rejected, so they remain in the data and are simply not counted toward any region in the totals above.\n- Price has 2 values written as text (\"$900.00\", \"$45.00\"); they don't affect this question since Quantity is already numeric.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "south": "South",
+            "west": "West",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "Merge case variants and misspellings into allowed Region labels"
+        },
+        "reason": "Merge case variants and misspellings into allowed Region labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Region: merged 4 label variant(s), 4 cells",
+        "code": "df['Region'] = df['Region'].replace({'south': 'South', 'west': 'West', 'Suoth': 'South', 'Wst': 'West'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            44
+          ],
+          "reason": "Quantity is -5, but rules say Quantity must be a positive whole number"
+        },
+        "reason": "Quantity is -5, but rules say Quantity must be a positive whole number",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          44
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [44]",
+        "code": "df = df.drop(index=[44])"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "summary": "excluded 3 row(s): [8, 48, 57]"
+      }
+    ],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": false,
+        "why": "removes row 8 (id 2009) that should be kept"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-hemmingway-1-5",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

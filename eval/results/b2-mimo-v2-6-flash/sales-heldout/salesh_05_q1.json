@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 21.55,
+  "tokens": 2638,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    df['Price'] = (df['Price'].astype(str)\n                   .str.replace('$', '', regex=False)\n                   .str.replace(',', '', regex=False)\n                   .str.strip())\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    region_map = {'west': 'West', 'Wst': 'West',\n                  'south': 'South', 'Suoth': 'South',\n                  'north': 'North', 'east': 'East'}\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace(region_map)\n    df = df.dropna(subset=['Region'])\n    df = df[df['Region'] != 'nan']\n    df = df[(df['Quantity'] >= 1) & (df['Price'] >= 0)]\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    elec = df[df['Category'] == 'Electronics']\n    g = elec.groupby('Region')['Revenue'].sum()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

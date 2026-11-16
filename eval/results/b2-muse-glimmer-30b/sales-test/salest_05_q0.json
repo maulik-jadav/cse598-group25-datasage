@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 73.52,
+  "tokens": 5327,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # strip whitespace from text columns safely\n    for col in [\"Category\", \"Region\", \"Product\", \"Date\"]:\n        if col in df.columns:\n            df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # standardise known label variants\n    region_map = {\"Suoth\": \"South\", \"Nort\": \"North\"}\n    df[\"Region\"] = df[\"Region\"].replace(region_map)\n    # ensure numeric types\n    for col in [\"Quantity\", \"Price\", \"Revenue\"]:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors=\"coerce\")\n    # fix cross-column rule: Revenue = Quantity * Price\n    if {\"Quantity\", \"Price\"}.issubset(df.columns):\n        df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n    # optional date normalisation \u2013 keep as string but try parse\n    if \"Date\" in df.columns:\n        # keep original string; parsing is attempted for validation only\n        _ = pd.to_datetime(df[\"Date\"], errors=\"coerce\", format=\"%Y-%m-%d\")\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    # filter to Electronics category after cleaning\n    sub = dfc[dfc[\"Category\"] == \"Electronics\"]\n    # drop rows with missing grouping key\n    sub = sub.dropna(subset=[\"Region\"])\n    # total revenue by region\n    grouped = sub.groupby(\"Region\", dropna=True)[\"Revenue\"].sum()\n    # return plain dict with native numbers\n    return {str(k): float(v) for k, v in grouped.items()}\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

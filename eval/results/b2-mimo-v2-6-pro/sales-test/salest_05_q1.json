@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 34.79,
+  "tokens": 2688,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "extra": {
+    "code": "ALLOWED_CATEGORIES = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n\ndef clean(df):\n    d = df.copy()\n    # normalize Category labels (whitespace / case variants -> canonical allowed values)\n    cat = d[\"Category\"].astype(\"string\").str.strip().str.replace(r\"\\s+\", \" \", regex=True)\n    canon = {c.lower(): c for c in ALLOWED_CATEGORIES}\n    d[\"Category\"] = cat.map(lambda x: canon.get(str(x).lower(), x) if x is not None and str(x) != \"<NA>\" else x)\n    # numeric coercion\n    d[\"Quantity\"] = pd.to_numeric(d[\"Quantity\"], errors=\"coerce\")\n    d[\"Price\"] = pd.to_numeric(d[\"Price\"], errors=\"coerce\")\n    # enforce Revenue = Quantity * Price\n    d[\"Revenue\"] = d[\"Quantity\"] * d[\"Price\"]\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=[\"Category\"])\n    g = d.groupby(\"Category\", dropna=True)[\"Revenue\"].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

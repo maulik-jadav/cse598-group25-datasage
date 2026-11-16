@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 171.83,
+  "tokens": 9878,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    region_mapping = {'north': 'North', 'Nort': 'North', 'east': 'East', 'Suoth': 'South', 'Wst': 'West', 'south': 'South', 'west': 'West'}\n    df['Region'] = df['Region'].str.strip().map(region_mapping).fillna(df['Region'])\n    df = df[df['Region'].isin(['North', 'South', 'East', 'West'])]\n\n    df['Price'] = pd.to_numeric(df['Price'].str.replace('$', ''), errors='coerce')\n    df = df.dropna(subset=['Price'])\n    df['Revenue'] = df['Quantity'] * df['Price']\n    df = df.dropna(subset=['Revenue'])\n\n    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce')\n    df = df.dropna(subset=['Date'])\n\n    return df\n\n\ndef answer(df):\n    electronics = df[df['Category'] == 'Electronics']\n    grouped = electronics.groupby('Region')['Revenue'].sum().to_dict()\n    return grouped"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b-think",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,184 @@
+{
+  "task_id": "salesh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 66.87,
+  "tokens": 52297,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "extra": {
+    "final_summary": "**Answer:**  \n- Accessories: **16** orders  \n- Electronics: **13** orders  \n- Furniture: **10** orders  \n- Office Supplies: **23** orders  \n\n**Data quality actions taken**\n1. Normalized the \u201cCategory\u201d label \u201coffice supplies\u201d \u2192 \u201cOffice Supplies\u201d.  \n2. Normalized the \u201cRegion\u201d misspellings \u201cEats\u201d \u2192 \u201cEast\u201d and \u201cSuoth\u201d \u2192 \u201cSouth\u201d.  \n3. Removed 2 exact duplicate rows.  \n4. Fixed 3 invalid dates by setting them to missing.  \n5. Recomputed the Revenue for the single row where it didn\u2019t match\u202fQuantity\u202f\u00d7\u202fPrice.  \n6. Checked for missing Region values (2 rows) \u2013 left as missing because no rule specified a fill value.\n\nAll remaining data needed for the question is clean, so the count of orders per category is reliable.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "office supplies": "Office Supplies"
+          },
+          "reason": "Merge case variant to standard label"
+        },
+        "reason": "Merge case variant to standard label",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({'office supplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Exact duplicate rows identified"
+        },
+        "reason": "Exact duplicate rows identified",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          12,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Eats": "East",
+            "Suoth": "South"
+          },
+          "reason": "Merge misspelled region labels"
+        },
+        "reason": "Merge misspelled region labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'Eats': 'East', 'Suoth': 'South'})"
+      },
+      {
+        "version": 4,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Set invalid dates to missing"
+        },
+        "reason": "Set invalid dates to missing",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 5,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            28
+          ],
+          "reason": "Fix revenue mismatch according to rule"
+        },
+        "reason": "Fix revenue mismatch according to rule",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[28], 'Revenue'] = [105.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 14
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

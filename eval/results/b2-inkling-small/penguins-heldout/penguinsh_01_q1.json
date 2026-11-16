@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinsh_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 56.27,
+  "tokens": 4329,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 78775.0,
+    "Chinstrap": 28400.0,
+    "Gentoo": 160050.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Fix species label variants\n    df['species'] = df['species'].astype(str).str.strip()\n    df['species'] = df['species'].replace({'adelie': 'Adelie', 'gentoo': 'Gentoo'})\n    # Fix island label variants\n    df['island'] = df['island'].astype(str).str.strip()\n    df['island'] = df['island'].replace({'Bisco': 'Biscoe', 'Dram': 'Dream'})\n    # Convert text numbers to numeric\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['bill_length_mm'] = pd.to_numeric(df['bill_length_mm'], errors='coerce')\n    df['bill_depth_mm'] = pd.to_numeric(df['bill_depth_mm'], errors='coerce')\n    df['year'] = pd.to_numeric(df['year'], errors='coerce')\n    # Fix negative flipper values (sign error)\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df = df.dropna(subset=['species', 'body_mass_g'])\n    # Group by species and sum body mass\n    grouped = df.groupby('species')['body_mass_g'].sum()\n    return grouped.to_dict()\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 74875.0,
+    "Chinstrap": 24675.0,
+    "Gentoo": 155250.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

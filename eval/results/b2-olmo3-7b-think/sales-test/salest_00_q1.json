@@ -1,0 +1,42 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 1,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 177.11,
+  "tokens": 12794,
+  "stop_reason": "code_error",
+  "note": "TypeError: '<=' not supported between instances of 'int' and 'str'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    date_errors = []\n    for idx, row in df.iterrows():\n        date_str = row['Date']\n        try:\n            dt = pd.to_datetime(date_str, format='%Y-%m-%d')\n            if date_str.lower() in ['tbd', 'not-a-date']:\n                raise ValueError\n            # Keep valid datetime\n        except:\n            date_errors.append(idx)\n    df = df.drop(index=date_errors)\n\n    price_errors = []\n    for idx, row in df.iterrows():\n        price_str = row['Price']\n        try:\n            price = float(price_str)\n        except:\n            price_errors.append(idx)\n            continue\n    df = df.drop(index=price_errors)\n\n    quantity_out = []\n    for idx, row in df.iterrows():\n        q = row['Quantity']\n        if not (1 <= q <= 8):\n            quantity_out.append(idx)\n    df = df.drop(index=quantity_out)\n\n    allowed = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    category_out = []\n    for idx, row in df.iterrows():\n        cat = row['Category']\n        if cat not in allowed:\n            category_out.append(idx)\n    df = df.drop(index=category_out)\n\n    df['Revenue'] = df.apply(lambda x: x['Quantity'] * x['Price'], axis=1)\n    rev_out = []\n    for idx, row in df.iterrows():\n        rev = row['Revenue']\n        if not (12 <= rev <= 3600):\n            rev_out.append(idx)\n    df = df.drop(index=rev_out)\n\n    return df\n\ndef answer(df):\n    df['month'] = df['Date'].dt.strftime('%Y-%m')\n    monthly = df.groupby('month')['Revenue'].sum().reset_index()\n    total = monthly['Revenue'].sum()\n    monthly['all'] = total\n    result = {}\n    for row in monthly.itertuples():\n        result[row.month] = row.Revenue\n    result['all'] = total\n    return result"
+  },
+  "corrections": 0,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ]
+  ]
+}

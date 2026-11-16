@@ -1,0 +1,58 @@
+{
+  "task_id": "salesh_03_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 305.86,
+  "tokens": 12681,
+  "stop_reason": "code_error",
+  "note": "    - passing `format='mixed'`, and the format will be inferred for each element individually. You might want to use `dayfirst` alongside this.",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Quantity and Price to numeric, coerce errors to NaN\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n\n    # Convert Date to datetime\n    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d')\n\n    # Compute Revenue as Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    # Handle label variants for Category\n    allowed_category = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    df['Category'] = df['Category'].apply(lambda x: x if x in allowed_category else \"Office Supplies\" if x.lower() == \"office supplies\" else x)\n\n    # Handle label variant for Region (Suoth -> South)\n    allowed_region = [\"North\", \"South\", \"East\", \"West\"]\n    df['Region'] = df['Region'].apply(lambda x: x if x in allowed_region else \"South\" if x.lower() == \"suoth\" else x)\n\n    # Drop rows where Quantity or Price is NaN (since they are required)\n    df = df.dropna(subset=['Quantity', 'Price'])\n\n    return df\n\ndef answer(df):\n    # Extract month from Date\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n\n    # Group by month and sum Revenue\n    grouped = df.groupby('Month')['Revenue'].sum().reset_index()\n\n    # Create dictionary mapping month to revenue\n    result = {}\n    for row in grouped.itertuples():\n        month = row.Month\n        revenue = row.Revenue\n        result[month] = revenue\n\n    # Drop any months with zero revenue? Or only include those with entries?\n    # The problem says to drop missing group keys. If a month has no entries after filtering, it's not in grouped.\n    return result"
+  },
+  "corrections": 0,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

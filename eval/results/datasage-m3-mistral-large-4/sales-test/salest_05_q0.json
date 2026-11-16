@@ -1,0 +1,105 @@
+{
+  "task_id": "salest_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 260.55,
+  "tokens": 19023,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "extra": {
+    "final_summary": "Total revenue by region for Electronics (Category = \"Electronics\", sum of Revenue, grouped by Region): East = $1,140; North = $260; South = $4,800; West = $2,700 (10 rows used).\n\nData problems found and fixed:\n1. Category had 3 label variants with extra spaces (\" Furniture\", \"Accessories \", \"Furniture \" on rows 8, 24, 39) \u2014 merged into the allowed labels with normalize_labels (auto-approved, case/space only).\n2. Region had 2 misspellings (\"Nort\" \u2192 North on row 20, \"Suoth\" \u2192 South on row 38) \u2014 merged with normalize_labels (approved).\n3. Verified Revenue = Quantity * Price holds for all rows (0 violations), no duplicate rows, and Quantity/Price are within valid ranges.\n\nCaveat: 2 rows have a missing Region (rows 15 and 17). Row 15 is an Electronics order (Monitor, Revenue $1,800) with no region, so it cannot be assigned to any region and is not included in the per-region totals above; the rules file does not specify a default region, so it was left missing rather than guessed. Row 17 is Accessories and does not affect this question.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            "Accessories ": "Accessories",
+            "Furniture ": "Furniture"
+          },
+          "reason": "Merge case/space variants into allowed Category labels (rows 8, 24, 39) so Electronics filter and grouping are correct."
+        },
+        "reason": "Merge case/space variants into allowed Category labels (rows 8, 24, 39) so Electronics filter and grouping are correct.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 3 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', 'Accessories ': 'Accessories', 'Furniture ': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Nort": "North",
+            "Suoth": "South"
+          },
+          "reason": "Fix misspelled Region labels (rows 20, 38) so they map to allowed regions North/South for the by-region grouping."
+        },
+        "reason": "Fix misspelled Region labels (rows 20, 38) so they map to allowed regions North/South for the by-region grouping.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'Nort': 'North', 'Suoth': 'South'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mistral-large-4",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

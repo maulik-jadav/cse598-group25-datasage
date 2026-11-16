@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 54.99,
+  "tokens": 3786,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Normalize text columns (strip stray whitespace)\n    df['Category'] = df['Category'].astype(str).str.strip()\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'nan': float('nan'), 'None': float('nan'), '': float('nan')})\n    # Fix category typo / label variant\n    df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})\n    # Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    # Enforce Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    months = pd.to_datetime(d['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m')\n    g = d.groupby(months)['Revenue'].sum()\n    return {str(k): float(v) for k, v in g.items() if pd.notna(k)}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

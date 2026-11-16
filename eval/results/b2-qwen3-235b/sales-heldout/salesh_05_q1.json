@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 24.49,
+  "tokens": 2439,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Price: remove $ and .00, convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '').str.replace('.00', '').astype(float)\n    \n    # Fix Region label variants\n    region_mapping = {\n        'west': 'West',\n        'Wst': 'West',\n        'south': 'South',\n        'Suoth': 'South'\n    }\n    df['Region'] = df['Region'].map(region_mapping).fillna(df['Region'])\n    \n    # Fix negative Quantity and recalculate Revenue\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recalculate Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Filter for Electronics category\n    electronics = df[df['Category'] == 'Electronics']\n    # Group by Region and sum Revenue\n    result = electronics.groupby('Region')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 9,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-235b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 5880.0,
+    "North": 7560.0,
+    "South": 4200.0,
+    "West": 10880.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

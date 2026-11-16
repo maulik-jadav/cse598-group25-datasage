@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 33.25,
+  "tokens": 3360,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Normalize Category label variants (extra spaces)\n    df['Category'] = df['Category'].astype(str).str.strip()\n    # Parse Price written as text (e.g. '$300.00')\n    df['Price'] = (\n        df['Price'].astype(str)\n        .str.replace('$', '', regex=False)\n        .str.replace(',', '', regex=False)\n        .str.strip()\n        .astype(float)\n    )\n    # Quantity must be a positive whole number (min 1); drop invalid negative row\n    df = df[df['Quantity'] >= 1]\n    # Recompute Revenue for consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    g = df.groupby('Region')['Quantity'].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

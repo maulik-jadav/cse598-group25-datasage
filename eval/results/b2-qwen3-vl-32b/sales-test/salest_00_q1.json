@@ -1,0 +1,66 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 141.15,
+  "tokens": 2502,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0,
+    "all": 25047.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Quantity, Revenue, Price to numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'].str.replace(r'[\\$\\,\\s]', '', regex=True), errors='coerce')\n    \n    # Fix Region label variants\n    df['Region'] = df['Region'].str.strip()\n    df['Region'] = df['Region'].replace({'North ': 'North', 'Suoth': 'South'})\n    \n    # Fix Date: convert to datetime, handle invalid dates\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # Filter out rows with invalid dates\n    df = df.dropna(subset=['Date'])\n    \n    # Recalculate Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Extract month from Date\n    df['Month'] = df['Date'].dt.to_period('M')\n    \n    return df\n\n\ndef answer(df):\n    # Group by Month and sum Revenue\n    monthly_revenue = df.groupby('Month')['Revenue'].sum().to_dict()\n    \n    # Format keys as 'YYYY-MM'\n    result = {str(k): v for k, v in monthly_revenue.items()}\n    \n    # Add overall total\n    result['all'] = df['Revenue'].sum()\n    \n    return result"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

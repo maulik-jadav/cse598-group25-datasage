@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 160.57,
+  "tokens": 5575,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Category label variants (strip whitespace)\n    df['Category'] = df['Category'].str.strip()\n    \n    # Fix Price text numbers (remove $ and convert to float)\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)\n    \n    # Fix negative Quantity - set to NaN (invalid per rules: must be positive)\n    df.loc[df['Quantity'] < 0, 'Quantity'] = pd.NA\n    \n    # Recalculate Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    result = df.groupby('Region', dropna=True)['Quantity'].sum()\n    return {k: v for k, v in result.items() if pd.notna(k)}"
+  },
+  "corrections": 6,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-minimax-m3",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 173.46,
+  "tokens": 6001,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 77.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix Region case variants and typos\n    region_map = {\n        'west': 'West',\n        'south': 'South',\n        'Wst': 'West',\n        'Suoth': 'South'\n    }\n    df['Region'] = df['Region'].replace(region_map)\n    \n    # Fix Price text values (remove $ and convert to float)\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).astype(float)\n    \n    # Fix negative Quantity (take absolute value to make it positive)\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Fix Revenue to be consistent with Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Drop rows with missing Region\n    df_clean = df.dropna(subset=['Region'])\n    result = df_clean.groupby('Region')['Quantity'].sum()\n    return result.to_dict()"
+  },
+  "corrections": 9,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-minimax-m3",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

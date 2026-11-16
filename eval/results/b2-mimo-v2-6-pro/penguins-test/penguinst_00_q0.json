@@ -1,0 +1,65 @@
+{
+  "task_id": "penguinst_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 3,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 109.56,
+  "tokens": 3369,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3944.1666666666665,
+    "male": 4668.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # normalize label variants (case / stray spaces)\n    d['species'] = d['species'].astype(str).str.strip().str.capitalize()\n    d['island'] = d['island'].astype(str).str.strip().str.capitalize()\n    # numbers stored as text -> numeric\n    for c in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g', 'year']:\n        d[c] = pd.to_numeric(d[c], errors='coerce')\n    # enforce allowed ranges: out-of-range values become missing\n    d.loc[(d['bill_length_mm'] < 30) | (d['bill_length_mm'] > 60), 'bill_length_mm'] = pd.NA\n    d.loc[(d['flipper_length_mm'] < 170) | (d['flipper_length_mm'] > 235), 'flipper_length_mm'] = pd.NA\n    d.loc[(d['body_mass_g'] < 2500) | (d['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # sex: only 'male'/'female' allowed; missing stays missing (do not guess)\n    s = d['sex'].astype(str).str.strip().str.lower()\n    d['sex'] = s.where(s.isin(['male', 'female']))\n    return d\n\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['sex', 'body_mass_g'])\n    g = d.groupby('sex')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in g.items()}\n"
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3944.1667,
+    "male": 4668.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

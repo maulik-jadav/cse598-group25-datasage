@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinst_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 254.78,
+  "tokens": 4303,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3767.2413793103447,
+    "Chinstrap": 3726.785714285714,
+    "Gentoo": 4895.833333333333
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n\n    if 'species' in df.columns:\n        df['species'] = df['species'].astype('string').str.strip()\n\n    if 'island' in df.columns:\n        df['island'] = df['island'].astype('string').str.strip()\n        island_map = {'biscoe': 'Biscoe', 'dream': 'Dream', 'torgersen': 'Torgersen'}\n        df['island'] = df['island'].str.lower().map(island_map).fillna(df['island'])\n\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = pd.to_numeric(\n            df['body_mass_g'].astype('string').str.replace(',', '', regex=False).str.strip(),\n            errors='coerce'\n        )\n\n    for col in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'year']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'body_mass_g'])\n    result = d.groupby('species', dropna=True)['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in result.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3767.2414,
+    "Chinstrap": 3726.7857,
+    "Gentoo": 4895.8333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

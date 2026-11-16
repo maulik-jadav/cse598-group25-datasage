@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_03_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 4,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 487.36,
+  "tokens": 5852,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 6440.0,
+    "2026-02": 3187.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\n\ndef clean(df):\n    df = df.copy()\n    for col in ['Order_ID', 'Quantity', 'Price', 'Revenue']:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    # Remove exact duplicate rows (profile reports 2 duplicates)\n    df = df.drop_duplicates()\n    # Parse dates; non-ISO/invalid dates become NaT (iso_date_rate ~0.953)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n    # Derive month key as YYYY-MM\n    df['month'] = df['Date'].dt.to_period('M').astype(str)\n    return df\n\n\ndef answer(df):\n    result = {}\n    grouped = df.groupby('month')['Revenue'].sum()\n    for month, rev in grouped.items():\n        result[month] = float(rev)\n    return result"
+  },
+  "corrections": 4,
+  "planted": 11,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-ornith-1-5-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ]
+  ]
+}

@@ -1,0 +1,156 @@
+{
+  "task_id": "salest_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 57.77,
+  "tokens": 50952,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "extra": {
+    "final_summary": "Data quality issues found and fixed:\n\n1. **Region label variants**: 2 rows had lowercase \"east\" and \"south\" instead of \"East\" and \"South\". Normalized to canonical labels.\n\n2. **Price stored as text**: 2 rows had prices with dollar signs (\"$6.00\", \"$180.00\"). Converted to numeric.\n\n3. **Negative Quantity values**: 3 rows (20, 35, 58) had negative quantities (-7, -2, -7), violating the rule that Quantity must be \u2265 1. These rows were excluded from analysis.\n\n4. **Revenue mismatch**: Row 52 had Revenue=14405 but Quantity*Price=144. Revenue was recomputed to match the formula (Quantity * Price).\n\n**Total Revenue by Category** (58 rows used):\n- Electronics: $27,140.00\n- Furniture: $7,665.00\n- Accessories: $2,390.00\n- Office Supplies: $780.00",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "south": "South"
+          },
+          "reason": "Fix case variants in Region column to match allowed labels"
+        },
+        "reason": "Fix case variants in Region column to match allowed labels",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'south': 'South'})"
+      },
+      {
+        "version": 2,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Convert price values stored as text with dollar signs to numeric"
+        },
+        "reason": "Convert price values stored as text with dollar signs to numeric",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (61 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            20,
+            35,
+            58
+          ],
+          "reason": "Rows 20, 35, 58 have negative Quantity values which violate the rule that Quantity must be >= 1 (units sold). These also produce negative Revenue values."
+        },
+        "reason": "Rows 20, 35, 58 have negative Quantity values which violate the rule that Quantity must be >= 1 (units sold). These also produce negative Revenue values.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          20,
+          35,
+          58
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [20, 35, 58]",
+        "code": "df = df.drop(index=[20, 35, 58])"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            52
+          ],
+          "reason": "Row 52 has Revenue=14405 but Quantity*Price=144. Fix Revenue to match the formula."
+        },
+        "reason": "Row 52 has Revenue=14405 but Quantity*Price=144. Fix Revenue to match the formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[52], 'Revenue'] = [144.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 9
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen36-35b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

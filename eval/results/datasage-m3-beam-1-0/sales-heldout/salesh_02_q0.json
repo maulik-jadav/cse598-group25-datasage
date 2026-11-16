@@ -1,0 +1,120 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 2,
+  "detect_fn": 3,
+  "tool_calls": 15,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 291.44,
+  "tokens": 29675,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "extra": {
+    "final_summary": "Problems found: 3 rows (5, 14, 65) had negative Quantity (violating the min-1 rule) and were excluded; 3 rows (10, 19, 61) had Revenue 10x the correct value (Quantity*Price) and were recomputed. No duplicate rows, no label variants in Category, no invalid dates or numeric issues in Price. Total revenue by category (64 rows): Accessories 2450, Electronics 29070, Furniture 16505, Office Supplies 972.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            10,
+            19,
+            61
+          ],
+          "reason": "Revenue must equal Quantity * Price per rules; rows 10, 19, 61 have Revenue 10x the expected value."
+        },
+        "reason": "Revenue must equal Quantity * Price per rules; rows 10, 19, 61 have Revenue 10x the expected value.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[10, 19, 61], 'Revenue'] = [240.0, 24.0, 48.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            5,
+            14,
+            65
+          ],
+          "reason": "Quantity must be a positive whole number (min 1); rows 5, 14, 65 have negative Quantity, violating the rule."
+        },
+        "reason": "Quantity must be a positive whole number (min 1); rows 5, 14, 65 have negative Quantity, violating the rule.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          5,
+          14,
+          65
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [5, 14, 65]",
+        "code": "df = df.drop(index=[5, 14, 65])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 7
+  },
+  "corrections": 9,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-beam-1-0",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 24.78,
+  "tokens": 2724,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    df = df.copy()\n    # Standardize Region: strip spaces, title\u2011case, map known lower\u2011case variants\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].astype(str).str.strip()\n        # map lower\u2011case variants to proper case\n        region_map = {\n            'north': 'North',\n            'south': 'South',\n            'east': 'East',\n            'west': 'West'\n        }\n        df['Region'] = df['Region'].replace(region_map)\n        # after strip, empty strings become NaN\n        df['Region'] = df['Region'].replace({'': pd.NA})\n    # Fix negative Quantity (should be positive whole number)\n    if 'Quantity' in df.columns:\n        df['Quantity'] = df['Quantity'].abs()\n        # ensure integer type\n        df['Quantity'] = df['Quantity'].round().astype(int)\n    # Re\u2011calculate Revenue from Quantity * Price (ensuring correct sign)\n    if {'Quantity', 'Price'}.issubset(df.columns):\n        df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Clean first\n    df = clean(df)\n    # Filter to Electronics category only\n    electronics = df[df['Category'] == 'Electronics']\n    # Drop rows where Region is missing\n    electronics = electronics.dropna(subset=['Region'])\n    # Group by Region and sum Revenue\n    result_series = electronics.groupby('Region')['Revenue'].sum()\n    # Convert to plain dict (region -> total revenue as number)\n    result = {region: float(value) for region, value in result_series.items()}\n    return result"
+  },
+  "corrections": 12,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

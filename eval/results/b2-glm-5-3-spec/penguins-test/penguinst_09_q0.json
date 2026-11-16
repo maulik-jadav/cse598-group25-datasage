@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinst_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 46.46,
+  "tokens": 3261,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 193.0,
+    "Chinstrap": 196.77,
+    "Gentoo": 216.68
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Normalize species label variants to canonical values\n    species_map = {\n        'adelie': 'Adelie', 'Adelie': 'Adelie',\n        'chinstrap': 'Chinstrap', 'Chinstrap': 'Chinstrap',\n        'gentoo': 'Gentoo', 'Gentto': 'Gentoo', 'Gentoo': 'Gentoo'\n    }\n    df['species'] = df['species'].astype(str).str.strip().map(species_map)\n    # Fix negative flipper lengths (sign errors); values fall in valid range after abs\n    df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    # Parse body_mass_g written as text (e.g. '3,900')\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False),\n        errors='coerce'\n    )\n    return df\n\ndef answer(df):\n    df = clean(df)\n    out = df.groupby('species')['flipper_length_mm'].mean().round(2)\n    return {k: float(v) for k, v in out.items()}"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "penguins-test",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 193.1667,
+    "Chinstrap": 197.0909,
+    "Gentoo": 216.6842
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

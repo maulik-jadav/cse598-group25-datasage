@@ -1,0 +1,159 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 12,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 49.09,
+  "tokens": 48973,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "extra": {
+    "final_summary": "Fixed data quality issues before computing average unit price (Price) by Category: (1) normalized misspelled Category labels (\"Furnture\"\u2192Furniture, \"Office Suplies\"\u2192Office Supplies); (2) trimmed whitespace in Region; (3) removed 1 exact duplicate row; (4) excluded 3 rows with invalid negative Quantity (rows 1, 34, 51) per rules (Quantity \u2265 1). Average unit prices (66 rows): Accessories 32.5, Electronics 275.71, Furniture 191.05, Office Supplies 11.37. Note: Revenue cross-check showed 1 outlier (row 64, Revenue 7505 vs expected 75) but it was not excluded since Price/Category were valid; Region had 2 missing values (not used in question).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Fix misspelled category labels per rules (allowed: Electronics, Accessories, Furniture, Office Supplies)"
+        },
+        "reason": "Fix misspelled category labels per rules (allowed: Electronics, Accessories, Furniture, Office Supplies)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "Trim leading/trailing spaces in Region values"
+        },
+        "reason": "Trim leading/trailing spaces in Region values",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: trimmed 3 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      },
+      {
+        "version": 3,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate row (row 5, duplicate of row 4)"
+        },
+        "reason": "Remove exact duplicate row (row 5, duplicate of row 4)",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          5
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            1,
+            34,
+            51
+          ],
+          "reason": "Quantity violates rule (min 1, positive whole number): negative values at rows 1, 34, 51"
+        },
+        "reason": "Quantity violates rule (min 1, positive whole number): negative values at rows 1, 34, 51",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          1,
+          34,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [1, 34, 51]",
+        "code": "df = df.drop(index=[1, 34, 51])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 12
+  },
+  "corrections": 11,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-inkling-small",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.94,
+  "tokens": 2153,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Normalize label variants\n    df['Category'] = df['Category'].str.strip().str.replace(r'\\s+', ' ', regex=True)\n    df['Region'] = df['Region'].str.strip().str.replace(r'\\s+', ' ', regex=True)\n    # Map common misspellings to correct values\n    region_map = {'Suoth': 'South', 'Nort': 'North'}\n    df['Region'] = df['Region'].map(region_map).fillna(df['Region'])\n    # Ensure numeric columns are proper numbers\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Compute Revenue if needed (should match existing but we recalc for consistency)\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    # Filter for Electronics category\n    electronics = df[df['Category'] == 'Electronics']\n    # Group by Region and sum Revenue\n    result = electronics.groupby('Region')['Revenue'].sum().to_dict()\n    # Convert to expected format (single level keys)\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-granite41-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

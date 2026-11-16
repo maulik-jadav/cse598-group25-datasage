@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 135.87,
+  "tokens": 6208,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Standardize Region label variants\n    region_map = {\n        'north': 'North',\n        'Nort': 'North',\n        'east': 'East',\n        'Suoth': 'South',\n        'Wst': 'West'\n    }\n    df['Region'] = df['Region'].replace(region_map)\n    # Parse Price which is stored as text with $ signs\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.replace(r'[\\$,]', '', regex=True),\n        errors='coerce'\n    )\n    # Ensure Quantity is numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # Fix cross-column issue: Revenue must equal Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    # Assumes df is cleaned; filter Electronics and sum revenue by Region\n    sub = df[df['Category'] == 'Electronics']\n    grouped = sub.groupby('Region')['Revenue'].sum()\n    # Return plain dict, drop NaN groups\n    return {region: float(val) for region, val in grouped.items() if pd.notna(region)}\n"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

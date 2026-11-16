@@ -1,0 +1,47 @@
+{
+  "task_id": "penguinsh_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1630.28,
+  "tokens": 7583,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 78775.0,
+    "Chinstrap": 28400.0,
+    "Gentoo": 160050.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix species case variants (gentoo->Gentoo, adelie->Adelie)\n    df['species'] = df['species'].astype(str).str.strip().str.capitalize()\n    # Remove exact duplicate rows (penguin_id is the unique id)\n    df = df.drop_duplicates(subset=['penguin_id'])\n    # Ensure body_mass_g is numeric\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df = df.dropna(subset=['species'])\n    grouped = df.groupby('species')['body_mass_g'].sum()\n    return {species: float(total) for species, total in grouped.items()}"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-ornith-1-5-35b",
+  "dataset": "penguins-heldout",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 74875.0,
+    "Chinstrap": 24675.0,
+    "Gentoo": 155250.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "species"
+    ]
+  ]
+}

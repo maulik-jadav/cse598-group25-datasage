@@ -1,0 +1,152 @@
+{
+  "task_id": "salest_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 18,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 85.35,
+  "tokens": 104534,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "extra": {
+    "final_summary": "Data quality issues found and fixed:\n- Region label variants: 'east' and 'south' normalized to 'East' and 'South'.\n- Price column contained text numbers like '$6.00' and '$180.00'; cast to numeric.\n- Quantity negative values in rows 20, 35, 58 violated rule min 1; rows excluded.\n- Revenue mismatch in row 52 (14405 vs expected 144); recomputed Revenue as Quantity * Price.\nTotal revenue by category on cleaned data (58 rows used):\nAccessories: 2390.0\nElectronics: 27140.0\nFurniture: 7665.0\nOffice Supplies: 780.0\nCaveats: 3 rows excluded due to invalid negative Quantity; Revenue recomputed for 1 row.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "south": "South"
+          },
+          "reason": "Case variants should be merged to allowed labels per rules"
+        },
+        "reason": "Case variants should be merged to allowed labels per rules",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'south': 'South'})"
+      },
+      {
+        "version": 2,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains $ text numbers; need numeric for Revenue formula"
+        },
+        "reason": "Price contains $ text numbers; need numeric for Revenue formula",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (61 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            20,
+            35,
+            58
+          ],
+          "reason": "Quantity negative violates rule min 1; rows are invalid per rules"
+        },
+        "reason": "Quantity negative violates rule min 1; rows are invalid per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          20,
+          35,
+          58
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [20, 35, 58]",
+        "code": "df = df.drop(index=[20, 35, 58])"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            52
+          ],
+          "reason": "Revenue does not equal Quantity * Price per rules"
+        },
+        "reason": "Revenue does not equal Quantity * Price per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[52], 'Revenue'] = [144.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 18
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

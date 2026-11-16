@@ -1,0 +1,102 @@
+{
+  "task_id": "salesh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 0,
+  "detect_fn": 4,
+  "tool_calls": 7,
+  "tool_errors": 1,
+  "recovered_errors": 1,
+  "approvals_asked": 2,
+  "seconds": 97.82,
+  "tokens": 21068,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "extra": {
+    "final_summary": "Average unit price by category (43 valid rows after cleaning):\n\n- Electronics: $360.00\n- Furniture: $205.00\n- Accessories: $30.67\n- Office Supplies: $10.67\n\nData problems found and fixed:\n1. Exact duplicate rows (rows 17 and 23) \u2014 removed, as they would double-count orders and skew the averages.\n2. Negative quantities (rows 19 and 34, Quantity = -5 and -4) \u2014 excluded, since the rules file states Quantity must be a positive whole number (min 1). These rows also had negative Revenue as a result.\n\nNo other issues affected the question: Category labels were clean (no case/space variants or misspellings), Price had no missing values, no negatives, and no numbers stored as text. Region had minor whitespace/case variants and 2 missing values, but Region is not used in this question, so it was left untouched.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 17 and 23 are exact duplicates of earlier rows; keeping both would double-count orders and skew the average price per category."
+        },
+        "reason": "Rows 17 and 23 are exact duplicates of earlier rows; keeping both would double-count orders and skew the average price per category.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          17,
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            19,
+            34
+          ],
+          "reason": "Rows 19 and 34 have negative Quantity (-5 and -4), violating the rule that Quantity is a positive whole number (min 1)."
+        },
+        "reason": "Rows 19 and 34 have negative Quantity (-5 and -4), violating the rule that Quantity is a positive whole number (min 1).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          19,
+          34
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [19, 34]",
+        "code": "df = df.drop(index=[19, 34])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 6,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.6667,
+    "Electronics": 360.0,
+    "Furniture": 205.0,
+    "Office Supplies": 10.6667
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ]
+  ]
+}

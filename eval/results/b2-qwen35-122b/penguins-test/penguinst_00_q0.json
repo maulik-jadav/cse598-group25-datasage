@@ -1,0 +1,53 @@
+{
+  "task_id": "penguinst_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 32.89,
+  "tokens": 3210,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3944.1666666666665,
+    "male": 4668.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix species label variant (chinstrap -> Chinstrap)\n    df['species'] = df['species'].str.strip().str.title()\n    \n    # Fix island label variant (leading space)\n    df['island'] = df['island'].str.strip()\n    \n    # Filter out of range body_mass_g values (2500-6500)\n    df = df[(df['body_mass_g'] >= 2500) & (df['body_mass_g'] <= 6500)]\n    \n    # Drop rows with missing sex (can't group by unknown)\n    df = df.dropna(subset=['sex'])\n    \n    return df\n\ndef answer(df):\n    result = df.groupby('sex')['body_mass_g'].mean().to_dict()\n    return result"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-122b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3944.1667,
+    "male": 4668.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

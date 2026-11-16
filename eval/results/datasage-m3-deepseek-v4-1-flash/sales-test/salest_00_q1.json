@@ -1,0 +1,125 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 15,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 41.44,
+  "tokens": 33095,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "extra": {
+    "final_summary": "Total revenue per month (44 of 47 rows used):\n\n| Month | Revenue |\n|---|---|\n| 2026-01 | 5,335 |\n| 2026-02 | 6,462 |\n| 2026-03 | 6,058 |\n| 2026-04 | 1,694 |\n| 2026-05 | 4,619 |\n| 2026-06 | 879 |\n\nProblems found and fixes applied:\n1. Date (3 invalid values, rows 5, 6, 44: \"TBD\", \"not-a-date\", \"13/45/2026\") \u2014 set to missing via parse_dates. These rows cannot be assigned to a month, so they are excluded from the monthly totals (their revenue is not counted anywhere).\n2. Price (3 values stored as text: \"$350.00\", \"$18.00\", \"$45.00\", rows 16, 25, 28) \u2014 cast to numbers. After the cast, the rule Revenue = Quantity * Price holds for all 47 rows, so Revenue needed no recomputation.\n3. Region (2 label variants: \"North \" with trailing space, and misspelling \"Suoth\") \u2014 normalized to \"North\"/\"South\". Region is not used by this question, but it was fixed for consistency.\n\nChecks that came back clean: no duplicate rows, no negative or out-of-range Quantity (min 1) or Price (min 0), no non-numeric Revenue, no other label variants.\n\nCaveats: the three undated rows (revenue 400, 280 and one more) are omitted from the monthly breakdown; if their dates can be recovered, the monthly figures would change. April and June look low simply because of how the orders fall in this small 47-row dataset.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "3 values are not valid YYYY-MM-DD dates (\"TBD\", \"not-a-date\", \"13/45/2026\"); they cannot be assigned to a month, so mark them missing rather than guess."
+        },
+        "reason": "3 values are not valid YYYY-MM-DD dates (\"TBD\", \"not-a-date\", \"13/45/2026\"); they cannot be assigned to a month, so mark them missing rather than guess.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "3 prices are stored as text (\"$350.00\", \"$18.00\", \"$45.00\"); convert to numbers so the Revenue = Quantity * Price rule can be verified."
+        },
+        "reason": "3 prices are stored as text (\"$350.00\", \"$18.00\", \"$45.00\"); convert to numbers so the Revenue = Quantity * Price rule can be verified.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (47 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "North ": "North",
+            "Suoth": "South"
+          },
+          "reason": "Merge trailing-space variant \"North \" and misspelling \"Suoth\" into the allowed Region labels."
+        },
+        "reason": "Merge trailing-space variant \"North \" and misspelling \"Suoth\" into the allowed Region labels.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'North ': 'North', 'Suoth': 'South'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 44.32,
+  "tokens": 3265,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Normalize Category label variants (extra leading/trailing spaces)\n    df['Category'] = df['Category'].astype(str).str.strip()\n    # Convert Price text like '$300.00' to numeric\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False).str.strip().astype(float)\n    # Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep='first')\n    # Quantity must be a positive whole number (min 1); drop invalid negative row\n    df = df[df['Quantity'] >= 1]\n    return df\n\ndef answer(df):\n    g = df.groupby('Region')['Quantity'].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 35.0,
+    "North": 53.0,
+    "South": 68.0,
+    "West": 46.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

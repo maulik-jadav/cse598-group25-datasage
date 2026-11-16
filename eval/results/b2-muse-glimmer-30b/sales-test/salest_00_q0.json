@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 179.17,
+  "tokens": 7515,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 37.142857142857146,
+    "Electronics": 369.0,
+    "Furniture": 169.16666666666666,
+    "Office Supplies": 13.636363636363637
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # strip whitespace from object columns\n    obj_cols = df.select_dtypes(include=['object']).columns\n    for col in obj_cols:\n        df[col] = df[col].astype(str).str.strip()\n    # fix known region variants\n    df['Region'] = df['Region'].replace({'Suoth': 'South'})\n    # parse Price to numeric, removing $ and commas\n    def parse_price(v):\n        if pd.isna(v):\n            return np.nan\n        s = str(v).replace('$', '').replace(',', '').strip()\n        try:\n            return float(s)\n        except:\n            return np.nan\n    df['Price'] = df['Price'].apply(parse_price)\n    # ensure numeric types\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Order_ID'] = pd.to_numeric(df['Order_ID'], errors='coerce')\n    # parse dates, invalid become NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce', format='ISO8601')\n    # cross-column consistency for Revenue = Quantity * Price\n    df['Revenue_calc'] = df['Quantity'] * df['Price']\n    mask = ~np.isclose(df['Revenue'], df['Revenue_calc'], equal_nan=True, rtol=1e-6)\n    df.loc[mask, 'Revenue'] = df.loc[mask, 'Revenue_calc']\n    df.drop(columns=['Revenue_calc'], inplace=True)\n    return df\n\ndef answer(df):\n    # work on cleaned frame; ensure Price is numeric\n    if df['Price'].dtype == object:\n        df = df.copy()\n        df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace('$','').str.replace(',',''), errors='coerce')\n    avg_price = df.groupby('Category', dropna=False)['Price'].mean()\n    result = {cat: float(val) for cat, val in avg_price.items() if pd.notna(cat) and pd.notna(val)}\n    return result\n"
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 37.1429,
+    "Electronics": 369.0,
+    "Furniture": 169.1667,
+    "Office Supplies": 13.6364
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

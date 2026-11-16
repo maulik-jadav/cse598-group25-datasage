@@ -1,0 +1,91 @@
+{
+  "task_id": "salesh_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 39.71,
+  "tokens": 19139,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "extra": {
+    "final_summary": "Units sold by region (after cleaning): West 104, North 83, South 64, East 60.\n\nData problems found and fixed:\n- 2 exact duplicate rows (rows 6 and 60) were removed so units aren't double-counted.\n- Quantity was checked and is clean (all positive whole numbers, no text-formatted values).\n- Region labels are clean (no case/space variants or misspellings).\n\nCaveat:\n- Row 39 (Order 2039, 8 units) has a missing Region. I proposed excluding it from the per-region breakdown, but that fix was rejected, so it remains in the data. The analyze tool grouped only the 69 rows with a known region (69 = 72 \u2212 2 duplicates \u2212 1 missing-region row), so the 8 units from row 39 are not included in any region's total. If you'd like, I can attribute those units to an \"Unknown\" region instead.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 6 and 60 are exact duplicates of earlier rows; keeping them would double-count units sold."
+        },
+        "reason": "Rows 6 and 60 are exact duplicates of earlier rows; keeping them would double-count units sold.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          60
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "summary": "excluded 1 row(s): [39]"
+      }
+    ],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": false,
+        "why": "removes row 39 (id 2039) that should be kept"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 3,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3-spec",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

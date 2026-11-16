@@ -1,0 +1,139 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 50.67,
+  "tokens": 39968,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "extra": {
+    "final_summary": "Total revenue per month (2026, based on 44 valid dated rows out of 47):\n- January: $5,335\n- February: $6,462\n- March: $6,058\n- April: $1,694\n- May: $4,619\n- June: $879\n\nData quality fixes applied:\n- Trimmed trailing whitespace in Region ('North ' \u2192 'North').\n- Normalized misspelled region 'Suoth' \u2192 'South'.\n- Converted Price from text to numeric (e.g., '$350.00' \u2192 350).\n- Set 3 invalid dates ('TBD', 'not-a-date', '13/45/2026') to missing; those rows are excluded from the monthly totals.\n- Verified Revenue = Quantity \u00d7 Price holds for all rows.\n\nCaveat: 3 rows have missing dates after cleaning and are not included in the monthly totals.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "Region 'North ' has trailing space; normalize to allowed label 'North'."
+        },
+        "reason": "Region 'North ' has trailing space; normalize to allowed label 'North'.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: trimmed 1 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Suoth": "South"
+          },
+          "reason": "Fix misspelled region 'Suoth' to allowed label 'South'."
+        },
+        "reason": "Fix misspelled region 'Suoth' to allowed label 'South'.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Region: merged 1 label variant(s), 1 cells",
+        "code": "df['Region'] = df['Region'].replace({'Suoth': 'South'})"
+      },
+      {
+        "version": 3,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains text numbers like '$350.00'; convert to numeric for revenue calculation."
+        },
+        "reason": "Price contains text numbers like '$350.00'; convert to numeric for revenue calculation.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (47 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 4,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Date has invalid values 'TBD', 'not-a-date', '13/45/2026'; set invalid dates to missing so monthly grouping is accurate."
+        },
+        "reason": "Date has invalid values 'TBD', 'not-a-date', '13/45/2026'; set invalid dates to missing so monthly grouping is accurate.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 10
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-kimi-k2-7-code",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

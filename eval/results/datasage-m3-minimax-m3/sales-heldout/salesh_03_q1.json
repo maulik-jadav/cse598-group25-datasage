@@ -1,0 +1,189 @@
+{
+  "task_id": "salesh_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 90.96,
+  "tokens": 26291,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "extra": {
+    "final_summary": "**Total revenue per month (2026):**\n- January: $6,440\n- February: $2,237\n- March: $4,187\n- April: $2,726\n- May: $14,612\n- June: $10,022\n\n**Problems found and fixed:**\n1. **Duplicate rows (2)** \u2014 rows 12 and 51 were exact duplicates; removed (would have inflated totals).\n2. **Invalid dates (3)** \u2014 rows 24, 39, 55 had impossible dates (\"2026-14-01\", \"2026-02-30\"); set to missing so they don't misattribute revenue to a month. These 3 rows are excluded from the monthly totals.\n3. **Wrong Revenue (1)** \u2014 row 28 had Revenue=1055 but Quantity*Price=105; recomputed per the rules formula.\n4. **Category label variant (1)** \u2014 row 58 had \"office supplies\" (lowercase); normalized to \"Office Supplies\".\n5. **Region misspellings (2)** \u2014 row 6 \"Suoth\"\u2192\"South\", row 9 \"Eats\"\u2192\"East\".\n\n**Caveats:** The 3 rows with invalid dates (and 2 duplicates) are not included in the monthly sums. The analysis used 59 of the original 64 rows.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "2 exact duplicate rows (12, 51) inflate revenue totals"
+        },
+        "reason": "2 exact duplicate rows (12, 51) inflate revenue totals",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          12,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            24,
+            39,
+            55
+          ],
+          "reason": "Rows 24, 39, 55 have invalid dates (\"2026-14-01\", \"2026-02-30\") that cannot be parsed; mark as missing so they don't misattribute revenue to a month"
+        },
+        "reason": "Rows 24, 39, 55 have invalid dates (\"2026-14-01\", \"2026-02-30\") that cannot be parsed; mark as missing so they don't misattribute revenue to a month",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: set 3 value(s) to missing",
+        "code": "df.loc[[24, 39, 55], 'Date'] = pd.NA"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            28
+          ],
+          "reason": "Row 28 has Revenue=1055 but Quantity*Price=105; fix per rules formula"
+        },
+        "reason": "Row 28 has Revenue=1055 but Quantity*Price=105; fix per rules formula",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[28], 'Revenue'] = [105.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 4,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "office supplies": "Office Supplies"
+          },
+          "reason": "Row 58 has \"office supplies\" (lowercase) which is a case variant of allowed label \"Office Supplies\""
+        },
+        "reason": "Row 58 has \"office supplies\" (lowercase) which is a case variant of allowed label \"Office Supplies\"",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({'office supplies': 'Office Supplies'})"
+      },
+      {
+        "version": 5,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "Eats": "East",
+            "Suoth": "South"
+          },
+          "reason": "Rows 6 and 9 have misspellings \"Suoth\" and \"Eats\" which should be \"South\" and \"East\" per allowed labels"
+        },
+        "reason": "Rows 6 and 9 have misspellings \"Suoth\" and \"Eats\" which should be \"South\" and \"East\" per allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'Eats': 'East', 'Suoth': 'South'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-minimax-m3",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

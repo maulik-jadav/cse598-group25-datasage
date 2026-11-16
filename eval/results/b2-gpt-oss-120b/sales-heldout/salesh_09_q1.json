@@ -1,0 +1,70 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 27.41,
+  "tokens": 3355,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0,
+    "all": 31482.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # ----- Date -----\n    # Parse dates, coerce invalid ones to NaT and drop those rows (they cannot contribute to revenue per month)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n\n    # ----- Region -----\n    # Strip whitespace and normalise known variants\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].astype(str).str.strip()\n        region_map = {\n            'Wst': 'West',\n            'West': 'West',\n            'West': 'West',\n            'West': 'West',\n            'East': 'East',\n            'East': 'East',\n            'East': 'East',\n            'East': 'East',\n            'Eats': 'East',\n            'North': 'North',\n            'South': 'South'\n        }\n        df['Region'] = df['Region'].replace(region_map)\n        # keep NaN as is (missing value)\n\n    # ----- Quantity -----\n    # Ensure numeric, drop rows with non\u2011positive quantities\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df = df.dropna(subset=['Quantity'])\n    df = df[df['Quantity'] > 0]\n\n    # ----- Price -----\n    # Remove currency symbols / commas and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('[\\$,]', '', regex=True)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df = df.dropna(subset=['Price'])\n\n    # ----- Revenue -----\n    # Re\u2011calculate revenue from clean Quantity and Price (overwrites existing column)\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    # Keep the identifier column(s) and the columns needed for the answer\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Group by month (YYYY\u2011MM) and sum revenue\n    df['Month'] = df['Date'].dt.to_period('M').astype(str)\n    result = df.groupby('Month')['Revenue'].sum().reset_index()\n    # Convert to dictionary {\"YYYY\u2011MM\": total_revenue}\n    out = {row['Month']: float(row['Revenue']) for _, row in result.iterrows()}\n    # Also provide an overall total under the key \"all\"\n    out['all'] = float(df['Revenue'].sum())\n    return out"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

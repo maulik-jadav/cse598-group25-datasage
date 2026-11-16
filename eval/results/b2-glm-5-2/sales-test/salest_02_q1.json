@@ -1,0 +1,73 @@
+{
+  "task_id": "salest_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 14.86,
+  "tokens": 2378,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Fix Category label variants\n    cat_map = {\n        'Office Suplies': 'Office Supplies',\n        'Furnture': 'Furniture',\n    }\n    df['Category'] = df['Category'].replace(cat_map)\n    # Fix Region label variants (strip spaces)\n    df['Region'] = df['Region'].str.strip()\n    # Drop rows with invalid (negative) Quantity\n    df = df[df['Quantity'] >= 1].copy()\n    # Recalculate Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df = df.dropna(subset=['Date'])\n    df['month'] = df['Date'].str[:7]\n    grouped = df.groupby('month')['Revenue'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-2",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

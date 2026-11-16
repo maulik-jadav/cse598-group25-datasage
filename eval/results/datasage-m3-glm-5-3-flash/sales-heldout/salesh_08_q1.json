@@ -1,0 +1,117 @@
+{
+  "task_id": "salesh_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 66.63,
+  "tokens": 17003,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "extra": {
+    "final_summary": "**Total revenue per month (2026):**\n\n| Month | Revenue |\n|-------|---------|\n| January | $6,680 |\n| February | $4,424 |\n| March | $7,202 |\n| April | $5,260 |\n| May | $14,196 |\n| June | $3,640 |\n\n**Data problems found and fixed (53 rows used after cleaning):**\n1. **Exact duplicate row** (row 23) \u2014 removed, as it would have double-counted its revenue.\n2. **Region whitespace variants** \u2014 trimmed 'East ', 'West ', and ' North' to match the allowed labels (not used in the final grouping, but cleaned for consistency).\n3. **Category misspelling** \u2014 merged 'Furnture' (2 rows) into 'Furniture' per the rules file.\n\n**Verified clean:** Revenue = Quantity \u00d7 Price held for all rows, all dates were valid YYYY-MM-DD, and no missing values existed in the columns used. One Region value is missing (row 47), but Region isn't needed for this question, so it was left as-is.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 23 is an exact duplicate of an earlier row; keeping it would double-count its revenue in the monthly totals."
+        },
+        "reason": "Row 23 is an exact duplicate of an earlier row; keeping it would double-count its revenue in the monthly totals.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "Three region values have leading/trailing spaces ('East ', 'West ', ' North'); trimming makes them match the allowed labels."
+        },
+        "reason": "Three region values have leading/trailing spaces ('East ', 'West ', ' North'); trimming makes them match the allowed labels.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: trimmed 3 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture"
+          },
+          "reason": "'Furnture' is a misspelling of the allowed label 'Furniture' per the rules file."
+        },
+        "reason": "'Furnture' is a misspelling of the allowed label 'Furniture' per the rules file.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 1 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-glm-5-3-flash",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6680.0,
+    "2026-02": 4424.0,
+    "2026-03": 7202.0,
+    "2026-04": 5260.0,
+    "2026-05": 14196.0,
+    "2026-06": 3640.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ]
+  ]
+}

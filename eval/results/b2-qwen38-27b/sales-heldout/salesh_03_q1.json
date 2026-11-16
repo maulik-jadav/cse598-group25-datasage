@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 48.39,
+  "tokens": 3350,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Category label variants\n    cat_map = {'office supplies': 'Office Supplies', 'Office Supplies': 'Office Supplies',\n               'Accessories': 'Accessories', 'Electronics': 'Electronics', 'Furniture': 'Furniture'}\n    df['Category'] = df['Category'].str.strip().map(lambda x: cat_map.get(x, x))\n    \n    # Fix Region label variants\n    region_map = {'Suoth': 'South', 'Eats': 'East', 'South': 'South', 'North': 'North', 'East': 'East', 'West': 'West'}\n    df['Region'] = df['Region'].map(lambda x: region_map.get(x.strip(), x.strip()) if pd.notna(x) else x)\n    \n    # Parse dates robustly\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Recompute Revenue to ensure correctness\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = df.copy()\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n    df = df.dropna(subset=['Month'])\n    result = df.groupby('Month')['Revenue'].sum()\n    return result.to_dict()"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen38-27b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

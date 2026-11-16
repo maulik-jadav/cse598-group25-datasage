@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 218.88,
+  "tokens": 2220,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix negative Quantity and Revenue (likely data entry errors)\n    df = df.copy()\n    df['Quantity'] = df['Quantity'].astype(float)\n    df['Revenue'] = df['Revenue'].astype(float)\n    df.loc[df['Quantity'] < 0, 'Quantity'] = 0\n    df.loc[df['Revenue'] < 0, 'Revenue'] = 0\n    \n    # Fix Region label variant: 'Nort' -> 'North'\n    df['Region'] = df['Region'].replace({'Nort': 'North'})\n    \n    # Remove exact duplicate rows (based on profile: 1 exact duplicate)\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Ensure Quantity is integer (as per rules: whole number)\n    df['Quantity'] = df['Quantity'].astype(int)\n    \n    return df\n\n\ndef answer(df):\n    # Group by Region and sum Quantity\n    result = df.groupby('Region')['Quantity'].sum().to_dict()\n    \n    # Drop any missing group keys (none expected here)\n    return result"
+  },
+  "corrections": 2,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

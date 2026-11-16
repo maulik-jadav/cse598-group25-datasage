@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 2028.33,
+  "tokens": 10066,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 77.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Fix Region: label variants\n    df['Region'] = df['Region'].replace({\n        'west': 'West',\n        'south': 'South',\n        'Wst': 'West',\n        'Suoth': 'South'\n    })\n    \n    # Fix Quantity: convert to numeric and fix negatives\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    mask_neg = df['Quantity'] < 0\n    df.loc[mask_neg, 'Quantity'] = df.loc[mask_neg, 'Quantity'].abs()\n    \n    # Fix Price: convert to numeric, remove '$'\n    df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace('$', '', regex=False), errors='coerce')\n    \n    # Drop rows with missing Region\n    df = df.dropna(subset=['Region'])\n    \n    # Ensure Quantity >= 1\n    df = df[df['Quantity'] >= 1]\n    \n    return df\n\ndef answer(df):\n    result = df.groupby('Region')['Quantity'].sum().to_dict()\n    return result"
+  },
+  "corrections": 6,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen-agentworld-35b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

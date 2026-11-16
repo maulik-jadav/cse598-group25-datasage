@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_08_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 170.65,
+  "tokens": 6608,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3506.0,
+    "Gentoo": 5295.3125,
+    "Chinstrap": 3907.8125
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    d = df.copy()\n\n    for col in [\"species\", \"island\", \"sex\"]:\n        if col in d.columns:\n            d[col] = d[col].astype(\"string\").str.strip()\n\n    species_map = {\n        \"adelie\": \"Adelie\",\n        \"adeile\": \"Adelie\",\n        \"chinstrap\": \"Chinstrap\",\n        \"gentoo\": \"Gentoo\",\n        \"gentto\": \"Gentoo\",\n    }\n    if \"species\" in d.columns:\n        d[\"species\"] = d[\"species\"].str.lower().map(species_map).fillna(d[\"species\"])\n\n    island_map = {\n        \"biscoe\": \"Biscoe\",\n        \"dream\": \"Dream\",\n        \"torgersen\": \"Torgersen\",\n    }\n    if \"island\" in d.columns:\n        d[\"island\"] = d[\"island\"].str.lower().map(island_map).fillna(d[\"island\"])\n\n    if \"sex\" in d.columns:\n        d[\"sex\"] = d[\"sex\"].str.lower()\n        d.loc[~d[\"sex\"].isin([\"male\", \"female\"]), \"sex\"] = pd.NA\n\n    for col in [\"bill_length_mm\", \"bill_depth_mm\", \"flipper_length_mm\", \"year\"]:\n        if col in d.columns:\n            d[col] = pd.to_numeric(d[col], errors=\"coerce\")\n\n    if \"body_mass_g\" in d.columns:\n        s = d[\"body_mass_g\"].astype(\"string\")\n        s = s.str.replace(\",\", \"\", regex=False).str.replace(\" \", \"\", regex=False)\n        s = pd.to_numeric(s, errors=\"coerce\")\n\n        repair = (s > 6500) & ((s / 1000) >= 2500) & ((s / 1000) <= 6500)\n        s.loc[repair] = s.loc[repair] / 1000\n\n        s = s.mask((s < 2500) | (s > 6500))\n        d[\"body_mass_g\"] = s\n\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d[d[\"species\"].isin([\"Adelie\", \"Chinstrap\", \"Gentoo\"])]\n    d = d.dropna(subset=[\"species\", \"body_mass_g\"])\n    result = d.groupby(\"species\", sort=False)[\"body_mass_g\"].mean()\n    return {str(k): float(v) for k, v in result.items()}"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3500.0,
+    "Chinstrap": 3907.8125,
+    "Gentoo": 5248.3333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

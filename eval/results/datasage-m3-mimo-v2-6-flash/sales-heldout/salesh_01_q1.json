@@ -1,0 +1,107 @@
+{
+  "task_id": "salesh_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 7,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 27.24,
+  "tokens": 18512,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "extra": {
+    "final_summary": "Orders per category: Accessories 21, Electronics 18, Office Supplies 17, Furniture 14 (70 orders total). Problems found and fixed: (1) 6 Category label variants \u2014 leading/trailing spaces and misspellings \"Furnture\"/\"Accesories\" \u2014 normalized into the 4 allowed labels; (2) 2 exact duplicate rows removed (Order_ID must be unique per rules). Not fixed as it doesn't affect this question: 1 missing Region value. Caveat: counts are of order rows, not distinct Order_IDs, though after deduplication Order_IDs are unique.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Furniture": "Furniture",
+            " Office Supplies": "Office Supplies",
+            "Furniture ": "Furniture",
+            "Accesories": "Accessories",
+            "Furnture": "Furniture"
+          },
+          "reason": "Merge space/case variants and misspellings into the 4 allowed category labels"
+        },
+        "reason": "Merge space/case variants and misspellings into the 4 allowed category labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Category: merged 5 label variant(s), 6 cells",
+        "code": "df['Category'] = df['Category'].replace({' Furniture': 'Furniture', ' Office Supplies': 'Office Supplies', 'Furniture ': 'Furniture', 'Accesories': 'Accessories', 'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "2 exact duplicate rows; Order_ID must be unique per rules"
+        },
+        "reason": "2 exact duplicate rows; Order_ID must be unique per rules",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          60
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mimo-v2-6-flash",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 21.0,
+    "Electronics": 18.0,
+    "Furniture": 14.0,
+    "Office Supplies": 17.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "task_id": "salesh_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 31.97,
+  "tokens": 19740,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 33.3333,
+    "Electronics": 397.6923,
+    "Furniture": 207.8125,
+    "Office Supplies": 12.6667
+  },
+  "extra": {
+    "final_summary": "**Average unit price by category** (53 rows after cleaning):\n\n| Category | Avg Price |\n|---|---|\n| Accessories | $33.33 |\n| Electronics | $397.69 |\n| Furniture | $207.81 |\n| Office Supplies | $12.67 |\n\n**Data issues found & fixed:**\n1. **Misspelled category label** \u2013 \"Furnture\" (2 rows: 36, 38) was a misspelling of \"Furniture\". Merged via `normalize_labels`.\n2. **Exact duplicate row** \u2013 Row 23 was a full duplicate of an earlier row. Removed via `drop_duplicates`.\n\n**Caveats:**\n- The Region column has 1 missing value and 3 whitespace variants (e.g. \"East \", \" North\"), but Region is not used in this question so no fix was applied.\n- All Price values are valid positive numbers; no further issues affect this analysis.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture"
+          },
+          "reason": "\"Furnture\" is a misspelling of the allowed label \"Furniture\" (rows 36, 38)."
+        },
+        "reason": "\"Furnture\" is a misspelling of the allowed label \"Furniture\" (rows 36, 38).",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 1 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 23 is an exact duplicate of an earlier row; keeping the first copy."
+        },
+        "reason": "Row 23 is an exact duplicate of an earlier row; keeping the first copy.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          23
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 4,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen38-27b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.3333,
+    "Electronics": 397.6923,
+    "Furniture": 207.8125,
+    "Office Supplies": 12.6667
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

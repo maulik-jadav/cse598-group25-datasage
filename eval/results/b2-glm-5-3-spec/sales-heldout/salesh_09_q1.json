@@ -1,0 +1,69 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 77.81,
+  "tokens": 4354,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n\n    # --- Price: numbers written as text with currency symbols (e.g. \"$300.00\") ---\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.replace(r'[$,]', '', regex=True).str.strip(),\n        errors='coerce'\n    )\n\n    # --- Date: mostly ISO, a few rows in other formats ---\n    def parse_date(v):\n        if pd.isna(v):\n            return pd.NaT\n        s = str(v).strip()\n        d = pd.to_datetime(s, format='%Y-%m-%d', errors='coerce')\n        if pd.isna(d):\n            d = pd.to_datetime(s, errors='coerce')\n        return d\n    df['Date'] = df['Date'].apply(parse_date)\n\n    # --- Quantity: must be a positive whole number (row with -7 is invalid) ---\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df = df[(df['Quantity'] >= 1) & (df['Quantity'] % 1 == 0)]\n\n    # --- Revenue: enforce Revenue = Quantity * Price ---\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    # --- Region: strip spaces and fix typo variants (not needed for the question, but tidy) ---\n    df['Region'] = df['Region'].where(df['Region'].notna(), other=pd.NA)\n    df['Region'] = (df['Region'].astype('string').str.strip()\n                    .replace({'Wst': 'West', 'Eats': 'East', '': pd.NA}))\n\n    return df\n\ndef answer(df):\n    d = df.dropna(subset=['Date', 'Revenue']).copy()\n    d['month'] = d['Date'].dt.strftime('%Y-%m')\n    out = d.groupby('month')['Revenue'].sum()\n    return {k: float(v) for k, v in out.items()}"
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

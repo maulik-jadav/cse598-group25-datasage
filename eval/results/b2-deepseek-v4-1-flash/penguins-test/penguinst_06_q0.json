@@ -1,0 +1,57 @@
+{
+  "task_id": "penguinst_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 661.43,
+  "tokens": 5999,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3866.346153846154,
+    "male": 4485.227272727273
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    d = df.copy()\n    d = d.drop_duplicates()\n\n    for c in ['penguin_id', 'species', 'island', 'sex']:\n        if c in d.columns:\n            d[c] = d[c].astype('string').str.strip()\n\n    if 'sex' in d.columns:\n        d['sex'] = d['sex'].str.lower()\n\n    for c in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'year']:\n        if c in d.columns:\n            d[c] = pd.to_numeric(d[c], errors='coerce')\n\n    if 'body_mass_g' in d.columns:\n        def parse_mass(x):\n            if pd.isna(x):\n                return np.nan\n            if isinstance(x, str):\n                x = x.replace(',', '').strip()\n            try:\n                v = float(x)\n            except Exception:\n                return np.nan\n            if v > 6500:\n                v2 = v / 1000.0\n                if 2500 <= v2 <= 6500:\n                    v = v2\n            return v\n\n        d['body_mass_g'] = d['body_mass_g'].map(parse_mass)\n\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['sex', 'body_mass_g'])\n    out = d.groupby('sex')['body_mass_g'].mean().to_dict()\n    return {str(k): float(v) for k, v in out.items()}"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3876.0,
+    "male": 4485.2273
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

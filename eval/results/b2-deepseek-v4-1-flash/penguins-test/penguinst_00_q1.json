@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinst_00_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1810.17,
+  "tokens": 6217,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 32.0,
+    "Dream": 17.0,
+    "Torgersen": 10.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n\n    for col in ['penguin_id', 'species', 'island', 'sex']:\n        if col in df.columns:\n            df[col] = df[col].astype('string').str.strip()\n\n    if 'species' in df.columns:\n        species_map = {'adelie': 'Adelie', 'chinstrap': 'Chinstrap', 'gentoo': 'Gentoo'}\n        df['species'] = df['species'].map(\n            lambda x: species_map.get(str(x).strip().lower(), x) if pd.notna(x) else x\n        )\n\n    if 'island' in df.columns:\n        island_map = {'biscoe': 'Biscoe', 'dream': 'Dream', 'torgersen': 'Torgersen'}\n        df['island'] = df['island'].map(\n            lambda x: island_map.get(str(x).strip().lower(), x) if pd.notna(x) else x\n        )\n\n    for col in ['bill_length_mm', 'bill_depth_mm', 'flipper_length_mm', 'body_mass_g', 'year']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n\n    if 'body_mass_g' in df.columns:\n        mask = df['body_mass_g'] > 6500\n        df.loc[mask, 'body_mass_g'] = df.loc[mask, 'body_mass_g'] / 1000.0\n\n    if 'sex' in df.columns:\n        df['sex'] = df['sex'].astype('string').str.strip().str.lower()\n        df.loc[~df['sex'].isin(['male', 'female']), 'sex'] = pd.NA\n\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['island'])\n    counts = d.groupby('island', dropna=True).size().sort_index()\n    return {str(k): int(v) for k, v in counts.items()}"
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "penguins-test",
+  "question": "How many penguins were measured on each island?",
+  "reference_answer": {
+    "Biscoe": 32.0,
+    "Dream": 15.0,
+    "Torgersen": 9.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

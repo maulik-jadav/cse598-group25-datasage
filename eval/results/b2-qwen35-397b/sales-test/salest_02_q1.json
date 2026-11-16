@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 66.31,
+  "tokens": 3000,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicates\n    df = df.drop_duplicates()\n    # Fix Category label variants\n    df['Category'] = df['Category'].replace({'Office Suplies': 'Office Supplies', 'Furnture': 'Furniture'})\n    # Fix Region - trim spaces\n    df['Region'] = df['Region'].str.strip() if df['Region'].dtype == 'object' else df['Region']\n    # Convert numeric columns\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    # Filter out negative quantities (invalid per rules)\n    df = df[df['Quantity'] > 0]\n    # Recalculate Revenue correctly\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = df.copy()\n    # Extract month from Date\n    df['Month'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m')\n    # Group by month and sum revenue\n    result = df.groupby('Month')['Revenue'].sum().to_dict()\n    return result"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-397b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

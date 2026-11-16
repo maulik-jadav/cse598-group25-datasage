@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 135.11,
+  "tokens": 5410,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3767.2413793103447,
+    "Chinstrap": 3726.785714285714,
+    "Gentoo": 4895.833333333333
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # fix species label variants (extra spaces, case)\n    if 'species' in df.columns:\n        df['species'] = df['species'].astype('string').str.strip()\n        allowed_species = ['Adelie', 'Chinstrap', 'Gentoo']\n        lower_map = {a.lower(): a for a in allowed_species}\n        df['species'] = df['species'].apply(lambda x: lower_map.get(x.lower(), x) if isinstance(x, str) else x)\n    # fix island label variants (case variant biscoe)\n    if 'island' in df.columns:\n        df['island'] = df['island'].astype('string').str.strip()\n        allowed_island = ['Biscoe', 'Dream', 'Torgersen']\n        lower_map_i = {a.lower(): a for a in allowed_island}\n        df['island'] = df['island'].apply(lambda x: lower_map_i.get(x.lower(), x) if isinstance(x, str) else x)\n    # fix body_mass_g text_number with commas\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip()\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n        # enforce valid range 2500-6500 per rules\n        df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # ensure flipper_length_mm numeric (if stored as text)\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'].astype(str).str.replace(',', '', regex=False), errors='coerce')\n    return df\n\ndef answer(df):\n    # average body_mass_g for each species\n    if 'species' not in df.columns or 'body_mass_g' not in df.columns:\n        return {}\n    # drop missing group keys\n    d = df.dropna(subset=['species'])\n    # ensure body_mass_g is numeric\n    d['body_mass_g'] = pd.to_numeric(d['body_mass_g'], errors='coerce')\n    grouped = d.groupby('species', dropna=True)['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in grouped.items() if pd.notna(k) and pd.notna(v)}\n"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3767.2414,
+    "Chinstrap": 3726.7857,
+    "Gentoo": 4895.8333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

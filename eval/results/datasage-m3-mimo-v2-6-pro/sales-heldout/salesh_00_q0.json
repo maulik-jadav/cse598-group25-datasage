@@ -1,0 +1,107 @@
+{
+  "task_id": "salesh_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 11,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 310.25,
+  "tokens": 32517,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "Accessories": 35.6522,
+    "Electronics": 259.2308,
+    "Furniture": 251.9444,
+    "Office Supplies": 9.2308
+  },
+  "extra": {
+    "final_summary": "Here's the average unit price per category, computed on the cleaned data (67 rows after removing the duplicate):\n\n| Category | Average Unit Price |\n|---|---|\n| Electronics | $259.23 |\n| Furniture | $251.94 |\n| Accessories | $35.65 |\n| Office Supplies | $9.23 |\n\n**Problems found:**\n- **Category** (the group-by key): 3 rows used misspellings \u2014 `Accesories` (row 55) and `Office Suplies` (rows 5, 25) \u2014 which would have created two phantom categories and split the real ones.\n- **Duplicates**: 1 exact duplicate (row 4, a repeat of row 3) that would have double-counted a Furniture price of $45.\n- **Price** (the metric) was clean: all numeric, no negatives, all within the rules' \u2265 0 range. Quantity and the Revenue = Quantity \u00d7 Price formula also checked out.\n\n**Fixes applied:**\n- Normalized the Category misspellings into `Accessories` and `Office Supplies` (approved).\n- Dropped the exact duplicate row (approved).\n\n**Caveats:**\n- Two rows (14, 19) have invalid dates (`2026-02-30`, `2026-14-01`). Date isn't used in this question, so I left them as-is \u2014 but they'd need attention for any time-based analysis.\n- Region has 2 missing values and a whitespace/case variant (` East`), also unused here and left untouched.\n- These are unweighted means of the unit `Price` column (not revenue-weighted), which matches \"average unit price.\"",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Accesories": "Accessories",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Rows 5, 25, 55 use misspellings not in the rules file's allowed Category list. Merge 'Accesories' \u2192 'Accessories' and 'Office Suplies' \u2192 'Office Supplies' so the group-by key matches the allowed labels."
+        },
+        "reason": "Rows 5, 25, 55 use misspellings not in the rules file's allowed Category list. Merge 'Accesories' \u2192 'Accessories' and 'Office Suplies' \u2192 'Office Supplies' so the group-by key matches the allowed labels.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Category: merged 2 label variant(s), 3 cells",
+        "code": "df['Category'] = df['Category'].replace({'Accesories': 'Accessories', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Row 4 is an exact duplicate of row 3 (same Order_ID 2004, Lamp/Furniture, Price 45). Keeping it would double-count one price and bias the average unit price per category."
+        },
+        "reason": "Row 4 is an exact duplicate of row 3 (same Order_ID 2004, Lamp/Furniture, Price 45). Keeping it would double-count one price and bias the average unit price per category.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          4
+        ],
+        "cells_changed": 0,
+        "summary": "removed 1 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 6
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mimo-v2-6-pro",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.6522,
+    "Electronics": 259.2308,
+    "Furniture": 251.9444,
+    "Office Supplies": 9.2308
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

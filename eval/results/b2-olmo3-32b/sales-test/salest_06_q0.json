@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_06_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 4,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 14.47,
+  "tokens": 2301,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 33.0,
+    "Electronics": 382.5,
+    "Furniture": 177.86,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix invalid dates (convert to datetime, coerce errors to NaT, then back to string in YYYY-MM-DD)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d')\n    # Normalize Region label variant 'Nort' to 'North'\n    df['Region'] = df['Region'].replace({'Nort': 'North'})\n    # Fix invalid Category values\n    allowed_cat = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df['Category'] = df['Category'].apply(lambda x: x if x in allowed_cat else None)\n    # Remove rows where Category became None\n    df = df.dropna(subset=['Category'])\n    # Fix negative Quantity\n    df.loc[df['Quantity'] < 1, 'Quantity'] = None\n    df = df.dropna(subset=['Quantity'])\n    # Fix negative Revenue\n    df.loc[df['Revenue'] < 0, 'Revenue'] = None\n    df = df.dropna(subset=['Revenue'])\n    # Ensure Revenue == Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # Keep id column (Order_ID)\n    return df\n\ndef answer(df):\n    # Group by Category, aggregate average unit price (Price)\n    grouped = df.groupby('Category')['Price'].mean().reset_index()\n    result = {}\n    if len(grouped) == 1:\n        # Single overall value\n        cat = grouped.iloc[0]['Category']\n        avg = grouped.iloc[0]['Price']\n        result['all'] = round(avg, 2)\n    else:\n        for _, row in grouped.iterrows():\n            result[row['Category']] = round(row['Price'], 2)\n    # Remove any keys that became empty after dropping\n    return {k: v for k, v in result.items() if k is not None}"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.8571,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Category"
+    ],
+    [
+      "text_number",
+      "Product"
+    ]
+  ]
+}

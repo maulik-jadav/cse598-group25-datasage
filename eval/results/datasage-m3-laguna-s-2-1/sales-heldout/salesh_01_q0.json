@@ -1,0 +1,103 @@
+{
+  "task_id": "salesh_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 96.52,
+  "tokens": 23974,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "extra": {
+    "final_summary": "## Answer\n\n**Units sold in each region:**\n\n| Region | Units Sold |\n|--------|-----------|\n| West   | 104       |\n| North  | 83        |\n| South  | 64        |\n| East   | 60        |\n\n**Total: 311 units** across 69 rows used.\n\n## Problems Found & Fixes Applied\n\n1. **Duplicate rows (rows 6 & 60):** Two exact duplicate rows were found \u2014 row 6 duplicates Order_ID 2006, and row 60 duplicates another earlier row. These would have inflated the unit counts. **Fix:** Removed both duplicates.\n\n2. **Missing Region (row 39):** One row had a null `Region` value, making it impossible to assign to any region. **Fix:** Excluded this row from the analysis (69 of 72 original rows used).\n\n3. **Category label variants:** The `Category` column had minor issues (extra spaces, a misspelling \"Furnture\" \u2192 \"Furniture\", \"Accesories\" \u2192 \"Accessories\"). These were **not fixed** because `Category` is not used in this question.\n\n**Caveat:** The 1 excluded row (row 39) had a Quantity of 8, so the true total across all 72 rows would be 319 units. The per-region breakdown above reflects only the 69 rows with valid region assignments.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Rows 6 and 60 are exact duplicates of earlier rows (Order_ID 2006 and another). Keeping duplicates would double-count units sold in the per-region totals."
+        },
+        "reason": "Rows 6 and 60 are exact duplicates of earlier rows (Order_ID 2006 and another). Keeping duplicates would double-count units sold in the per-region totals.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          6,
+          60
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            39
+          ],
+          "reason": "Row 39 has a null Region value, so it cannot be assigned to any region for the per-region unit count. Marking as missing excludes it from the analysis."
+        },
+        "reason": "Row 39 has a null Region value, so it cannot be assigned to any region for the per-region unit count. Marking as missing excludes it from the analysis.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 1 value(s) to missing",
+        "code": "df.loc[[39], 'Region'] = pd.NA"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 3,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-laguna-s-2-1",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 60.0,
+    "North": 83.0,
+    "South": 64.0,
+    "West": 104.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

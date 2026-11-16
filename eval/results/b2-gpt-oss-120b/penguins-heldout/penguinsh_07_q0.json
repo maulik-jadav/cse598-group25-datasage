@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinsh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 2,
+  "detect_fn": 4,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 21.31,
+  "tokens": 3197,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 190.18,
+    "Chinstrap": 199.64,
+    "Gentoo": 215.14
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    \"\"\"Clean the penguins dataframe for the average flipper length calculation.\n    \n    - Convert flipper_length_mm to numeric (coerce errors to NaN).\n    - Remove rows with missing or invalid flipper lengths (negative or outside 170\u2011235).\n    - Standardise species values (strip whitespace, title\u2011case) to match allowed list.\n    \"\"\"\n    df = df.copy()\n    # standardise species strings\n    df['species'] = df['species'].astype(str).str.strip().str.title()\n    # convert flipper length to numeric\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    # filter out invalid values\n    valid_mask = df['flipper_length_mm'].notna() & (df['flipper_length_mm'] >= 170) & (df['flipper_length_mm'] <= 235)\n    df = df[valid_mask]\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    \"\"\"Return a mapping of each species to the average flipper length (mm).\n    The result is rounded to two decimal places.\n    \"\"\"\n    # assume df is already cleaned (or clean it here for safety)\n    df = clean(df)\n    avg_series = df.groupby('species')['flipper_length_mm'].mean().round(2)\n    # convert to plain python dict (keys as strings, values as floats)\n    result = {species: float(val) for species, val in avg_series.items()}\n    return result"
+  },
+  "corrections": 8,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 190.2812,
+    "Chinstrap": 199.6429,
+    "Gentoo": 215.1429
+  },
+  "issues_reported": [
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

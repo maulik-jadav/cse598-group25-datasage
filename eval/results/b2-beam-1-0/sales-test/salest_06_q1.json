@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1436.97,
+  "tokens": 5353,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 92.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    df = df.drop_duplicates()\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].replace({'Nort': 'North'})\n    if 'Quantity' in df.columns:\n        df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce').abs()\n    if {'Quantity', 'Price', 'Revenue'}.issubset(df.columns):\n        df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    grouped = df.groupby('Region', dropna=True)['Quantity'].sum()\n    result = {}\n    for key, value in grouped.items():\n        value = float(value)\n        result[str(key)] = int(value) if value.is_integer() else value\n    return result\n"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-beam-1-0",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

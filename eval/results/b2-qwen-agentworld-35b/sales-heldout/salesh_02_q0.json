@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1831.88,
+  "tokens": 9070,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 17405.0,
+    "Office Supplies": 1080.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix Quantity: ensure positive\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df.loc[df['Quantity'] < 0, 'Quantity'] = abs(df.loc[df['Quantity'] < 0, 'Quantity'])\n    \n    # Ensure Price is numeric\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Recalculate Revenue\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Clean Region\n    df['Region'] = df['Region'].apply(lambda x: x.strip().capitalize() if isinstance(x, str) else x)\n    \n    return df\n\ndef answer(df):\n    result = df.groupby('Category')['Revenue'].sum().to_dict()\n    return result"
+  },
+  "corrections": 12,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen-agentworld-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

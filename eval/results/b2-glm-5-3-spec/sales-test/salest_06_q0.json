@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 34.68,
+  "tokens": 3069,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.86,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows (57 rows, only 56 distinct Order_IDs)\n    df = df.drop_duplicates()\n    # Drop rows with invalid Quantity (must be >= 1); this also removes the negative Revenue row\n    df = df[df['Quantity'] >= 1]\n    # Fix label variant in Region\n    df['Region'] = df['Region'].replace({'Nort': 'North'})\n    return df\n\ndef answer(df):\n    df = clean(df)\n    g = df.groupby('Category')['Price'].mean()\n    return {k: round(float(v), 2) for k, v in g.items()}"
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.8571,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

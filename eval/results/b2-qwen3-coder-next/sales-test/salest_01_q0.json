@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 15.91,
+  "tokens": 2371,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.333333333333336,
+    "Electronics": 396.42857142857144,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix negative quantities: remove rows with negative Quantity\n    df = df[df['Quantity'].astype(float) > 0].copy()\n    \n    # Fix Price: convert text prices to numeric (remove $ and convert to float)\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).astype(float)\n    \n    # Fix Region: standardize case and spelling\n    df['Region'] = df['Region'].str.lower().replace({'south': 'South', 'east': 'East'})\n    \n    # Ensure Category is consistent (already clean per profile)\n    # Ensure Quantity is numeric\n    df['Quantity'] = df['Quantity'].astype(float).astype(int)\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 27,
+  "cleaned_available": true,
+  "system": "b2-qwen3-coder-next",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

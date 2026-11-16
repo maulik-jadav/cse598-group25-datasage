@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 17.77,
+  "tokens": 2653,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # Drop exact duplicate rows\n    df = df.drop_duplicates().copy()\n    # Standardize Region labels (fix variant \"Nort\" -> \"North\")\n    df['Region'] = df['Region'].replace({'Nort': 'North'})\n    # Remove rows with non\u2011positive Quantity (negative or zero)\n    df = df[df['Quantity'] > 0].copy()\n    # Recalculate Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Assume df is already cleaned (or clean it here for safety)\n    df = clean(df)\n    # Group by Region and sum the units sold (Quantity)\n    result_series = df.groupby('Region')['Quantity'].sum()\n    # Convert to plain Python dict with integer values\n    result = {region: int(qty) for region, qty in result_series.items()}\n    return result"
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

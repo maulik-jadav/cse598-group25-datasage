@@ -1,0 +1,157 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 10,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 53.02,
+  "tokens": 24740,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "final_summary": "Total revenue per month (2026):\n- 2026-01: $3,138\n- 2026-02: $1,908\n- 2026-03: $1,050\n- 2026-04: $10,290\n- 2026-05: $4,953\n- 2026-06: $2,688\n\nProblems found and fixed:\n- Category had 5 label variants/misspellings ('Accesories', 'Electornics', 'Office Suplies', 'electronics', 'office supplies'); merged into the allowed labels via normalize_labels.\n- Region had 3 values with leading/trailing spaces ('East ', ' North', 'North '); trimmed.\n- Revenue violated the rule Revenue = Quantity * Price on rows 13 and 29 (off by a factor of 10); recomputed.\n- Date on row 15 was 'TBD' (not a valid YYYY-MM-DD date); set to missing, so that row is excluded from the monthly aggregation (40 of 41 rows used).\n\nCaveats: Row 15 (Date = 'TBD') could not be assigned to a month and is not included in the totals.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "electronics": "Electronics",
+            "office supplies": "Office Supplies",
+            "Accesories": "Accessories",
+            "Electornics": "Electronics",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Merge case/space variants and misspellings into the allowed Category labels."
+        },
+        "reason": "Merge case/space variants and misspellings into the allowed Category labels.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 5,
+        "summary": "Category: merged 5 label variant(s), 5 cells",
+        "code": "df['Category'] = df['Category'].replace({'electronics': 'Electronics', 'office supplies': 'Office Supplies', 'Accesories': 'Accessories', 'Electornics': 'Electronics', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "trim_whitespace",
+        "args": {
+          "column": "Region",
+          "reason": "Region has values with extra spaces (e.g. 'East ', ' North', 'North ')."
+        },
+        "reason": "Region has values with extra spaces (e.g. 'East ', ' North', 'North ').",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Region: trimmed 3 values",
+        "code": "df['Region'] = df['Region'].str.strip()"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            13,
+            29
+          ],
+          "reason": "Rows 13 and 29 violate Revenue = Quantity * Price; recompute to the correct value."
+        },
+        "reason": "Rows 13 and 29 violate Revenue = Quantity * Price; recompute to the correct value.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[13, 29], 'Revenue'] = [45.0, 15.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 4,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            15
+          ],
+          "reason": "Row 15 has Date = 'TBD', which is not a valid YYYY-MM-DD date."
+        },
+        "reason": "Row 15 has Date = 'TBD', which is not a valid YYYY-MM-DD date.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Date: set 1 value(s) to missing",
+        "code": "df.loc[[15], 'Date'] = pd.NA"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-minimax-m3",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

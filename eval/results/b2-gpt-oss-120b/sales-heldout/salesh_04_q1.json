@@ -1,0 +1,53 @@
+{
+  "task_id": "salesh_04_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 23.83,
+  "tokens": 2817,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 11.0,
+    "Electronics": 15.0,
+    "Furniture": 15.0,
+    "Office Supplies": 20.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Standardize Category values\n    # Define mapping from variant to canonical label\n    cat_map = {\n        'accessories': 'Accessories',\n        'furnture': 'Furniture',\n        'office supplies': 'Office Supplies'\n    }\n    # Strip whitespace and lower case for matching\n    df['Category'] = df['Category'].astype(str).str.strip()\n    df['Category'] = df['Category'].apply(lambda x: cat_map.get(x.lower(), x))\n    \n    # Ensure Category values are within allowed list (optional sanity check)\n    allowed = {\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"}\n    df = df[df['Category'].isin(allowed)]\n    \n    # Recalculate Revenue to satisfy the formula Revenue = Quantity * Price\n    # Ensure Quantity and Price are numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # After cleaning, count orders per Category\n    cleaned = clean(df)\n    counts = cleaned.groupby('Category').size().to_dict()\n    return counts"
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 11.0,
+    "Electronics": 15.0,
+    "Furniture": 15.0,
+    "Office Supplies": 20.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ]
+  ]
+}

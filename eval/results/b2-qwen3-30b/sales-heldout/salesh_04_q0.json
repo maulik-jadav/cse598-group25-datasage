@@ -1,0 +1,49 @@
+{
+  "task_id": "salesh_04_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 31.52,
+  "tokens": 2249,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.0,
+    "Electronics": 568.67,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix case/spacing variants in Category\n    category_mapping = {\n        'Office Supplies': 'Office Supplies',\n        'office supplies': 'Office Supplies',\n        'Electronics': 'Electronics',\n        'Accessories': 'Accessories',\n        'accessories': 'Accessories',\n        'Furniture': 'Furniture',\n        'Furnture': 'Furniture'\n    }\n    df['Category'] = df['Category'].map(category_mapping)\n    \n    # Drop rows with missing Region (since it's not needed for the question)\n    df = df.dropna(subset=['Region'])\n    \n    # Ensure numeric types\n    df['Quantity'] = pd.to_numeric(df['Quantity'])\n    df['Price'] = pd.to_numeric(df['Price'])\n    df['Revenue'] = pd.to_numeric(df['Revenue'])\n    \n    return df\n\ndef answer(df):\n    # Calculate average unit price per category\n    avg_price = df.groupby('Category', as_index=False)['Price'].mean()\n    \n    # Convert to dictionary with category as key and average price as value\n    result = {row['Category']: round(row['Price'], 2) for _, row in avg_price.iterrows()}\n    \n    return result"
+  },
+  "corrections": 4,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.1818,
+    "Electronics": 568.6667,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

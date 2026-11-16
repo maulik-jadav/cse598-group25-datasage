@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 34.38,
+  "tokens": 3212,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # --- Clean Date -------------------------------------------------------\n    # Convert to datetime, coerce invalid entries to NaT and drop them (they cannot be used for monthly aggregation)\n    df = df.copy()\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df.dropna(subset=['Date'])\n\n    # --- Clean Region ------------------------------------------------------\n    # Strip whitespace and fix known typo variants\n    df['Region'] = df['Region'].astype(str).str.strip()\n    region_corrections = {\n        'Suoth': 'South'\n    }\n    df['Region'] = df['Region'].replace(region_corrections)\n\n    # --- Clean Price -------------------------------------------------------\n    # Remove currency symbols and commas, then convert to float\n    def parse_price(val):\n        if pd.isna(val):\n            return pd.NA\n        # Ensure string\n        s = str(val).strip()\n        # Remove leading $ and any commas\n        s = s.replace('$', '').replace(',', '')\n        try:\n            return float(s)\n        except ValueError:\n            return pd.NA\n    df['Price'] = df['Price'].apply(parse_price)\n\n    # --- Ensure numeric types for Quantity and Revenue --------------------\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce').astype('Int64')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n\n    # --- Re\u2011calculate Revenue if it does not match Quantity * Price --------\n    # Use the formula Revenue = Quantity * Price\n    mask = (~df['Quantity'].isna()) & (~df['Price'].isna())\n    calculated = df.loc[mask, 'Quantity'] * df.loc[mask, 'Price']\n    # If existing Revenue differs (allow small rounding differences), replace it\n    diff = (df.loc[mask, 'Revenue'] - calculated).abs()\n    df.loc[mask & (diff > 0.01), 'Revenue'] = calculated\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Assume df is already cleaned (or clean it inside)\n    df = clean(df)\n    # Create month column in required format YYYY-MM\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n    # Group by month and sum Revenue\n    result_series = df.groupby('Month')['Revenue'].sum()\n    # Convert to plain dict (float values, but if they are whole numbers keep as int)\n    result = {}\n    for month, rev in result_series.items():\n        # If rev is an integer value, cast to int for cleaner output\n        if rev.is_integer():\n            result[month] = int(rev)\n        else:\n            result[month] = float(rev)\n    return result"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 5335.0,
+    "2026-02": 6462.0,
+    "2026-03": 6058.0,
+    "2026-04": 1694.0,
+    "2026-05": 4619.0,
+    "2026-06": 879.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 40.77,
+  "tokens": 2751,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # numeric coercion\n    for c in ['Order_ID', 'Quantity', 'Price', 'Revenue']:\n        d[c] = pd.to_numeric(d[c], errors='coerce')\n    # Quantity must be a positive whole number -> drop invalid rows\n    d = d[(d['Quantity'].notna()) & (d['Quantity'] >= 1) & (d['Quantity'] == d['Quantity'].round())]\n    d['Quantity'] = d['Quantity'].astype(int)\n    # Price must be >= 0\n    d = d[d['Price'].notna() & (d['Price'] >= 0)]\n    # enforce Revenue = Quantity * Price\n    d['Revenue'] = d['Quantity'] * d['Price']\n    # tidy text columns (Region label variants / stray spaces)\n    if 'Region' in d.columns:\n        d['Region'] = d['Region'].astype(str).str.strip().str.title().replace({'Nan': None})\n    if 'Category' in d.columns:\n        d['Category'] = d['Category'].astype(str).str.strip()\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['Category'].notna()]\n    g = d.groupby('Category')['Revenue'].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 15,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,182 @@
+{
+  "task_id": "salest_04_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 17,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 15.91,
+  "tokens": 90407,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 31.7857,
+    "Electronics": 351.4286,
+    "Furniture": 153.25,
+    "Office Supplies": 9.6923
+  },
+  "extra": {
+    "final_summary": "Found 2 duplicate rows, 3 missing regions, 2 invalid dates, and 2 prices written as text. Fixed: set 3 regions and 2 dates to missing, converted 2 prices to numbers, recomputed 1 revenue, and removed 2 duplicates.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            29,
+            44,
+            67
+          ],
+          "reason": "missing region"
+        },
+        "reason": "missing region",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 3 value(s) to missing",
+        "code": "df.loc[[29, 44, 67], 'Region'] = pd.NA"
+      },
+      {
+        "version": 2,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            41,
+            58
+          ],
+          "reason": "invalid date"
+        },
+        "reason": "invalid date",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Date: set 2 value(s) to missing",
+        "code": "df.loc[[41, 58], 'Date'] = pd.NA"
+      },
+      {
+        "version": 3,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "convert to number"
+        },
+        "reason": "convert to number",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (70 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            61
+          ],
+          "reason": "revenue mismatch"
+        },
+        "reason": "revenue mismatch",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[61], 'Revenue'] = [90.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 5,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "duplicate rows"
+        },
+        "reason": "duplicate rows",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          25,
+          56
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 17
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-llama4-scout",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 31.7857,
+    "Electronics": 351.4286,
+    "Furniture": 153.25,
+    "Office Supplies": 9.6923
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

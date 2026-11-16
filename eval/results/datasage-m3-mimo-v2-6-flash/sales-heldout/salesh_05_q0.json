@@ -1,0 +1,108 @@
+{
+  "task_id": "salesh_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 7,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 21.77,
+  "tokens": 18946,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "extra": {
+    "final_summary": "Units sold by region: East 94, South 78, West 72, North 37. Problems found and fixed: (1) Region had 4 label variants/misspellings (south, west, Suoth, Wst) \u2014 normalized to allowed labels; (2) row 44 had Quantity = -5, violating the rules (Quantity must be \u2265 1) \u2014 excluded. Caveats: 3 rows have missing Region and are not included in any region total (58 of 61 rows counted); Price had two values written as text ($900.00, $45.00) but that doesn't affect this question.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "south": "South",
+            "west": "West",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "Merge case variants and misspellings into allowed Region labels per rules"
+        },
+        "reason": "Merge case variants and misspellings into allowed Region labels per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Region: merged 4 label variant(s), 4 cells",
+        "code": "df['Region'] = df['Region'].replace({'south': 'South', 'west': 'West', 'Suoth': 'South', 'Wst': 'West'})"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            44
+          ],
+          "reason": "Quantity = -5 violates rules (min 1, always positive); row is an invalid sale"
+        },
+        "reason": "Quantity = -5 violates rules (min 1, always positive); row is an invalid sale",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          44
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [44]",
+        "code": "df = df.drop(index=[44])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 4
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-mimo-v2-6-flash",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 94.0,
+    "North": 37.0,
+    "South": 78.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

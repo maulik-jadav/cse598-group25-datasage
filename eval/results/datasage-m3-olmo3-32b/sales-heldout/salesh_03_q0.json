@@ -1,0 +1,155 @@
+{
+  "task_id": "salesh_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 16.97,
+  "tokens": 58277,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "extra": {
+    "final_summary": "Found and merged 1 label variant in Category. Removed 2 exact duplicate orders. Corrected 1 Revenue value that did not match Quantity * Price. Marked 2 missing Region values as missing. After these fixes, there are 62 unique orders. Counts by Category: Accessories 16, Electronics 13, Furniture 10, Office Supplies 23.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "office supplies": "Office Supplies"
+          },
+          "reason": "Fix label variant to canonical label per rules."
+        },
+        "reason": "Fix label variant to canonical label per rules.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({'office supplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate orders to avoid double-counting."
+        },
+        "reason": "Remove exact duplicate orders to avoid double-counting.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          12,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            28
+          ],
+          "reason": "Fix Revenue that does not match Quantity * Price."
+        },
+        "reason": "Fix Revenue that does not match Quantity * Price.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[28], 'Revenue'] = [105.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 4,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            18,
+            57
+          ],
+          "reason": "Mark Region as missing for rows with no value."
+        },
+        "reason": "Mark Region as missing for rows with no value.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 2 value(s) to missing",
+        "code": "df.loc[[18, 57], 'Region'] = pd.NA"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 13
+  },
+  "corrections": 6,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-olmo3-32b",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 16.0,
+    "Electronics": 13.0,
+    "Furniture": 10.0,
+    "Office Supplies": 23.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

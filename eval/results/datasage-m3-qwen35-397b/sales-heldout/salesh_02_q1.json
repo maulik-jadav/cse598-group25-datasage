@@ -1,0 +1,168 @@
+{
+  "task_id": "salesh_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 128.59,
+  "tokens": 51595,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "extra": {
+    "final_summary": "**Data Quality Issues Found and Fixed:**\n\n1. **Region label variants** (6 rows): Fixed case/space variants like \" South\", \"North \", \"east\", \"north\", \"west\" by normalizing to allowed labels (North, South, East, West).\n\n2. **Invalid dates** (3 rows: 48, 50, 64): Set to missing as they contained unreadable values (TBD, 2026-14-01, not-a-date).\n\n3. **Revenue formula violations** (3 rows: 10, 19, 61): Recomputed Revenue as Quantity * Price to correct mismatches.\n\n4. **Negative quantities** (3 rows: 5, 14, 65): Excluded these rows as they had negative Quantity values (-2, -6, -3) which violate the rule that Quantity must be >= 1.\n\n**Answer: Total Revenue by Region for Electronics**\n- East: $7,580\n- North: $3,750\n- South: $10,540\n- West: $1,800\n\nTotal: $23,670 across 12 rows used in the analysis.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " South": "South",
+            "North ": "North",
+            "east": "East",
+            "north": "North",
+            "west": "West"
+          },
+          "reason": "Normalize Region labels to allowed values (North, South, East, West) by fixing case and leading/trailing spaces."
+        },
+        "reason": "Normalize Region labels to allowed values (North, South, East, West) by fixing case and leading/trailing spaces.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Region: merged 5 label variant(s), 6 cells",
+        "code": "df['Region'] = df['Region'].replace({' South': 'South', 'North ': 'North', 'east': 'East', 'north': 'North', 'west': 'West'})"
+      },
+      {
+        "version": 2,
+        "tool": "set_missing",
+        "args": {
+          "column": "Date",
+          "rows": [
+            48,
+            50,
+            64
+          ],
+          "reason": "Invalid dates (TBD, 2026-14-01, not-a-date) cannot be parsed; marking as missing."
+        },
+        "reason": "Invalid dates (TBD, 2026-14-01, not-a-date) cannot be parsed; marking as missing.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: set 3 value(s) to missing",
+        "code": "df.loc[[48, 50, 64], 'Date'] = pd.NA"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            10,
+            19,
+            61
+          ],
+          "reason": "Revenue values did not match Quantity * Price; recomputing to correct the formula."
+        },
+        "reason": "Revenue values did not match Quantity * Price; recomputing to correct the formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[10, 19, 61], 'Revenue'] = [240.0, 24.0, 48.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            5,
+            14,
+            65
+          ],
+          "reason": "Rows have negative Quantity values (-2, -6, -3) which violate the rule that Quantity must be >= 1 (units sold; always a positive whole number). These are impossible values."
+        },
+        "reason": "Rows have negative Quantity values (-2, -6, -3) which violate the rule that Quantity must be >= 1 (units sold; always a positive whole number). These are impossible values.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          5,
+          14,
+          65
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [5, 14, 65]",
+        "code": "df = df.drop(index=[5, 14, 65])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "set_missing",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 9
+  },
+  "corrections": 18,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-qwen35-397b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 7580.0,
+    "North": 3750.0,
+    "South": 10540.0,
+    "West": 1800.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

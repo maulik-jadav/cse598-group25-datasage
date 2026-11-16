@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 21.22,
+  "tokens": 2987,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # 1. Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep='first').reset_index(drop=True)\n    # 2. Convert Price from text to numeric (strip $ and possible commas)\n    def parse_price(val):\n        if pd.isna(val):\n            return pd.NA\n        # Remove any currency symbols and whitespace\n        s = str(val).replace('$', '').replace(',', '').strip()\n        try:\n            return float(s)\n        except ValueError:\n            return pd.NA\n    df['Price'] = df['Price'].apply(parse_price)\n    # Ensure numeric type\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # 3. Re\u2011calculate Revenue to guarantee consistency with Quantity * Price\n    # Quantity is already numeric; if not, coerce\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # 4. Drop rows where Region is missing because the question groups by Region\n    df = df.dropna(subset=['Region']).reset_index(drop=True)\n    # 5. (Optional) Enforce allowed values for Category and Region \u2013 keep only valid rows\n    allowed_categories = {\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"}\n    allowed_regions = {\"North\", \"South\", \"East\", \"West\"}\n    df = df[df['Category'].isin(allowed_categories) & df['Region'].isin(allowed_regions)]\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Assume df is already cleaned via clean()\n    # Filter to Electronics category\n    electronics = df[df['Category'] == 'Electronics']\n    # Group by Region and sum Revenue\n    result_series = electronics.groupby('Region')['Revenue'].sum()\n    # Convert to plain Python dict with region as key and float/int as value\n    result = {region: float(value) if not value.is_integer() else int(value) for region, value in result_series.items()}\n    return result"
+  },
+  "corrections": 5,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

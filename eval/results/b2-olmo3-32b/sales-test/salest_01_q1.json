@@ -1,0 +1,68 @@
+{
+  "task_id": "salest_01_q1",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 3,
+  "detect_fp": 5,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 16.64,
+  "tokens": 2660,
+  "stop_reason": "code_error",
+  "note": "SyntaxError: unexpected character after line continuation character",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Keep id column (Order_ID)\n    df = df.copy()\n    # 1. Fix label variants in Region\n    df[~df['Region'].isin(['North', 'South', 'East', 'West'])] = None\n    df['Region'] = df['Region'].str.strip().str.title()\n    # 2. Validate and parse Date\n    df['Date'] = df['Date'].astype(str).str.strip()\n    invalid = ~df['Date'].str.match(r'^\\d{4}-\\d{2}-\\d{2}$')\n    df.loc[invalid, 'Date'] = None\n    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d').dt.date\n    # 3. Fix Quantity: must be positive integer >=1\n    df['Quantity'] = df['Quantity'].fillna(0).astype(float)\n    mask = (df['Quantity'].notna() & (df['Quantity'] <= 0) | (df['Quantity'].apply(lambda x: not x.is_integer())))\n    df.loc[mask, 'Quantity'] = None\n    df['Quantity'] = df['Quantity'].astype(int)\n    # 4. Parse and clean Price\n    def parse_price(x):\n        if pd.isna(x):\n            return None\n        x = str(x).strip().replace('$', '').replace(',', '')\n        try:\n            return float(x)\n        except:\n            return None\n    df['Price'] = df['Price'].apply(parse_price)\n    # 5. Check Price range (assume reasonable min, but per rules min>=0)\n    df.loc[df['Price'].lt(0), 'Price'] = None\n    # 6. Recompute Revenue only if both Quantity and Price are valid\n    df['Revenue'] = None\n    valid_rows = df['Quantity'].notna() & df['Price'].notna()\n    df.loc[valid_rows, 'Revenue'] = df.loc[valid_rows, 'Quantity'] * df.loc[valid_rows, 'Price']\n    # 7. Drop duplicate rows (exact)\n    df = df.drop_duplicates()\n    return df\n\ndef answer(df):\n    # Group by Category, aggregate total revenue\n    df = df[df['Revenue'].notna()]\n    grouped = df.groupby('Category').sum(numeric_only=True)\\n    result = {'all': grouped['Revenue'].sum() if 'Revenue' in grouped else None}\n    for cat, g in grouped.items():\n        if 'Revenue' in g:\n            result[cat] = g['Revenue']\n    # Remove keys with NaN revenue\n    result = {k: v for k, v in result.items() if not pd.isna(v)}\n    return result"
+  },
+  "corrections": 0,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-32b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "*"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Price"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

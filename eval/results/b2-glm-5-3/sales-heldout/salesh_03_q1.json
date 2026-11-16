@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 68.58,
+  "tokens": 3495,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Parse dates: ISO first, then fall back to flexible parsing for non-ISO entries\n    s = df['Date'].astype(str).str.strip()\n    parsed = pd.to_datetime(s, format='%Y-%m-%d', errors='coerce')\n    bad = parsed.isna()\n    if bad.any():\n        fallback = pd.to_datetime(s[bad], errors='coerce')\n        parsed.loc[bad] = fallback\n    df['Date'] = parsed\n    # Normalize category casing\n    df['Category'] = df['Category'].astype(str).str.strip().str.title()\n    # Fix region typos\n    df['Region'] = df['Region'].replace({'Suoth': 'South', 'Eats': 'East'})\n    # Enforce Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = df.dropna(subset=['Date']).copy()\n    d['month'] = d['Date'].dt.strftime('%Y-%m')\n    g = d.groupby('month')['Revenue'].sum()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6440.0,
+    "2026-02": 2237.0,
+    "2026-03": 4187.0,
+    "2026-04": 2726.0,
+    "2026-05": 14612.0,
+    "2026-06": 10022.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

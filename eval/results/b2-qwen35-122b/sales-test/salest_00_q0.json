@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 60.03,
+  "tokens": 3301,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 37.142857142857146,
+    "Electronics": 369.0,
+    "Furniture": 169.16666666666666,
+    "Office Supplies": 13.636363636363637
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Price column - remove $ and convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.strip()\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Fix Date column - keep valid dates, set invalid to NaN\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Fix Region column - trim spaces and fix typos\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Suoth': 'South'})\n    \n    # Fix Quantity column - convert to numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # Fix Order_ID - convert to numeric\n    df['Order_ID'] = pd.to_numeric(df['Order_ID'], errors='coerce')\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    \n    # Calculate average unit price by category\n    result = df.groupby('Category')['Price'].mean().to_dict()\n    \n    return result"
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen35-122b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 37.1429,
+    "Electronics": 369.0,
+    "Furniture": 169.1667,
+    "Office Supplies": 13.6364
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "task_id": "salest_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 4,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 9.52,
+  "tokens": 2386,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0,
+    "all": 67.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # Remove duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix label variants in Category column\n    df['Category'] = df['Category'].str.strip()\n    category_mapping = {\n        'Electronics': 'Electronics',\n        'Accessories': 'Accessories',\n        'Furniture': 'Furniture',\n        'Office Supplies': 'Office Supplies',\n        'Office Supplies ': 'Office Supplies',\n        ' Electronics': 'Electronics'\n    }\n    df['Category'] = df['Category'].map(category_mapping)\n    \n    # Convert numeric columns to proper numeric types\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Remove rows with negative Quantity or Revenue\n    df = df[(df['Quantity'] >= 1) & (df['Revenue'] >= 0)]\n    \n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Group by Category and count orders\n    result = df.groupby('Category', observed=True).size().to_dict()\n    \n    # Add overall total\n    result['all'] = sum(result.values())\n    \n    return result"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 10.0,
+    "Electronics": 24.0,
+    "Furniture": 20.0,
+    "Office Supplies": 13.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

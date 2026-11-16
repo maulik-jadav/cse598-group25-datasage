@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_04_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 145.47,
+  "tokens": 15246,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.0,
+    "Electronics": 568.6666666666666,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    allowed = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    allowed_lower = [c.lower() for c in allowed]\n\n    def correct_category(cat):\n        lower_cat = cat.lower()\n        if lower_cat in allowed_lower:\n            return allowed[allowed_lower.index(lower_cat)]\n        else:\n            if lower_cat == \"furnture\":\n                return \"Furniture\"\n            elif lower_cat == \"furniure\":\n                return \"Furniture\"\n            elif lower_cat == \"furntue\":\n                return \"Furniture\"\n            else:\n                return None\n    df[\"Category\"] = df[\"Category\"].apply(correct_category)\n    df = df[df[\"Category\"].notna() & df[\"Category\"].isin(allowed)]\n\n    allowed_regions = [\"North\", \"South\", \"East\", \"West\"]\n    allowed_regions_lower = [r.lower() for r in allowed_regions]\n\n    def correct_region(region):\n        if pd.isna(region):\n            return None\n        lower_region = region.lower()\n        if lower_region in allowed_regions_lower:\n            return allowed_regions[allowed_regions_lower.index(lower_region)]\n        else:\n            if lower_region == \"north \":\n                return \"North\"\n            elif lower_region == \"south \":\n                return \"South\"\n            elif lower_region == \"east \":\n                return \"East\"\n            elif lower_region == \"west \":\n                return \"West\"\n            else:\n                return None\n    df[\"Region\"] = df[\"Region\"].apply(correct_region)\n    df = df[df[\"Region\"].notna() & df[\"Region\"].isin(allowed_regions)]\n\n    df = df[df[\"Quantity\"] >= 1]\n    df = df[df[\"Price\"] >= 0]\n    return df\n\ndef answer(df):\n    grouped = df.groupby(\"Category\")[\"Price\"].mean()\n    return {category: mean for category, mean in grouped.items()}"
+  },
+  "corrections": 4,
+  "planted": 10,
+  "damaged_rows": 3,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.1818,
+    "Electronics": 568.6667,
+    "Furniture": 203.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Price"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

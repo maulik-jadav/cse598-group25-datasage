@@ -1,0 +1,64 @@
+{
+  "task_id": "salest_04_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 3,
+  "detect_fp": 4,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 166.71,
+  "tokens": 14024,
+  "stop_reason": "code_error",
+  "note": "TypeError: tuple indices must be integers or slices, not str",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.drop_duplicates(subset=['Order_ID'])\n    allowed_categories = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    df = df[df['Category'].isin(allowed_categories)]\n    df = df[df['Region'].notna()]\n    df['Price_num'] = pd.to_numeric(df['Price'], errors='coerce')\n    df = df[(df['Quantity'].astype(int) == df['Quantity']) & (df['Quantity'] >= 1)]\n    df = df[(df['Price_num'] >= 0) & (df['Price_num'].notna())]\n    df['Revenue'] = df['Quantity'] * df['Price_num']\n    return df[['Order_ID', 'Region', 'Revenue']]\n\ndef answer(df):\n    grouped = df.groupby('Region')['Revenue'].sum().reset_index()\n    result = grouped[grouped['Revenue'] > 0]\n    return {row['Region']: row['Revenue'] for row in result.itertuples()}"
+  },
+  "corrections": 0,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1680.0,
+    "North": 4600.0,
+    "South": 19590.0,
+    "West": 1380.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Price"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

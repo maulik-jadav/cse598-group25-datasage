@@ -1,0 +1,57 @@
+{
+  "task_id": "penguinsh_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 904.1,
+  "tokens": 5550,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3788.1944444444443,
+    "male": 4482.142857142857
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    df = df.drop_duplicates()\n\n    df['sex'] = df['sex'].astype(str).str.strip().str.lower()\n    df.loc[~df['sex'].isin(['male', 'female']), 'sex'] = pd.NA\n\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False),\n        errors='coerce'\n    )\n    mask = df['body_mass_g'] > 100000\n    df.loc[mask, 'body_mass_g'] = df.loc[mask, 'body_mass_g'] / 1000\n\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce').abs()\n\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['sex', 'body_mass_g'])\n    return d.groupby('sex')['body_mass_g'].mean().to_dict()"
+  },
+  "corrections": 3,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "penguins-heldout",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3792.8571,
+    "male": 4492.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

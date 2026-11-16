@@ -1,0 +1,52 @@
+{
+  "task_id": "salesh_06_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 11.91,
+  "tokens": 2244,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 28.0,
+    "Nort": 2.0,
+    "North": 38.0,
+    "South": 52.0,
+    "Suoth": 1.0,
+    "West": 57.0,
+    "Wst": 5.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Standardize Region labels (case\u2011fold and map known misspellings)\n    region_map = {\"north\": \"North\", \"nort\": \"North\", \"east\": \"East\", \"suoth\": \"South\", \"wst\": \"West\"}\n    df['Region'] = df['Region'].str.strip().str.title()\n    df['Region'] = df['Region'].map(region_map).fillna(df['Region'])\n    # Convert Price from text (possible $ and commas) to numeric\n    def parse_price(p):\n        if isinstance(p, str):\n            p = p.replace('$', '').replace(',', '')\n        return float(p)\n    df['Price'] = df['Price'].astype(str).apply(parse_price)\n    # Ensure Quantity is integer (already numeric per profile, but keep safe)\n    df['Quantity'] = df['Quantity'].astype(int)\n    return df\n\ndef answer(df):\n    # Sum Quantity per Region\n    result = df.groupby('Region')['Quantity'].sum().to_dict()\n    # Remove any missing group keys (should not be any after cleaning)\n    result = {k: v for k, v in result.items() if pd.notna(k)}\n    return result\n"
+  },
+  "corrections": 6,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-granite41-30b",
+  "dataset": "sales-heldout",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 28.0,
+    "North": 40.0,
+    "South": 53.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

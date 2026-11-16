@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 68.44,
+  "tokens": 4392,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 90500.0,
+    "Chinstrap": 22475.0,
+    "Gentoo": 105800.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows so masses are not double-counted.\n    df = df.drop_duplicates().reset_index(drop=True)\n    # Convert body mass from text (with commas) to numeric grams.\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', ''),\n        errors='coerce'\n    )\n    # Standardize island and sex variants for consistency.\n    df['island'] = df['island'].str.strip().replace({\n        'Bisco': 'Biscoe',\n        'Torgerson': 'Torgersen'\n    })\n    df['sex'] = df['sex'].str.lower()\n    return df\n\ndef answer(df):\n    df = clean(df)\n    totals = df.groupby('species', dropna=True)['body_mass_g'].sum()\n    return {str(species): int(mass) for species, mass in totals.items() if pd.notna(mass)}\n"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-kimi-k2-7-code",
+  "dataset": "penguins-test",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 90500.0,
+    "Chinstrap": 22475.0,
+    "Gentoo": 105800.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

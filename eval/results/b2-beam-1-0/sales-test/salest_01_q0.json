@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 540.34,
+  "tokens": 5884,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 36.25,
+    "Electronics": 396.42857142857144,
+    "Furniture": 161.07142857142858,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    if \"Price\" in df.columns:\n        df[\"Price\"] = (\n            df[\"Price\"]\n            .astype(str)\n            .str.replace(r\"[\\$,]\", \"\", regex=True)\n            .str.strip()\n        )\n        df[\"Price\"] = pd.to_numeric(df[\"Price\"], errors=\"coerce\")\n    return df\n\ndef answer(df):\n    df = df.copy()\n    if \"Price\" in df.columns and not pd.api.types.is_numeric_dtype(df[\"Price\"]):\n        df[\"Price\"] = (\n            df[\"Price\"]\n            .astype(str)\n            .str.replace(r\"[\\$,]\", \"\", regex=True)\n            .str.strip()\n        )\n        df[\"Price\"] = pd.to_numeric(df[\"Price\"], errors=\"coerce\")\n    result = (\n        df.dropna(subset=[\"Category\"])\n        .groupby(\"Category\", dropna=True)[\"Price\"]\n        .mean()\n    )\n    return {str(k): float(v) for k, v in result.items()}\n"
+  },
+  "corrections": 2,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-beam-1-0",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

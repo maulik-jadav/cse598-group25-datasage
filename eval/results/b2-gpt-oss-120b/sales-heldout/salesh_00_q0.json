@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 18.67,
+  "tokens": 2948,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.65,
+    "Electronics": 259.23,
+    "Furniture": 251.94,
+    "Office Supplies": 9.23
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    \"\"\"Clean the raw dataframe for the average price per category question.\n    - Remove exact duplicate rows.\n    - Strip leading/trailing whitespace from all text columns.\n    - Normalise Category variants (typos, extra spaces).\n    - Keep only allowed Category values.\n    \"\"\"\n    # 1. Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates().reset_index(drop=True)\n\n    # 2. Trim whitespace in all object (string) columns\n    for col in df.select_dtypes(include=['object']).columns:\n        df[col] = df[col].astype(str).str.strip()\n\n    # 3. Fix known Category misspellings / variants\n    cat_corrections = {\n        'Office Suplies': 'Office Supplies',\n        'Accesories': 'Accessories'\n    }\n    df['Category'] = df['Category'].replace(cat_corrections)\n\n    # 4. Keep only the categories defined in the rules\n    allowed_categories = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    df = df[df['Category'].isin(allowed_categories)].reset_index(drop=True)\n\n    return df\n\ndef answer(df):\n    \"\"\"Return a dictionary mapping each Category to the average unit Price.\n    The result is rounded to two decimal places.\n    \"\"\"\n    clean_df = clean(df)\n    avg_price = clean_df.groupby('Category')['Price'].mean().round(2).to_dict()\n    return avg_price"
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.6522,
+    "Electronics": 259.2308,
+    "Furniture": 251.9444,
+    "Office Supplies": 9.2308
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 215.69,
+  "tokens": 2587,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3767.2413793103447,
+    "Chinstrap": 3726.785714285714,
+    "Gentoo": 4895.833333333333
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Normalize species labels (strip stray spaces)\n    df['species'] = df['species'].astype(str).str.strip()\n    # Normalize island labels (strip + consistent capitalization)\n    df['island'] = df['island'].astype(str).str.strip().str.title()\n    # body_mass_g is text with commas; convert to numeric\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    # sex missing means unknown; leave as NaN (not needed for this question)\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'body_mass_g'])\n    means = d.groupby('species')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in means.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3767.2414,
+    "Chinstrap": 3726.7857,
+    "Gentoo": 4895.8333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 31.51,
+  "tokens": 3039,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # Drop exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n\n    # Standardize Category variants\n    cat_map = {\n        \"Office Suplies\": \"Office Supplies\",\n        \"Accesories\": \"Accessories\",\n        \"Accessories\": \"Accessories\",\n        \"Electronics\": \"Electronics\",\n        \"Furniture\": \"Furniture\",\n        \"Office Supplies\": \"Office Supplies\"\n    }\n    df['Category'] = df['Category'].str.strip().map(cat_map).fillna(df['Category'].str.strip())\n\n    # Standardize Region variants (strip spaces and fix leading space)\n    df['Region'] = df['Region'].astype('object')  # ensure string handling for NaN\n    df['Region'] = df['Region'].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # After stripping, ensure allowed values; any unexpected keep as is\n\n    # Parse Date to proper datetime (YYYY-MM-DD). Coerce errors to NaT.\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n\n    # Ensure Quantity is integer and positive\n    df['Quantity'] = df['Quantity'].astype(int)\n    df = df[df['Quantity'] >= 1]\n\n    # Ensure Price is non\u2011negative float\n    df['Price'] = df['Price'].astype(float)\n    df = df[df['Price'] >= 0]\n\n    # Recalculate Revenue based on Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Group by Category and sum Revenue\n    result_series = df.groupby('Category', dropna=False)['Revenue'].sum()\n    # Convert to plain Python dict, rounding to 2 decimals if needed\n    result = {cat: float(val) if not pd.isna(val) else 0 for cat, val in result_series.items()}\n    return result\n"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

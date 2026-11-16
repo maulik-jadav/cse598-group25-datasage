@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 49.69,
+  "tokens": 3439,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Normalize Category label variants (extra spaces)\n    df['Category'] = df['Category'].astype(str).str.strip()\n    # Convert Price from text (e.g. '$180.00') to numeric\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.replace('$', '', regex=False)\n        .str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    # Parse dates (non-ISO entries become NaT)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    return df\n\ndef answer(df):\n    d = clean(df)\n    # Units sold per region; rows with missing Region are dropped as group keys\n    g = d.dropna(subset=['Region']).groupby('Region')['Quantity'].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 9,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

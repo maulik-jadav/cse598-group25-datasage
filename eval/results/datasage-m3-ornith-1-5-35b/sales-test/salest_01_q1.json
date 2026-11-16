@@ -1,0 +1,129 @@
+{
+  "task_id": "salest_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 2,
+  "seconds": 600.05,
+  "tokens": 58133,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "extra": {
+    "final_summary": "Total revenue by category (after cleaning):\n\n- Electronics: $27,140\n- Furniture: $7,665\n- Accessories: $2,390\n- Office Supplies: $780\n\nData problems found and fixed:\n1. Price stored as text with currency symbols ($6.00, $180.00) \u2192 cast to numeric (safe, no values lost).\n2. Three rows with negative Quantity (rows 20, 35, 58), violating the rule that units sold must be positive \u2192 excluded those rows.\n3. One row with incorrect Revenue (row 52: Revenue was 14405 but Quantity\u00d7Price = 144) \u2192 recomputed Revenue = Quantity \u00d7 Price per the formula rule.\n\nCategory labels were clean (no variants). Region had case variants (south/east) but is not used by this question, so it was left unchanged. Analysis used 58 of 61 rows.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Prices \"$6.00\" and \"$180.00\" stored as text with currency symbol; converting to numeric per rules (unit price in dollars). No values become missing."
+        },
+        "reason": "Prices \"$6.00\" and \"$180.00\" stored as text with currency symbol; converting to numeric per rules (unit price in dollars). No values become missing.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (61 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            20,
+            35,
+            58
+          ],
+          "reason": "Quantity is negative (-7, -2, -7), violating the rule that units sold must be a positive whole number. Revenue is derived from these impossible quantities, so the rows are unreliable for revenue totals."
+        },
+        "reason": "Quantity is negative (-7, -2, -7), violating the rule that units sold must be a positive whole number. Revenue is derived from these impossible quantities, so the rows are unreliable for revenue totals.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          20,
+          35,
+          58
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [20, 35, 58]",
+        "code": "df = df.drop(index=[20, 35, 58])"
+      },
+      {
+        "version": 3,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            52
+          ],
+          "reason": "Revenue (14405) does not match the rule formula Revenue = Quantity * Price (144). Quantity and Price are valid, so Revenue is corrected to the formula value."
+        },
+        "reason": "Revenue (14405) does not match the rule formula Revenue = Quantity * Price (144). Quantity and Price are valid, so Revenue is corrected to the formula value.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[52], 'Revenue'] = [144.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 8
+  },
+  "corrections": 6,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-ornith-1-5-35b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

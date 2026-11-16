@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 50.58,
+  "tokens": 3654,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix Category label variants (typos / case)\n    cat_map = {\n        'accesories': 'Accessories', 'accessories': 'Accessories',\n        'electornics': 'Electronics', 'electronics': 'Electronics',\n        'office suplies': 'Office Supplies', 'office supplies': 'Office Supplies',\n        'furniture': 'Furniture'\n    }\n    df['Category'] = df['Category'].astype(str).str.strip().str.lower().map(\n        lambda v: cat_map.get(v, v.strip())\n    )\n    # Fix Region extra spaces / case variants\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    # Parse dates; coerce unparseable ones after trying strict ISO first\n    parsed = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce')\n    fallback = pd.to_datetime(df['Date'], errors='coerce')\n    df['Date'] = parsed.fillna(fallback)\n    # Recompute Revenue from the formula Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = df.dropna(subset=['Date'])\n    months = d['Date'].dt.to_period('M').astype(str)\n    grouped = d.groupby(months)['Revenue'].sum()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

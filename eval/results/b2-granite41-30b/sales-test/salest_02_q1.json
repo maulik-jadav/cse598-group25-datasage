@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_02_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 12.54,
+  "tokens": 2086,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 10786.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    # Fix negative quantities and revenues (set to 0)\n    df.loc[df['Quantity'] < 0, 'Quantity'] = 0\n    df.loc[df['Revenue'] < 0, 'Revenue'] = 0\n    # Correct label variants in Category\n    df['Category'] = df['Category'].replace({'Office Suplies': 'Office Supplies', 'Furnture': 'Furniture'})\n    # Clean whitespace and case variants in Region\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    return df\n\ndef answer(df):\n    # Ensure Date is string and extract YYYY-MM\n    df['Month'] = df['Date'].astype(str).str[:7]\n    # Group by month and sum Revenue\n    result = df.groupby('Month')['Revenue'].sum().to_dict()\n    return result\n"
+  },
+  "corrections": 8,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-granite41-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 4102.0,
+    "2026-02": 4325.0,
+    "2026-03": 3356.0,
+    "2026-04": 2981.0,
+    "2026-05": 5129.0,
+    "2026-06": 6668.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

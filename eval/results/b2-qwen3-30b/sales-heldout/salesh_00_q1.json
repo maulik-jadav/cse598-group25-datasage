@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 8.53,
+  "tokens": 2278,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix Category label variants\n    category_mapping = {\n        'Office Suplies': 'Office Supplies',\n        'Accesories': 'Accessories'\n    }\n    df['Category'] = df['Category'].map(category_mapping).fillna(df['Category'])\n    \n    # Fix Region label variants (trim spaces and fix case)\n    df['Region'] = df['Region'].str.strip().replace({' East': 'East'})\n    \n    # Convert numeric columns from text to float\n    numeric_cols = ['Quantity', 'Price', 'Revenue']\n    for col in numeric_cols:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    \n    # Ensure Revenue is calculated correctly (Quantity * Price)\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Group by Category and sum Revenue\n    result = df.groupby('Category', as_index=False)['Revenue'].sum()\n    \n    # Convert to dictionary with category as key and total revenue as value\n    return dict(zip(result['Category'], result['Revenue']))"
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 4275.0,
+    "Electronics": 16690.0,
+    "Furniture": 20970.0,
+    "Office Supplies": 516.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinst_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 13.84,
+  "tokens": 2661,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3767.2413793103447,
+    "Chinstrap": 3726.785714285714,
+    "Gentoo": 4895.833333333333
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Fix label variants in species (strip extra spaces)\n    df['species'] = df['species'].astype(str).str.strip()\n    # Fix label variants in island (strip + normalize case)\n    df['island'] = df['island'].astype(str).str.strip().str.title()\n    # Convert body_mass_g from text to numeric (remove commas)\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # Convert flipper_length_mm to numeric if needed\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    # Convert year to numeric if needed\n    df['year'] = pd.to_numeric(df['year'], errors='coerce')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Filter to valid body_mass_g range\n    df = df[df['body_mass_g'].between(2500, 6500)]\n    # Filter to allowed species\n    allowed_species = ['Adelie', 'Chinstrap', 'Gentoo']\n    df = df[df['species'].isin(allowed_species)]\n    result = df.groupby('species')['body_mass_g'].mean()\n    return {k: v for k, v in result.items()}"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-2",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3767.2414,
+    "Chinstrap": 3726.7857,
+    "Gentoo": 4895.8333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

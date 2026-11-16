@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 3,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 9.05,
+  "tokens": 2380,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 4030.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Convert Quantity, Price, and Revenue to numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Fix Category label variants\n    category_mapping = {\n        'Accesories': 'Accessories',\n        'electronics': 'Electronics',\n        'Electornics': 'Electronics',\n        'office supplies': 'Office Supplies',\n        'Office Suplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Fix Region label variants\n    region_mapping = {\n        'East ': 'East',\n        ' North': 'North',\n        'North ': 'North'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Drop rows with invalid data (e.g., NaN in critical columns)\n    df = df.dropna(subset=['Category', 'Quantity', 'Price', 'Revenue'])\n    \n    # Ensure Quantity is integer\n    df['Quantity'] = df['Quantity'].astype(int)\n    \n    return df\n\ndef answer(df):\n    # Group by Category and sum Revenue\n    result = df.groupby('Category', as_index=False)['Revenue'].sum()\n    \n    # Convert to dictionary with category as key and total revenue as value\n    return dict(zip(result['Category'], result['Revenue']))"
+  },
+  "corrections": 8,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

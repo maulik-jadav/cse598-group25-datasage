@@ -1,0 +1,84 @@
+{
+  "task_id": "salesh_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 9,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 1,
+  "seconds": 44.08,
+  "tokens": 27380,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "extra": {
+    "final_summary": "Total revenue by region for Electronics:\n\n| Region | Revenue |\n|----------|---------|\n| South    | $5,540  |\n| East     | $4,080  |\n| West     | $3,750  |\n| North    | $960    |\n\n(10 Electronics orders used.)\n\nProblems found & fixes applied:\n- **Region label variants (6 cells)**: `north`, `east`, `Nort`, `Suoth`, `Wst` were distinct from the canonical `North`/`East`/`South`/`West`. These would have created phantom regions in the grouping, so I merged them into the allowed labels via normalize_labels. This was the only fix needed.\n\nData already clean for this question:\n- **Category** (the filter) had no label variants.\n- **Revenue** already satisfies the rule `Revenue = Quantity * Price` for all rows (0 discrepancies), so no revenue recomputation was needed.\n- No duplicate rows.\n- Price had 3 text values (`$350.00`, `$6.00`, `$6.00`), but none were Electronics rows and Revenue was already correct, so no change was required.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "north": "North",
+            "Nort": "North",
+            "Suoth": "South",
+            "Wst": "West"
+          },
+          "reason": "Merge case variants and misspellings into allowed Region labels so grouping by region is correct"
+        },
+        "reason": "Merge case variants and misspellings into allowed Region labels so grouping by region is correct",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 6,
+        "summary": "Region: merged 5 label variant(s), 6 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'north': 'North', 'Nort': 'North', 'Suoth': 'South', 'Wst': 'West'})"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 5
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-ornith-1-5-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

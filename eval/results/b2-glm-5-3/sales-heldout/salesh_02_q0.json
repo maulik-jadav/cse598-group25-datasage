@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 94.45,
+  "tokens": 3416,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Normalize Region labels (strip spaces, normalize case); NaN stays NaN\n    df['Region'] = df['Region'].str.strip().str.title()\n    # Parse dates; invalid ones become NaT (not needed for the question)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # Quantity must be a positive whole number; drop invalid (negative) rows\n    df = df[df['Quantity'] >= 1].copy()\n    # Enforce Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    s = d.groupby('Category')['Revenue'].sum()\n    return {k: float(v) for k, v in s.items()}"
+  },
+  "corrections": 18,
+  "planted": 18,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2450.0,
+    "Electronics": 29070.0,
+    "Furniture": 16505.0,
+    "Office Supplies": 972.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

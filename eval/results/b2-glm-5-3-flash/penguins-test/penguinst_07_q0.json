@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinst_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 126.21,
+  "tokens": 2780,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 39700.0,
+    "Gentoo": 103500.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Fix species label variants: strip spaces and correct typos\n    species_map = {\n        'adelie': 'Adelie', 'Adeile': 'Adelie',\n        'Gentto': 'Gentoo', 'Chinstarp': 'Chinstrap'\n    }\n    df['species'] = df['species'].astype(str).str.strip().replace(species_map)\n    # body_mass_g stored as text (some with commas) -> numeric\n    df['body_mass_g'] = pd.to_numeric(\n        df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    # flipper_length_mm: fix out-of-range values (e.g. -200) -> NaN\n    flip = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['flipper_length_mm'] = flip.where(flip.between(170, 235))\n    return df\n\ndef answer(df):\n    d = df.dropna(subset=['species', 'body_mass_g'])\n    totals = d.groupby('species')['body_mass_g'].sum()\n    return {str(k): float(v) for k, v in totals.items()}"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "penguins-test",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 35900.0,
+    "Gentoo": 103500.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

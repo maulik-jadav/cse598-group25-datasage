@@ -1,0 +1,65 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 44.39,
+  "tokens": 3491,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 5420.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Price: strip $ and commas, convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)\n    \n    # Fix Quantity: take absolute value for negative entries\n    df['Quantity'] = df['Quantity'].abs().astype(int)\n    \n    # Fix Date: parse to datetime (handles non-ISO formats)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Recalculate Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = df.copy()\n    df['Month'] = df['Date'].dt.strftime('%Y-%m')\n    df = df.dropna(subset=['Month'])\n    result = df.groupby('Month')['Revenue'].sum()\n    return result.to_dict()"
+  },
+  "corrections": 6,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen38-27b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

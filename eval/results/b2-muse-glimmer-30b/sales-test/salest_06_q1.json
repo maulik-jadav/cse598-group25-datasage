@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 134.16,
+  "tokens": 6102,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "North": 92.0,
+    "South": 42.0,
+    "East": 46.0,
+    "West": 62.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # standardize Region values\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Nort': 'North'})\n    # fix Quantity sign / ensure positive whole number\n    df['Quantity'] = df['Quantity'].abs()\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # recompute Revenue to satisfy Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # ensure Order_ID uniqueness\n    df = df.drop_duplicates(subset=['Order_ID'], keep='first')\n    # keep only allowed regions\n    df = df[df['Region'].isin(['North', 'South', 'East', 'West'])]\n    return df\n\ndef answer(df):\n    d = df.copy()\n    # sum units sold per region\n    sums = d.groupby('Region')['Quantity'].sum()\n    result = {}\n    for region in ['North', 'South', 'East', 'West']:\n        if region in sums.index:\n            result[region] = int(sums.loc[region])\n    return result\n"
+  },
+  "corrections": 5,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 46.0,
+    "North": 90.0,
+    "South": 42.0,
+    "West": 62.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

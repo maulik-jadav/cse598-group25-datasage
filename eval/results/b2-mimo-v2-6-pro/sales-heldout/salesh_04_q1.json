@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_04_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 27.6,
+  "tokens": 2506,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 11.0,
+    "Electronics": 15.0,
+    "Furniture": 15.0,
+    "Office Supplies": 20.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # drop exact duplicate rows\n    df = df.drop_duplicates()\n    # normalize Category labels: trim, fix case variants and the 'Furnture' typo\n    def fix_cat(v):\n        if pd.isna(v):\n            return v\n        s = str(v).strip()\n        low = s.lower()\n        if low in ('furnture', 'furniture'):\n            return 'Furniture'\n        if low == 'electronics':\n            return 'Electronics'\n        if low == 'accessories':\n            return 'Accessories'\n        if low == 'office supplies':\n            return 'Office Supplies'\n        return s\n    df['Category'] = df['Category'].apply(fix_cat)\n    # parse dates (invalid ones become NaT) - not needed for the question but keeps data consistent\n    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce')\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Category'])\n    counts = d.groupby('Category').size()\n    return {str(k): int(v) for k, v in counts.items()}"
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-heldout",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 11.0,
+    "Electronics": 15.0,
+    "Furniture": 15.0,
+    "Office Supplies": 20.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}
