@@ -326,3 +326,34 @@ def test_files_of_an_earlier_session_still_download(tmp_path, monkeypatch):
                 assert err.code == 404
     finally:
         httpd.shutdown()
+
+
+def test_auto_pauses_before_dropping_rows_that_are_only_blank(tmp_path):
+    from app.web.runner import auto_needs_person
+    df = pd.DataFrame({"Date": ["2026-01-01", None, "x", "2026-01-04"], "Qty": [1, 2, 3, -1]})
+    s = Session(df, source="t.csv", request="q", rules={"Qty": {"min": 1}})
+    d = Dispatcher(s, AutoApprover())
+    _call(d, "check_missing", column="Date")
+    _call(d, "check_dates", column="Date")
+    _call(d, "check_out_of_range", column="Qty", minimum=1)
+    assert auto_needs_person("exclude_rows", {"rows_removed": [3]}, s) is None          # Qty -1 breaks a rule
+    assert "only problem" in auto_needs_person("exclude_rows", {"rows_removed": [1, 2]}, s)  # blank / unreadable date
+    assert auto_needs_person("exclude_rows", {"rows_removed": [0]}, s)                   # no problem found at all
+    assert auto_needs_person("drop_duplicates", {"rows_removed": [1]}, s) is None        # not a row drop by rule
+
+    run = Run(Path("x.csv"), "q", None, tmp_path, None, mode="auto")
+    run.session = s
+    answers = []
+    worker = threading.Thread(target=lambda: answers.append(
+        BrowserApprover(run).decide("exclude_rows", {"rows": [1]}, "high", {"summary": "", "rows_removed": [1]})))
+    worker.start()
+    for _ in range(200):
+        asks = [e for e in run.events if e["type"] == "approval"]
+        if asks:
+            break
+        threading.Event().wait(0.01)
+    assert asks[0]["auto"] is False and asks[0]["paused"]
+    run.answer(asks[0]["id"], False)
+    worker.join(2)
+    assert answers == [False]
+    assert BrowserApprover(run).decide("exclude_rows", {"rows": [3]}, "high", {"summary": "", "rows_removed": [3]}) is True

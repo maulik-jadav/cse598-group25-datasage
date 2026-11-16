@@ -152,3 +152,11 @@ model is not deterministic, so small differences between the two systems can com
 - Auto also approves fixes on columns the question does not use (one small-sample run blanked an
   unreadable Date that the revenue question never reads). That is harmless for the answer but changes the
   cleaned table, which supports the advice above.
+
+## Follow-up (done)
+
+The recommendation is now built into the app's Auto mode (`auto_needs_person` in `app/web/runner.py`): a row
+drop (`exclude_rows` or `exclude_where`) is not auto-approved when any dropped row has no recorded problem or
+only blank or unreadable values (missing, invalid date). Auto pauses, says why on the card, and waits for
+Keep or Apply. Rows that break a rule (negative, out of range, formula mismatch) are still dropped at once.
+This would have stopped the one bad auto-approval found above (`salest_00_q1`).

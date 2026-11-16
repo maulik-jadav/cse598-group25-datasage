@@ -231,6 +231,31 @@ def table_state(session) -> dict:
     return {"rows": rows_out, "version": session.version, "total_rows": len(original)}
 
 
+BLANK_KINDS = {"missing", "invalid_date"}  # a blank or unreadable value: not, on its own, a reason to drop a row
+
+
+def auto_needs_person(tool: str, preview: dict, session) -> str | None:
+    """In Auto mode, a fix that should still wait for a person, and why (None: approve as usual).
+
+    The Auto-mode study found one bad auto-approval in 269: dropping rows whose only problem was a blanked
+    date. So a row drop waits for a person when any dropped row has no recorded problem, or only blank or
+    unreadable values. Rows that break a rule (negative, out of range, formula) are still dropped at once.
+    """
+    if tool not in ("exclude_rows", "exclude_where") or session is None:
+        return None
+    rows = [int(r) for r in (preview.get("rows_removed") or [])]
+    weak = []
+    for r in rows:
+        kinds = {kind for (kind, _), issue in session.issues.items() if r in set(issue.get("rows", []))}
+        if not kinds or kinds <= BLANK_KINDS:
+            weak.append(r)
+    if not weak:
+        return None
+    shown = ", ".join(str(r) for r in weak[:5]) + ("..." if len(weak) > 5 else "")
+    return (f"Auto paused: row{'s' if len(weak) > 1 else ''} {shown} would be dropped although "
+            f"{'their' if len(weak) > 1 else 'its'} only problem is a blank or unreadable value (or none was found).")
+
+
 class BrowserApprover(Approver):
     name = "browser"
 
@@ -245,9 +270,10 @@ class BrowserApprover(Approver):
         waiter = threading.Event()
         self.run.pending[approval_id] = {"event": waiter, "answer": False}
         rows = list(preview.get("rows_removed") or args.get("rows") or [])
-        auto = self.run.mode == "auto"
+        paused = auto_needs_person(tool, preview, getattr(self.run, "session", None)) if self.run.mode == "auto" else None
+        auto = self.run.mode == "auto" and not paused
         self.run.emit({
-            "type": "approval", "id": approval_id, "tool": tool, "risk": risk, "auto": auto,
+            "type": "approval", "id": approval_id, "tool": tool, "risk": risk, "auto": auto, "paused": paused,
             "title": QUESTIONS.get(tool, f"Apply {tool}?").format(column=args.get("column", "this column")),
             "summary": future(tool, args, preview), "reason": args.get("reason", ""),
             "rows": [int(r) for r in rows][:20], "column": args.get("column"),
