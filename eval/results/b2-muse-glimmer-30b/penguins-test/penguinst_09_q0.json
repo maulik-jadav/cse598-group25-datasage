@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 128.15,
+  "tokens": 6270,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 193.0,
+    "Chinstrap": 196.76923076923077,
+    "Gentoo": 216.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # species label variants -> canonical allowed values\n    species_map = {\n        'adelie': 'Adelie',\n        'gentoo': 'Gentoo',\n        'gentto': 'Gentoo',\n        'chinstrap': 'Chinstrap'\n    }\n    df['species'] = df['species'].astype(str).str.strip()\n    df['species'] = df['species'].replace(species_map)\n    # flipper_length_mm: ensure numeric and fix sign errors\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    # negative values are data entry errors, take absolute value to bring into valid range\n    neg_mask = df['flipper_length_mm'] < 0\n    df.loc[neg_mask, 'flipper_length_mm'] = df.loc[neg_mask, 'flipper_length_mm'].abs()\n    # optional: clean body_mass_g text numbers with commas\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = (\n            df['body_mass_g'].astype(str)\n            .str.replace(',', '', regex=False)\n            .str.strip()\n        )\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    valid_species = ['Adelie', 'Chinstrap', 'Gentoo']\n    dfc = dfc[dfc['species'].isin(valid_species)]\n    avg = dfc.groupby('species')['flipper_length_mm'].mean()\n    # drop possible NaN groups\n    result = {species: float(val) for species, val in avg.dropna().items()}\n    return result\n"
+  },
+  "corrections": 5,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "penguins-test",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 193.1667,
+    "Chinstrap": 197.0909,
+    "Gentoo": 216.6842
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

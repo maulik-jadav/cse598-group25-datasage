@@ -151,6 +151,7 @@ def aggregate_rows(rows: list[dict]) -> dict:
         "recovered_errors": sum(r["recovered_errors"] for r in rows),
         "approvals_median": statistics.median(r["approvals_asked"] for r in rows) if calls else None,
         "tool_calls_median": statistics.median(r["tool_calls"] for r in rows) if calls else None,
+        "model_turns_median": statistics.median(r["extra"].get("model_turns", 0) for r in rows) if calls else None,
         "seconds_median": statistics.median(r["seconds"] for r in rows), "seconds_p90": _p90([r["seconds"] for r in rows]),
         "tokens_median": statistics.median(r["tokens"] for r in rows),
         "stop_reasons": stops,
@@ -272,7 +273,8 @@ def spearman(xs: list[float], ys: list[float]) -> float:
 
 def summary(models: dict) -> dict:
     """Cross-model facts used in docs/final/findings_models.md: the accuracy/latency and accuracy/token Pareto
-    fronts, and how accuracy relates to looking beyond the question's columns (models with under 5% tool errors)."""
+    fronts, and how accuracy relates to looking beyond the question's columns (models with under 5% tool errors that
+    completed at least 90% of the questions)."""
     rows = [(s, e["agent"]["heldout_test"], e["agent"]["behaviour"]) for s, e in models.items()
             if e["agent"]["heldout_test"] and e["agent"]["heldout_test"]["tasks"] == 80 and not s.endswith("-original")]
 
@@ -285,7 +287,7 @@ def summary(models: dict) -> dict:
                 keep.append(s)
         return sorted(keep, key=lambda s: models[s]["agent"]["heldout_test"][key])
 
-    clean = [(a, b) for _, a, b in rows if (a["tool_error_rate"] or 0) < 0.05]
+    clean = [(a, b) for _, a, b in rows if (a["tool_error_rate"] or 0) < 0.05 and a["completion"] >= 0.9]
     return {
         "models_with_80_tasks": len(rows),
         "pareto_accuracy_vs_median_seconds": front("seconds_median"),

@@ -1,0 +1,57 @@
+{
+  "task_id": "penguinst_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 93.19,
+  "tokens": 4641,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3866.346153846154,
+    "male": 4485.227272727273
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # strip whitespace / fix label variants (island has ' Biscoe')\n    for col in ['island', 'species', 'sex']:\n        if col in df.columns:\n            df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # body_mass_g is text with commas and out-of-range value 3625000\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip()\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n        # fix out_of_range: 3625000 -> 3625 (divide by 1000 if > max 6500)\n        mask = df['body_mass_g'] > 6500\n        df.loc[mask, 'body_mass_g'] = df.loc[mask, 'body_mass_g'] / 1000.0\n        # if still out of range after division, coerce to NaN\n        df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # ensure flipper_length_mm numeric (sample shows as text)\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    # drop exact duplicate rows (profile: 1 duplicate)\n    df = df.drop_duplicates()\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # drop missing sex (missing means unknown; do not guess)\n    df = df.dropna(subset=['sex'])\n    # drop missing body_mass_g if any after cleaning\n    df = df.dropna(subset=['body_mass_g'])\n    grouped = df.groupby('sex', dropna=True)['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in grouped.items()}\n"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3876.0,
+    "male": 4485.2273
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}
