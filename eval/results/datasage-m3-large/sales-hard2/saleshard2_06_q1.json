@@ -1,0 +1,300 @@
+{
+  "task_id": "saleshard2_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 8,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 19,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 6,
+  "seconds": 193.06,
+  "tokens": 121484,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 31.6932,
+    "Electricals": 370.8398,
+    "Electronics": 1038.2692,
+    "Furniture": 409.7211,
+    "Office Supplies": 12.0486,
+    "Outdoor Supplies": 452.6705
+  },
+  "extra": {
+    "final_summary": "Found and fixed: 6 duplicate rows (dropped); 9 label variants in Category and 18 in Region (normalized to allowed labels); 13 prices as text (converted to numbers); 30 negative prices (excluded as invalid); 2 revenue values incorrect (recomputed as Quantity * Price); 9 invalid dates (set to missing). Average unit price by category: Accessories: $31.69, Electricals: $370.84, Electronics: $1,038.27, Furniture: $409.72, Office Supplies: $12.05, Outdoor Supplies: $452.67.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "6 exact duplicate rows found; removing them to avoid double-counting"
+        },
+        "reason": "6 exact duplicate rows found; removing them to avoid double-counting",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          789,
+          1129,
+          1216,
+          1223,
+          1275,
+          1492
+        ],
+        "cells_changed": 0,
+        "summary": "removed 6 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "ACCESSORIES": "Accessories",
+            "electricals": "Electricals",
+            "electronics": "Electronics",
+            "outdoor supplies": "Outdoor Supplies",
+            "Electricasl": "Electricals",
+            "Eletcricals": "Electricals"
+          },
+          "reason": "9 label variants in Category, including 2 misspellings, all map to allowed labels per rules"
+        },
+        "reason": "9 label variants in Category, including 2 misspellings, all map to allowed labels per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 9,
+        "summary": "Category: merged 6 label variant(s), 9 cells",
+        "code": "df['Category'] = df['Category'].replace({'ACCESSORIES': 'Accessories', 'electricals': 'Electricals', 'electronics': 'Electronics', 'outdoor supplies': 'Outdoor Supplies', 'Electricasl': 'Electricals', 'Eletcricals': 'Electricals'})"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "  Southeast ": "Southeast",
+            " South": "South",
+            "EAST": "East",
+            "SOUTHEAST": "Southeast",
+            "WEST": "West",
+            "West ": "West",
+            "north": "North",
+            "sOUTH": "South",
+            "west": "West",
+            "EEast": "East",
+            "Eastt": "East",
+            "NNortheast": "Northeast",
+            "Northaest": "Northeast",
+            "Sotuh": "South",
+            "Souht": "South",
+            "Southeat": "Southeast",
+            "ortheast": "Northeast"
+          },
+          "reason": "18 label variants in Region, including 8 misspellings, all map to allowed labels per rules"
+        },
+        "reason": "18 label variants in Region, including 8 misspellings, all map to allowed labels per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 18,
+        "summary": "Region: merged 17 label variant(s), 18 cells",
+        "code": "df['Region'] = df['Region'].replace({'  Southeast ': 'Southeast', ' South': 'South', 'EAST': 'East', 'SOUTHEAST': 'Southeast', 'WEST': 'West', 'West ': 'West', 'north': 'North', 'sOUTH': 'South', 'west': 'West', 'EEast': 'East', 'Eastt': 'East', 'NNortheast': 'Northeast', 'Northaest': 'Northeast', 'Sotuh': 'South', 'Souht': 'South', 'Southeat': 'Southeast', 'ortheast': 'Northeast'})"
+      },
+      {
+        "version": 4,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "13 prices stored as text (e.g. '$ 2,400.00'); converting to numbers"
+        },
+        "reason": "13 prices stored as text (e.g. '$ 2,400.00'); converting to numbers",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (1559 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 5,
+        "tool": "exclude_where",
+        "args": {
+          "column": "Price",
+          "minimum": 0.0,
+          "maximum": null,
+          "reason": "30 negative unit prices found; invalid per rules (Price must be >= 0)"
+        },
+        "reason": "30 negative unit prices found; invalid per rules (Price must be >= 0)",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          47,
+          118,
+          143,
+          165,
+          196,
+          219,
+          349,
+          395,
+          398,
+          420,
+          481,
+          487,
+          588,
+          753,
+          801,
+          859,
+          893,
+          926,
+          992,
+          1074,
+          1151,
+          1220,
+          1319,
+          1423,
+          1426,
+          1475,
+          1484,
+          1517,
+          1521,
+          1564
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 30 row(s) where Price is below 0",
+        "code": "v = pd.to_numeric(df['Price'], errors='coerce')\ndf = df[~((v < 0.0))]"
+      },
+      {
+        "version": 6,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            525,
+            1450
+          ],
+          "reason": "2 rows have Revenue not equal to Quantity * Price; recomputing Revenue"
+        },
+        "reason": "2 rows have Revenue not equal to Quantity * Price; recomputing Revenue",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[525, 1450], 'Revenue'] = [54.0, 48.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 7,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "9 invalid dates (e.g. 'TBD'); setting to missing"
+        },
+        "reason": "9 invalid dates (e.g. 'TBD'); setting to missing",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 9,
+        "summary": "Date: 9 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_where",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 19
+  },
+  "corrections": 92,
+  "planted": 92,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-large",
+  "dataset": "sales-hard2",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 31.6932,
+    "Electricals": 370.8398,
+    "Electronics": 1038.2692,
+    "Furniture": 409.7211,
+    "Office Supplies": 12.0486,
+    "Outdoor Supplies": 452.6705
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Price"
+    ],
+    [
+      "out_of_range",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}
