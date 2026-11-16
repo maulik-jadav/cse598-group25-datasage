@@ -1,0 +1,73 @@
+{
+  "task_id": "saleshard_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 138.75,
+  "tokens": 2874,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 50.0,
+    "Electricals": 1450.0,
+    "Electronics": 2400.0,
+    "Furniture": 1250.0,
+    "Office Supplies": 18.0,
+    "Outdoor Supplies": 1100.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean Price: remove $, commas, and extra spaces; convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'[^0-9.-]', '', regex=True).astype(float)\n    \n    # Fix Category label variants\n    category_mapping = {\n        'utdoor Supplies': 'Outdoor Supplies',\n        'Office Supplie': 'Office Supplies',\n        'Furnniture': 'Furniture',\n        '  Outdoor Supplies ': 'Outdoor Supplies',\n        ' Accessories': 'Accessories',\n        'Elecrtonics': 'Electronics',\n        'Electricalss': 'Electricals'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Fix Region label variants and normalize\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    region_mapping = {\n        'South': 'South', 'Southeast': 'Southeast', 'East': 'East', 'West': 'West',\n        'North': 'North', 'Northeast': 'Northeast', 'SOUTH': 'South', 'sOUTH': 'South',\n        'eAST': 'East', 'east': 'East', 'East ': 'East', ' Southeast': 'Southeast',\n        ' West': 'West', 'west': 'West', 'wEST': 'West', ' Northeast': 'Northeast',\n        'north': 'North', 'East': 'East', 'South ': 'South'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Remove rows where Region is 'nan' (from previously missing)\n    df = df[df['Region'] != 'Nan']\n    \n    # Recompute Revenue to fix negative values caused by negative Price\n    # But first, ensure no negative Price or Quantity\n    df['Price'] = df['Price'].abs()\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = df[df['Region'] == 'East']\n    result = df.groupby('Category')['Price'].max()\n    return result.to_dict()"
+  },
+  "corrections": 56,
+  "planted": 63,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-hard",
+  "question": "What is the highest unit price in each category in the East region?",
+  "reference_answer": {
+    "Accessories": 50.0,
+    "Electricals": 1450.0,
+    "Electronics": 2400.0,
+    "Furniture": 1250.0,
+    "Office Supplies": 18.0,
+    "Outdoor Supplies": 1100.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Price"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

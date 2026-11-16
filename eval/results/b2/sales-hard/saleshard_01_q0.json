@@ -1,0 +1,77 @@
+{
+  "task_id": "saleshard_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 3,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 66.65,
+  "tokens": 2868,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4.02,
+    "North": 4.61,
+    "Northeast": 4.39,
+    "South": 5.03,
+    "Southeast": 4.07,
+    "West": 4.07
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix label variants in Category and Region by stripping whitespace and correcting known typos\n    category_mapping = {\n        'Furnture': 'Furniture',\n        'Accssories': 'Accessories',\n        'Electricals ': 'Electricals',\n        'Offcie Supplies': 'Office Supplies',\n        'Electroncs': 'Electronics',\n        'Electriacls': 'Electricals',\n        'Outdoor Suppliies': 'Outdoor Supplies',\n        '  Office Supplies ': 'Office Supplies',\n        ' Furniture': 'Furniture',\n        'lectronics': 'Electronics',\n        ' Electronics': 'Electronics',\n        ' Outdoor Supplies': 'Outdoor Supplies'\n    }\n    df['Category'] = df['Category'].replace(category_mapping).str.strip()\n    \n    region_mapping = {\n        'East ': 'East',\n        ' East': 'East',\n        'northeast': 'Northeast',\n        'West ': 'West',\n        'Sotuheast': 'Southeast',\n        ' South': 'South',\n        '  Northeast ': 'Northeast',\n        'Eaast': 'East'\n    }\n    df['Region'] = df['Region'].replace(region_mapping).str.strip()\n    \n    # Convert Quantity to numeric, coerce errors to NaN (handles text)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # Fix Revenue: recalculate as Quantity * Price where invalid\n    calculated_revenue = df['Quantity'] * df['Price']\n    df['Revenue'] = df['Revenue'].where(df['Revenue'] == calculated_revenue, calculated_revenue)\n    \n    # Remove rows with negative Quantity or missing Region\n    df = df[(df['Quantity'] > 0) & (df['Region'].notna())]\n    \n    return df\n\ndef answer(df):\n    # Filter for Furniture category\n    furniture_df = df[df['Category'] == 'Furniture']\n    # Group by Region and compute average Quantity per order\n    result = furniture_df.groupby('Region')['Quantity'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 65,
+  "planted": 73,
+  "damaged_rows": 5,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-hard",
+  "question": "What is the average quantity per order in each region for Furniture?",
+  "reference_answer": {
+    "East": 4.0244,
+    "North": 4.6136,
+    "Northeast": 4.3947,
+    "South": 5.0345,
+    "Southeast": 4.0682,
+    "West": 4.0741
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

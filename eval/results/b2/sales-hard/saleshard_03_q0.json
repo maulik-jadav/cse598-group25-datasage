@@ -1,0 +1,61 @@
+{
+  "task_id": "saleshard_03_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 253.88,
+  "tokens": 3178,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Office Supplies": 202.0,
+    "Outdoor Supplies": 201.0,
+    "Electricals": 197.0,
+    "Furniture": 195.0,
+    "Accessories": 192.0,
+    "Electronics": 184.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean Category: strip whitespace and standardize case\n    df = df.copy()\n    df['Category'] = df['Category'].str.strip().str.title()\n    # Map known mislabelings to correct categories\n    category_mapping = {\n        'Electrials': 'Electricals',\n        'Accesosries': 'Accessories',\n        'Ofifce Supplies': 'Office Supplies',\n        'O\\bF\\bF\\bI\\bC\\bE\\b \\bS\\bU\\bP\\bP\\bL\\bI\\bE\\bS': 'Office Supplies',\n        'O\\bU\\bT\\bD\\bO\\bR\\b \\bS\\bU\\bP\\bP\\bL\\bI\\bE\\bS': 'Outdoor Supplies',\n        'F\\bU\\bR\\bN\\bI\\bT\\bU\\bR\\bE': 'Furniture',\n        'E\\bL\\bE\\bC\\bT\\bR\\bO\\bN\\bI\\bC\\bS': 'Electronics'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Clean Region: strip whitespace and standardize case\n    df['Region'] = df['Region'].str.strip().str.title()\n    # Fix common typos in Region\n    region_mapping = {\n        'Weest': 'West',\n        'Suotheast': 'Southeast',\n        'Southh': 'South',\n        'Souuth': 'South',\n        'Nort': 'North',\n        'orth': 'North',\n        'EAST': 'East',\n        'NORTHEAST': 'Northeast',\n        'nORTHEAST': 'Northeast'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Clean Price: remove non-numeric characters and convert to float\n    df['Price'] = df['Price'].str.replace('[^\\\\d.]', '', regex=True).astype(float)\n    \n    return df\n\ndef answer(df):\n    result = df['Category'].value_counts()\n    return result.to_dict()"
+  },
+  "corrections": 45,
+  "planted": 57,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-hard",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 192.0,
+    "Electricals": 197.0,
+    "Electronics": 184.0,
+    "Furniture": 195.0,
+    "Office Supplies": 202.0,
+    "Outdoor Supplies": 201.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

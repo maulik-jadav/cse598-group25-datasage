@@ -133,6 +133,7 @@ counts as rejected.
 python -m eval.generate --tables 10 --seed 7          # dev split: 20 sales + 20 penguin tasks
 python -m eval.generate --tables 10 --seed 101 --split heldout   # held-out split (sales-heldout, penguins-heldout)
 python -m eval.generate --tables 10 --seed 202 --split test      # test split made for Milestone 3 (sales-test, penguins-test)
+python -m eval.generate_hard --tables 10 --seed 303   # hard split: sales-hard, penguins-hard (300-2,000 rows, see docs/final/findings_hard.md)
 python -m eval.run_eval --system b0 --dataset sales   # repeat for each system and dataset
 python -m eval.run_eval --system datasage --dataset penguins --workers 4
 python -m eval.run_eval --system datasage-reject --dataset sales --limit 10   # Table 8 ablations: first 10 tasks;

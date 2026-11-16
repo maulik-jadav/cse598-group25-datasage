@@ -1,0 +1,184 @@
+{
+  "task_id": "saleshard2_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 4,
+  "tool_calls": 15,
+  "tool_errors": 4,
+  "recovered_errors": 1,
+  "approvals_asked": 4,
+  "seconds": 69.43,
+  "tokens": 82081,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "Accessories": 100.0,
+    "Electricals": 123.0,
+    "Electronics": 107.0,
+    "Furniture": 129.0,
+    "Office Supplies": 95.0,
+    "Outdoor Supplies": 130.0
+  },
+  "extra": {
+    "final_summary": "**Answer**\n\n| Category          | Units sold (South) |\n|-------------------|--------------------|\n| Accessories       | 100 |\n| Electricals       | 123 |\n| Electronics       | 107 |\n| Furniture         | 129 |\n| Office Supplies   | 95 |\n| Outdoor Supplies  | 130 |\n\n**What was done**\n\n1. **Category labels** \u2013 normalized case/space variants and corrected misspellings (`Accessorries \u2192 Accessories`, `Furnitrue \u2192 Furniture`).  \n2. **Region labels** \u2013 normalized case/space variants and corrected misspellings (`outh \u2192 South`, etc.).  \n3. **Quantity** \u2013 excluded the two rows with negative quantities (rules require Quantity\u202f\u2265\u202f1).  \n4. **Duplicates** \u2013 removed four exact duplicate rows that would have double\u2011counted sales.  \n\nAfter these fixes, the dataset cleanly supports the query, and the summed `Quantity` per `Category` for the **South** region is shown above. No remaining data\u2011quality issues affect this result.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "  Electricals ": "Electricals",
+            "  Office Supplies ": "Office Supplies",
+            " Office Supplies": "Office Supplies",
+            "Furniture ": "Furniture",
+            "eLECTRONICS": "Electronics",
+            "office supplies": "Office Supplies",
+            "Accessorries": "Accessories",
+            "Furnitrue": "Furniture"
+          },
+          "reason": "Merge case/space variants and misspellings into allowed Category labels"
+        },
+        "reason": "Merge case/space variants and misspellings into allowed Category labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 8,
+        "summary": "Category: merged 8 label variant(s), 8 cells",
+        "code": "df['Category'] = df['Category'].replace({'  Electricals ': 'Electricals', '  Office Supplies ': 'Office Supplies', ' Office Supplies': 'Office Supplies', 'Furniture ': 'Furniture', 'eLECTRONICS': 'Electronics', 'office supplies': 'Office Supplies', 'Accessorries': 'Accessories', 'Furnitrue': 'Furniture'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "  North ": "North",
+            "  West ": "West",
+            " North": "North",
+            " Northeast": "Northeast",
+            "East ": "East",
+            "Noorth": "North",
+            "Noth": "North",
+            "Wesst": "West",
+            "Westt": "West",
+            "outh": "South"
+          },
+          "reason": "Merge case/space variants and misspellings into allowed Region labels"
+        },
+        "reason": "Merge case/space variants and misspellings into allowed Region labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 11,
+        "summary": "Region: merged 10 label variant(s), 11 cells",
+        "code": "df['Region'] = df['Region'].replace({'  North ': 'North', '  West ': 'West', ' North': 'North', ' Northeast': 'Northeast', 'East ': 'East', 'Noorth': 'North', 'Noth': 'North', 'Wesst': 'West', 'Westt': 'West', 'outh': 'South'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            320,
+            949
+          ],
+          "reason": "Quantity must be positive per rules"
+        },
+        "reason": "Quantity must be positive per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          320,
+          949
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [320, 949]",
+        "code": "df = df.drop(index=[320, 949])"
+      },
+      {
+        "version": 4,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Exact duplicate rows would double\u2011count sales"
+        },
+        "reason": "Exact duplicate rows would double\u2011count sales",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          675,
+          704,
+          867,
+          980
+        ],
+        "cells_changed": 0,
+        "summary": "removed 4 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 17
+  },
+  "corrections": 32,
+  "planted": 43,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-gptoss",
+  "dataset": "sales-hard2",
+  "question": "How many units were sold in each category in the South region?",
+  "reference_answer": {
+    "Accessories": 100.0,
+    "Electricals": 123.0,
+    "Electronics": 107.0,
+    "Furniture": 129.0,
+    "Office Supplies": 95.0,
+    "Outdoor Supplies": 130.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

@@ -1,0 +1,223 @@
+{
+  "task_id": "saleshard_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 16,
+  "tool_errors": 4,
+  "recovered_errors": 1,
+  "approvals_asked": 4,
+  "seconds": 86.55,
+  "tokens": 90800,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "East": 4.0244,
+    "North": 4.6136,
+    "Northeast": 4.3947,
+    "South": 5.0345,
+    "Southeast": 4.0682,
+    "West": 4.0741
+  },
+  "extra": {
+    "final_summary": "**Result \u2013 Average quantity per order for Furniture, by Region**\n\n| Region    | Avg\u202fQuantity |\n|-----------|--------------|\n| East      | 4.02 |\n| North     | 4.61 |\n| Northeast | 4.39 |\n| South     | 5.03 |\n| Southeast | 4.07 |\n| West      | 4.07 |\n\n**What was done**\n\n1. **Category** \u2013 already normalized.  \n2. **Region** \u2013 normalized label variants (extra spaces, case differences, and misspellings).  \n3. **Quantity** \u2013 excluded rows where Quantity\u202f<\u202f1 (rules require positive whole numbers).  \n4. **Duplicates** \u2013 removed 6 exact duplicate rows.  \n5. Ran the analysis on the cleaned data: filtered to *Category = \u201cFurniture\u201d*, grouped by *Region*, and computed the mean of *Quantity*.\n\n**Caveats**\n\n- Five rows still have a missing Region; they are omitted from the region\u2011wise averages.  \n- A few Revenue values do not match Quantity\u202f\u00d7\u202fPrice, but this does not affect the requested metric.  \n\nThe averages above are based on the cleaned dataset (250 rows after exclusions).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "  Office Supplies ": "Office Supplies",
+            " Electronics": "Electronics",
+            " Furniture": "Furniture",
+            " Outdoor Supplies": "Outdoor Supplies",
+            "Electricals ": "Electricals",
+            "Accssories": "Accessories",
+            "Electriacls": "Electricals",
+            "Electroncs": "Electronics",
+            "Furnture": "Furniture",
+            "Offcie Supplies": "Office Supplies",
+            "Outdoor Suppliies": "Outdoor Supplies",
+            "lectronics": "Electronics"
+          },
+          "reason": "Normalize Category labels to allowed values"
+        },
+        "reason": "Normalize Category labels to allowed values",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 13,
+        "summary": "Category: merged 12 label variant(s), 13 cells",
+        "code": "df['Category'] = df['Category'].replace({'  Office Supplies ': 'Office Supplies', ' Electronics': 'Electronics', ' Furniture': 'Furniture', ' Outdoor Supplies': 'Outdoor Supplies', 'Electricals ': 'Electricals', 'Accssories': 'Accessories', 'Electriacls': 'Electricals', 'Electroncs': 'Electronics', 'Furnture': 'Furniture', 'Offcie Supplies': 'Office Supplies', 'Outdoor Suppliies': 'Outdoor Supplies', 'lectronics': 'Electronics'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "  Northeast ": "Northeast",
+            " East": "East",
+            " South": "South",
+            "East ": "East",
+            "West ": "West",
+            "northeast": "Northeast",
+            "Eaast": "East",
+            "Sotuheast": "Southeast"
+          },
+          "reason": "Normalize Region labels to allowed values"
+        },
+        "reason": "Normalize Region labels to allowed values",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 12,
+        "summary": "Region: merged 8 label variant(s), 12 cells",
+        "code": "df['Region'] = df['Region'].replace({'  Northeast ': 'Northeast', ' East': 'East', ' South': 'South', 'East ': 'East', 'West ': 'West', 'northeast': 'Northeast', 'Eaast': 'East', 'Sotuheast': 'Southeast'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_where",
+        "args": {
+          "column": "Quantity",
+          "minimum": 1.0,
+          "maximum": null,
+          "reason": "Quantity must be positive per rules"
+        },
+        "reason": "Quantity must be positive per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          71,
+          92,
+          343,
+          369,
+          397,
+          419,
+          442,
+          459,
+          483,
+          631,
+          650,
+          686,
+          712,
+          761,
+          794,
+          850,
+          976,
+          1000,
+          1052,
+          1068,
+          1071,
+          1105,
+          1133,
+          1212,
+          1219,
+          1254,
+          1294,
+          1435,
+          1436,
+          1562
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 30 row(s) where Quantity is below 1",
+        "code": "v = pd.to_numeric(df['Quantity'], errors='coerce')\ndf = df[~((v < 1.0))]"
+      },
+      {
+        "version": 4,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Remove exact duplicate rows"
+        },
+        "reason": "Remove exact duplicate rows",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          466,
+          547,
+          829,
+          1364,
+          1398,
+          1563
+        ],
+        "cells_changed": 0,
+        "summary": "removed 6 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_where",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 18
+  },
+  "corrections": 66,
+  "planted": 73,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-gptoss",
+  "dataset": "sales-hard",
+  "question": "What is the average quantity per order in each region for Furniture?",
+  "reference_answer": {
+    "East": 4.0244,
+    "North": 4.6136,
+    "Northeast": 4.3947,
+    "South": 5.0345,
+    "Southeast": 4.0682,
+    "West": 4.0741
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

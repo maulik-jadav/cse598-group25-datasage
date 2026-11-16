@@ -1,0 +1,66 @@
+{
+  "task_id": "saleshard_00_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 6,
+  "detect_fp": 1,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 276.61,
+  "tokens": 3179,
+  "stop_reason": "code_error",
+  "note": "ValueError: could not convert string to float: '$ 1400.00'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Category: strip spaces, convert to title case, correct known typos\n    category_mapping = {\n        'electronics': 'Electronics',\n        'oFFICE sUPPLIES': 'Office Supplies',\n        'aCCESSORIES': 'Accessories',\n        'Offcie Supplies': 'Office Supplies',\n        '  Electronics ': 'Electronics',\n        'eLECTRICALS': 'Electricals',\n        '  Office Supplies ': 'Office Supplies',\n        'Outdoor Suppplies': 'Outdoor Supplies',\n        'FURNITURE': 'Furniture',\n        'Furniture ': 'Furniture',\n        'Furrniture': 'Furniture',\n        'Electricals ': 'Electricals',\n        'Accessoreis': 'Accessories',\n        '  Accessories ': 'Accessories',\n        'Office Supplies ': 'Office Supplies',\n        'Furnitture': 'Furniture',\n        'Furnniture': 'Furniture',\n        'Frniture': 'Furniture'\n    }\n    df['Category'] = df['Category'].str.strip().str.title()\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Fix Region: strip spaces and correct typos\n    region_mapping = {\n        'East ': 'East',\n        '  East ': 'East',\n        'Northast': 'Northeast',\n        'Norhteast': 'Northeast',\n        'Soutth': 'South',\n        'Wes': 'West',\n        'Suotheast': 'Southeast'\n    }\n    df['Region'] = df['Region'].str.strip()\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Convert Price: remove $ and commas, then to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False).astype(float)\n    \n    # Convert Quantity to int (already numeric but some negative)\n    df['Quantity'] = df['Quantity'].astype(int)\n    \n    # Convert Revenue: remove commas and convert to float, then recalc if needed\n    df['Revenue'] = df['Revenue'].astype(str).str.replace(',', '', regex=False).astype(float)\n    \n    # Recalculate Revenue to ensure consistency: Revenue = Quantity * Price\n    calculated_revenue = df['Quantity'] * df['Price']\n    # Only use calculated revenue if original was negative or inconsistent\n    df['Revenue'] = calculated_revenue\n    \n    # Fix negative Quantity: take absolute value (assuming error in sign)\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recalculate Revenue again after fixing Quantity\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    # Group by Category and sum Revenue\n    result = df_clean.groupby('Category')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 0,
+  "planted": 109,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2",
+  "dataset": "sales-hard",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 30850.0,
+    "Electricals": 313942.0,
+    "Electronics": 859040.0,
+    "Furniture": 428250.0,
+    "Office Supplies": 10320.0,
+    "Outdoor Supplies": 408030.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

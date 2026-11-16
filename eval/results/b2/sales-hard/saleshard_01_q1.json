@@ -1,0 +1,73 @@
+{
+  "task_id": "saleshard_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 123.66,
+  "tokens": 2826,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1084.0,
+    "North": 1170.0,
+    "Northeast": 1011.0,
+    "South": 1252.0,
+    "Southeast": 1197.0,
+    "West": 1218.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix label variants in Category\n    category_mapping = {\n        'Furnture': 'Furniture',\n        'Accssories': 'Accessories',\n        'Electricals ': 'Electricals',\n        'Offcie Supplies': 'Office Supplies',\n        'Electroncs': 'Electronics',\n        'Electriacls': 'Electricals',\n        'Outdoor Suppliies': 'Outdoor Supplies',\n        '  Office Supplies ': 'Office Supplies',\n        ' Furniture': 'Furniture',\n        'lectronics': 'Electronics',\n        ' Electronics': 'Electronics',\n        ' Outdoor Supplies': 'Outdoor Supplies'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Fix label variants in Region\n    region_mapping = {\n        'East ': 'East',\n        ' East': 'East',\n        'northeast': 'Northeast',\n        'West ': 'West',\n        'Sotuheast': 'Southeast',\n        ' South': 'South',\n        '  Northeast ': 'Northeast',\n        'Eaast': 'East'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Convert Quantity from text to number (it's stored as string in sample)\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # Fix negative quantities: since Quantity should be positive, flip sign\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recompute Revenue = Quantity * Price to fix negative and inconsistent values\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Drop rows where Region is missing (as we cannot assign to a region)\n    df = df.dropna(subset=['Region'])\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('Region')['Quantity'].sum().round().astype(int)\n    return result.to_dict()"
+  },
+  "corrections": 35,
+  "planted": 73,
+  "damaged_rows": 5,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-hard",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 1066.0,
+    "North": 1165.0,
+    "Northeast": 1006.0,
+    "South": 1222.0,
+    "Southeast": 1180.0,
+    "West": 1187.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ]
+  ]
+}

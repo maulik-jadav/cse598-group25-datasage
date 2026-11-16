@@ -1,0 +1,61 @@
+{
+  "task_id": "penguinshard_06_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 32.88,
+  "tokens": 2918,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 49.06,
+    "male": 50.45
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean species: standardize case and strip whitespace\n    df['species'] = df['species'].str.strip().str.capitalize()\n    \n    # Clean island: standardize to 'Biscoe', 'Dream', 'Torgersen'\n    df['island'] = df['island'].str.strip().str.capitalize()\n    # Fix common typos\n    df['island'] = df['island'].replace({'Bicoe': 'Biscoe', 'Bisco': 'Biscoe', 'orgersen': 'Torgersen'})\n    \n    # Clean sex: standardize to 'male', 'female', strip and fix common typos\n    df['sex'] = df['sex'].str.strip().str.lower()\n    df['sex'] = df['sex'].replace({'mlae': 'male', 'mle': 'male', 'ale': 'male',\n                                  'emale': 'female', 'femael': 'female'})\n    \n    # Fix body_mass_g: remove commas and convert to numeric\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '').astype(float)\n    \n    # Remove rows with negative bill_length_mm\n    df = df[df['bill_length_mm'] >= 0]\n    \n    return df\n\ndef answer(df):\n    # Filter for Biscoe island\n    biscoe_df = df[df['island'] == 'Biscoe']\n    # Group by sex and compute average bill length\n    result = biscoe_df.groupby('sex')['bill_length_mm'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 66,
+  "planted": 78,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "penguins-hard",
+  "question": "What is the average bill length for each sex on Biscoe island?",
+  "reference_answer": {
+    "female": 43.3642,
+    "male": 46.8658
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "bill_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

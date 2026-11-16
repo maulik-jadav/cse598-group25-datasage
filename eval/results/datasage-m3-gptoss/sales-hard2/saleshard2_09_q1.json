@@ -1,0 +1,149 @@
+{
+  "task_id": "saleshard2_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 1,
+  "detect_fn": 5,
+  "tool_calls": 8,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 3,
+  "seconds": 45.28,
+  "tokens": 41379,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "East": 706.0,
+    "North": 764.0,
+    "Northeast": 804.0,
+    "South": 684.0,
+    "Southeast": 787.0,
+    "West": 796.0
+  },
+  "extra": {
+    "final_summary": "**Answer**\n\n| Region      | Units Sold (sum of Quantity) |\n|------------|------------------------------|\n| East       | 706 |\n| North      | 764 |\n| Northeast  | 804 |\n| South      | 684 |\n| Southeast  | 787 |\n| West       | 796 |\n\n**Summary of data\u2011quality work**\n\n1. **Removed 4 exact duplicate rows** \u2013 prevented double\u2011counting of sales.  \n2. **Normalized Region labels** \u2013 merged spaces, case differences, and misspellings (e.g., \u201c  North \u201d, \u201cWestt\u201d, \u201couth\u201d) into the allowed region names.  \n3. **Excluded 2 rows with negative Quantity** \u2013 these violated the rule that Quantity must be \u2265\u202f1.  \n\nAfter these fixes, the dataset contained 1,000 valid rows, and the summed quantities per region are shown above. No other issues affect this specific question.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Exact duplicate rows would double\u2011count sales"
+        },
+        "reason": "Exact duplicate rows would double\u2011count sales",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          675,
+          704,
+          867,
+          980
+        ],
+        "cells_changed": 0,
+        "summary": "removed 4 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "  North ": "North",
+            "  West ": "West",
+            " North": "North",
+            " Northeast": "Northeast",
+            "East ": "East",
+            "Noorth": "North",
+            "Noth": "North",
+            "Wesst": "West",
+            "Westt": "West",
+            "outh": "South"
+          },
+          "reason": "Merge region label variants and misspellings into allowed labels"
+        },
+        "reason": "Merge region label variants and misspellings into allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 11,
+        "summary": "Region: merged 10 label variant(s), 11 cells",
+        "code": "df['Region'] = df['Region'].replace({'  North ': 'North', '  West ': 'West', ' North': 'North', ' Northeast': 'Northeast', 'East ': 'East', 'Noorth': 'North', 'Noth': 'North', 'Wesst': 'West', 'Westt': 'West', 'outh': 'South'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            320,
+            949
+          ],
+          "reason": "Quantity must be >=1 per rules"
+        },
+        "reason": "Quantity must be >=1 per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          320,
+          949
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 2 row(s): [320, 949]",
+        "code": "df = df.drop(index=[320, 949])"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 10
+  },
+  "corrections": 24,
+  "planted": 43,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-gptoss",
+  "dataset": "sales-hard2",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 706.0,
+    "North": 764.0,
+    "Northeast": 804.0,
+    "South": 684.0,
+    "Southeast": 787.0,
+    "West": 796.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}
