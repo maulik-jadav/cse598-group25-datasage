@@ -121,8 +121,8 @@ Accuracy (40 questions per split; held-out and test are the existing results):
 | B1 fixed script | 35.0% | 45.0% | 10.0% | 7.5% |
 | B2 single LLM call | 60.0% | 47.5% | 55.0% | not run |
 | DataSage M3 (30B) | 92.5% | 92.5% | 90.0% | 85.0% |
-| DataSage M3 (235B) | not run | not run | 97.5% | HARD2_LARGE |
-| DataSage M3 (gpt-oss-120b) | not run | not run | 90.0% | HARD2_GPTOSS |
+| DataSage M3 (235B) | not run | not run | 97.5% | 97.5% |
+| DataSage M3 (gpt-oss-120b) | not run | not run | 90.0% | 100.0% |
 
 The 235B and gpt-oss M3 systems have no held-out or test runs in this branch (another study runs every model
 on the standard splits), so their drop cannot be read from this table.
@@ -173,19 +173,21 @@ question does not use), which the prompt allows the agent to leave alone.
 
 Evidence that this is one specific weakness and not general difficulty:
 
-- It happens only on questions that group by Category and filter on Region ("in each category in the East
-  region", "for the West region"). There are 8 such questions in the hard split: the 30B model got 4 of them
-  wrong, the 235B model 1, gpt-oss-120b none. On hard2, 6 of 9 such questions failed for the 30B model, and
-  those 6 are its only wrong answers on hard2.
+- On the hard split it happens only on questions that group by Category and filter on Region ("in each
+  category in the East region", "for the West region"). There are 8 such questions: the 30B model got 4 of
+  them wrong, the 235B model 1, gpt-oss-120b none. On hard2, 6 of 9 such questions failed for the 30B model,
+  and those 6 are its only wrong answers there. The 235B model's only wrong answer on hard2 is the same
+  mistake on a penguin question ("average bill length for each sex on Biscoe island", answered with
+  `group_by [island, sex]` and keys like `Biscoe | female`, after it had handled 68 of 68 planted errors).
 - Questions filtered the other way ("total revenue by region for Electronics") never failed, and the
   held-out and test splits have no Region filters at all, which is why this never showed before.
 - If the filter value is dropped from the answer keys, all of these answers match the reference:
-  `correct_if_filter_key_dropped` in `hard_analysis.json` is 40/40 for both Qwen models on hard, and 40/40
-  for the 30B model on hard2.
+  `correct_if_filter_key_dropped` in `hard_analysis.json` is 40/40 for both Qwen models on hard and on
+  hard2.
 - `eval/failures.py` did not have a reason for this, so its first run blamed "never ran a check for
   invalid_date" (a distractor). A new reason was added: "grouped by the filter column too (answer keys carry
-  the filter value)". It now names this cause for all 5 hard failures and all 6 hard2 failures of the 30B
-  model.
+  the filter value)". It now names this cause for all 5 hard failures and all 7 hard2 failures of the
+  two Qwen models.
 
 Neither Qwen model ever triggered the coverage check (0 refusals in 80 runs): both ran every required check on
 their own, including the Revenue = Quantity x Price check in all 20 sales questions.
@@ -224,8 +226,9 @@ The one gpt-oss case without it (`penguinshard_00_q1`) removed the 15 rows in tw
 then the 5 the re-check listed). The 30B model used `exclude_where` in exactly those 18 questions and
 `exclude_rows` for small counts (14 times); the 235B model used `exclude_where` for every range rule (32
 times). No `exclude_where` was ever rejected by the oracle, and none removed a row that should be kept
-(damage 0). On hard2 the 30B model used it in all 24 questions that needed it and removed every
-rule-breaking row.
+(damage 0). On hard2, 24 questions needed it, and all three agents used it in all 24 and removed every
+rule-breaking row. One small issue: its change summary joins two bounds with "and" ("excluded 14 row(s)
+where bill_length_mm is below 30 and above 60"), where it means "or".
 
 ## 7. Cost and latency between models
 
@@ -248,14 +251,44 @@ rule-breaking row.
 
 ## 8. Second seed (hard2)
 
-HARD2_SECTION
+The second seed (`sales-hard2`, `penguins-hard2`, seed 404: 648 to 1,565 sales rows, 375 to 1,162 penguin
+rows, 1,329 planted errors, 12 tables with more than 10 rule-breaking rows in one column) gives the same
+picture. B2 was not run on it.
+
+| System | Correct | Accuracy | Damage | Detect P | Detect R | Errors handled | Question errors | Median s | Median tokens | Total s | Total tokens |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| B1 fixed script | 3 | 7.5% | 0 | 0.88 | 0.88 | 73.2% | | 0.0 | 0 | 1.8 | 0 |
+| DataSage M3 (30B) | 34 | 85.0% | 0 | 0.94 | 0.82 | 93.0% | 1,821 / 1,821 | 19.6 | 94,006 | 773 | 3,764,764 |
+| DataSage M3 (235B) | 39 | 97.5% | 0 | 0.92 | 0.83 | 93.7% | 1,821 / 1,821 | 144.8 | 98,343 | 5,868 | 3,928,801 |
+| DataSage M3 (gpt-oss-120b) | 40 | 100.0% | 0 | 0.96 | 0.64 | 81.0% | 1,819 / 1,821 | 68.2 | 78,905 | 2,739 | 3,096,773 |
+
+- Every wrong Qwen answer on hard2 is again the filter-grouping mistake (6 for the 30B model, 1 for the 235B
+  model); with the filter value dropped from the keys both are at 40/40.
+- gpt-oss-120b got every answer right on this seed. Its hard-split failures came from Revenue values written
+  x10 and from mixed exclusions, and on this seed those cases did not hit its questions. It still has the
+  lowest detection recall (0.64) and handles the fewest distractors, never calls `finish`, and 15% of its
+  tool calls failed.
+
+**Repeat run.** `datasage-m3` was run a second time on the hard split (results in
+`eval/results/repeat2/datasage-m3/`, kept apart so the main results are not mixed). It got 35 of 40 (87.5%)
+against 36 of 40 the first time. 39 of the 40 questions had the same outcome; the one that changed
+(`saleshard_07_q1`, "How many orders are there in each category in the East region?") failed for the same
+filter-grouping reason, so all 5 wrong answers of the repeat have that one cause. The rest matched the first
+run: 1,750 of 1,750 question errors handled, damage 0, every rule-breaking row removed in all 18 questions
+that needed it (17 with `exclude_where`, one with `exclude_rows`), 40/40 if the filter key is dropped. The
+median time was 20.2 s against 42.6 s in the first run with about the same tokens (100,506 against 98,654),
+which confirms that the latency differences come from the shared API's load, not from the agent.
+
+Across all 200 DataSage Qwen runs on hard data (30B: hard, hard repeat, hard2; 235B: hard, hard2) there are 17
+wrong answers, and all 17 have the filter-grouping cause.
 
 ## 9. Recommendations
 
 1. **Fix the filter-in-group_by mistake in code, not in the prompt.** In `analyze`, if a group-by column is
    also filtered to a single value, drop it from the group-by (and say so in the result). This alone would
-   turn all Qwen failures on hard and hard2 into correct answers (`correct_if_filter_key_dropped`). Add
-   Region-filtered questions to the dev split so this stays tested.
+   turn all 17 Qwen failures on hard, hard2 and the repeat into correct answers
+   (`correct_if_filter_key_dropped`). Add questions filtered on one value of a column that could also be a
+   group (Region, island) to the dev split so this stays tested.
 2. **Require the formula check in the coverage gate.** When the rules give a formula for a column the question
    uses (Revenue = Quantity x Price), add `check_cross_column` to the required checks. gpt-oss skipped it in 9
    of 20 sales questions and lost 2 answers to it.
@@ -265,7 +298,10 @@ HARD2_SECTION
 4. **Make argument handling tolerant inside filters too.** Accept `{"column", "operator": "=", "value"}` and
    `[column, "=", value]` as an equality filter. That removes 85 failed calls for gpt-oss-120b and makes
    other model families cheaper to use.
-5. **Keep the 30B model as the default and keep the hard split as a regression test.** It matches gpt-oss on
-   accuracy, handles more errors (92.0% against 80.9%) in 63% of its time, and after recommendation 1 it would
-   match the 235B model on this split in about a fifth of the time. The approval load (median 5 per question
-   on large files) is the next thing users will notice; grouping related fixes into one approval would help.
+5. **Keep the 30B model as the default and keep the hard split as a regression test.** Over both seeds
+   gpt-oss-120b got 76 of 80, the 30B model 70 and the 235B model 78, but every 30B and 235B miss had correct
+   numbers under the wrong keys, while gpt-oss's 4 misses were wrong numbers that look plausible. The 30B
+   model handles more errors than gpt-oss (92.0% against 80.9% on hard) in 63% of its time, and after
+   recommendation 1 it would match the 235B model at about a fifth of the time. The approval load (median 5
+   per question on large files) is the next thing users will notice; grouping related fixes into one approval
+   would help.
