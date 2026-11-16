@@ -53,7 +53,7 @@ a{color:#1F4E99}a:hover{color:#14284B}
 <svg role="img" aria-label="From the user back to Approval gate, yes or no" width="8" height="79" viewBox="0 0 8 79" preserveAspectRatio="none" style="position: absolute; left: 719px; top: 110px; width: 8px; height: 79px; overflow: visible; fill: none; stroke: #222222; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-7" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#222222" stroke="none" style="stroke: none; fill: #222222; fill: context-stroke"/></marker></defs><path d="M 4 0 L 4 75" marker-end="url(#dc-arrow-head-filled-7)"></path></svg>
 <svg role="img" aria-label="From Planner to Coverage check, when it calls analyze" width="8" height="79" viewBox="0 0 8 79" preserveAspectRatio="none" style="position: absolute; left: 397px; top: 340px; width: 8px; height: 79px; overflow: visible; fill: none; stroke: #222222; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-8" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#222222" stroke="none" style="stroke: none; fill: #222222; fill: context-stroke"/></marker></defs><path d="M 4 0 L 4 75" marker-end="url(#dc-arrow-head-filled-8)"></path></svg>
 <svg role="img" aria-label="From Coverage check to Answer and report" width="43" height="8" viewBox="0 0 43 8" preserveAspectRatio="none" style="position: absolute; left: 520px; top: 476px; width: 43px; height: 8px; overflow: visible; fill: none; stroke: #222222; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round"><defs><marker id="dc-arrow-head-filled-9" orient="auto" markerWidth="5" markerHeight="5" refX="2" refY="2" overflow="visible"><path d="M0 0 L4 2 L0 4 Z" fill="#222222" stroke="none" style="stroke: none; fill: #222222; fill: context-stroke"/></marker></defs><path d="M 0 4 L 39 4" marker-end="url(#dc-arrow-head-filled-9)"></path></svg>
-<div style="position: absolute; left: 282px; top: 0px; width: 238px; height: 110px; box-sizing: border-box; padding: 8px 12px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 2px solid #222222"><span><b>Tool library</b><br>7 checks, 9 fixes, analyze</span></div>
+<div style="position: absolute; left: 282px; top: 0px; width: 238px; height: 110px; box-sizing: border-box; padding: 8px 12px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 2px solid #222222"><span><b>Tool library</b><br>7 checks, 10 fixes, analyze</span></div>
 <div style="position: absolute; left: 564px; top: 0px; width: 238px; height: 110px; box-sizing: border-box; padding: 8px 12px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FCE8D8; border: 2px solid #B4531A"><span><b>User</b><br>approves or rejects</span></div>
 <div style="position: absolute; left: 0px; top: 190px; width: 238px; height: 150px; box-sizing: border-box; padding: 8px 12px; display: flex; align-items: center; justify-content: center; text-align: center; background: #FFFFFF; border: 2px solid #222222"><span><b>1. File + question</b><br>CSV or Excel, optional rules file</span></div>
 <div style="position: absolute; left: 282px; top: 190px; width: 238px; height: 150px; box-sizing: border-box; padding: 8px 12px; display: flex; align-items: center; justify-content: center; text-align: center; background: #DCE6F5; border: 2px solid #14284B"><span><b>2. Planner (LLM)</b><br>picks the next check or fix</span></div>
@@ -69,7 +69,7 @@ a{color:#1F4E99}a:hover{color:#14284B}
 </div>
 <p style="margin: 0; text-align: center; font-size: 23px; line-height: 1.35"><span style="color: #1F4E99; font-weight: 700">Figure 1:</span> The DataSage loop. Only the planner (blue) uses a language model; orange marks approval decisions. Steps 2 to 4 repeat, one fix per step, until the columns the question uses are clean.</p>
 <ul style="margin: 0; padding-left: 34px">
-<li><b>Tools, not free-form code:</b> the model sees a profile and sample rows and acts only through tools; Python does every calculation. A <b>validator</b> rolls back any fix whose rows or totals don't reconcile.</li>
+<li><b>Tools, not free-form code:</b> the model sees a profile and sample rows and acts only through tools in a reason-and-act loop [1]; Python (pandas [2]) does every calculation. A <b>validator</b> rolls back any fix whose rows or totals don't reconcile.</li>
 <li><b>Code decides what is risky, and what is still unchecked:</b> risky fixes wait for the user (a rejected fix becomes a caveat), and a <b>coverage check</b> runs any check the rules require before answering.</li>
 </ul>
 </section>
@@ -104,15 +104,15 @@ a{color:#1F4E99}a:hover{color:#14284B}
 <ul style="margin: 0; padding-left: 34px">
 <li><b>200 unseen questions</b> on generated sales tables and Palmer Penguins [3] (five seeds, 40 each; 40 more were used while building), plus a <b>hard split</b> of 40 questions on tables of 343 to 1,935 rows with many problems at once.</li>
 <li>Answers are scored against the clean table; an oracle that knows the planted errors answers approvals. The final system was run 4 times.</li>
-<li><b>B0</b> the stakeholder's rule-based script · <b>B1</b> a fixed cleaning script · <b>B2</b> a single LLM call with no tools.</li>
-<li>Planner: Qwen3-30B-A3B [2] on ASU Research Computing; 41 models on the same API were fully run as the planner.</li>
+<li><b>B0</b> the stakeholder's rule-based script [4] · <b>B1</b> a fixed cleaning script · <b>B2</b> a single LLM call with no tools.</li>
+<li>Planner: Qwen3-30B-A3B [5] on ASU Research Computing; 41 models on the same API were fully run as the planner.</li>
 </ul>
 </section>
 
 <section style="display: flex; flex-direction: column; gap: 16px">
 <h2 style="margin: 0; background: #14284B; color: #FFFFFF; font-size: 32px; font-weight: 700; padding: 8px 20px">Results</h2>
 <img src="figs/fig_accuracy.png" alt="Bar chart of right answers by approach on 200 standard questions with 95% ranges, and on 40 hard questions" style="width: 100%; height: auto; display: block">
-<p style="margin: 0; text-align: center; font-size: 23px"><span style="color: #1F4E99; font-weight: 700">Figure 3:</span> Right answers by approach: 200 standard unseen questions (solid, with 95% ranges) and 40 hard questions (hatched).</p>
+<p style="margin: 0; text-align: center; font-size: 23px"><span style="color: #1F4E99; font-weight: 700">Figure 3:</span> Right answers by approach: 200 standard unseen questions (solid, with 95% cluster-bootstrap ranges over tables [6]) and 40 hard questions (hatched).</p>
 <table style="border-collapse: collapse; width: 100%; font-size: 24px; line-height: 1.25; border-top: 3px solid #111111; border-bottom: 3px solid #111111">
 <thead><tr style="border-bottom: 1.5px solid #111111"><th style="padding: 7px 12px; text-align: left">System</th><th style="padding: 7px 12px; text-align: right">200 standard (%)</th><th style="padding: 7px 12px; text-align: right">40 hard (%)</th><th style="padding: 7px 12px; text-align: right">Damaged cells</th></tr></thead>
 <tbody>
@@ -140,10 +140,12 @@ a{color:#1F4E99}a:hover{color:#14284B}
 
 <section style="display: flex; flex-direction: column; gap: 12px; font-size: 21px; line-height: 1.35">
 <h2 style="margin: 0; background: #14284B; color: #FFFFFF; font-size: 32px; line-height: 1.4; font-weight: 700; padding: 8px 20px">References</h2>
-<p style="margin: 0">[1] S. Yao et al. ReAct: Synergizing reasoning and acting in language models. <i>ICLR</i>, 2023.</p>
-<p style="margin: 0">[2] Qwen Team. Qwen3 technical report. <i>arXiv:2505.09388</i>, 2025.</p>
-<p style="margin: 0">[3] A. M. Horst, A. P. Hill, K. B. Gorman. palmerpenguins: Palmer Archipelago (Antarctica) penguin data. R package, 2020.</p>
-<p style="margin: 0">[4] V. Buddani. DataSage rule-based baseline. github.com/VB914/DataSage.</p>
+<p style="margin: 0">[1] S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. Narasimhan, Y. Cao. ReAct: Synergizing reasoning and acting in language models. <i>ICLR</i>, 2023.</p>
+<p style="margin: 0">[2] W. McKinney. Data structures for statistical computing in Python. <i>Proc. 9th Python in Science Conf. (SciPy)</i>, 2010.</p>
+<p style="margin: 0">[3] A. M. Horst, A. P. Hill, K. B. Gorman. palmerpenguins: Palmer Archipelago (Antarctica) penguin data. R package, 2020. doi:10.5281/zenodo.3960218.</p>
+<p style="margin: 0">[4] V. Buddani. DataSage: rule-based data cleaning baseline. GitHub, github.com/VB914/DataSage, 2026.</p>
+<p style="margin: 0">[5] A. Yang et al. (Qwen Team). Qwen3 technical report. <i>arXiv:2505.09388</i>, 2025.</p>
+<p style="margin: 0">[6] B. Efron, R. J. Tibshirani. <i>An Introduction to the Bootstrap</i>. Chapman &amp; Hall, 1993.</p>
 <p style="margin: 6px 0 0"><b>Acknowledgements.</b> We thank our stakeholder Vyshanth Buddani for his reviews and test file, and ASU Research Computing for model access.</p>
 </section>
 
