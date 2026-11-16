@@ -1,0 +1,140 @@
+{
+  "task_id": "sales_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 74.13,
+  "tokens": 64019,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 59.0,
+    "North": 56.0,
+    "South": 79.0,
+    "West": 72.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues: 2 duplicate rows (40, 51) were removed; 'Region' had label variants (' East', 'Suoth') that were normalized to 'East' and 'South'; row 21 had an invalid negative Quantity (-4) and was excluded; row 26 had a missing Region value and was set to missing. After fixes, the analysis shows total units sold per region: East (59), North (56), South (79), West (72). All fixes were approved, and the final analysis is valid.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found 2 exact duplicate rows (40, 51) that are identical to earlier rows; keeping only the first occurrence."
+        },
+        "reason": "Found 2 exact duplicate rows (40, 51) that are identical to earlier rows; keeping only the first occurrence.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          40,
+          51
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            " East": "East",
+            "Suoth": "South"
+          },
+          "reason": "Merge case and space variants and correct the misspelling 'Suoth' to 'South' to match the allowed labels in the rules."
+        },
+        "reason": "Merge case and space variants and correct the misspelling 'Suoth' to 'South' to match the allowed labels in the rules.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({' East': 'East', 'Suoth': 'South'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            21
+          ],
+          "reason": "Row 21 has Quantity = -4, which is invalid (must be \u22651 per rules); exclude this row."
+        },
+        "reason": "Row 21 has Quantity = -4, which is invalid (must be \u22651 per rules); exclude this row.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          21
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [21]",
+        "code": "df = df.drop(index=[21])"
+      },
+      {
+        "version": 4,
+        "tool": "set_missing",
+        "args": {
+          "column": "Region",
+          "rows": [
+            26
+          ],
+          "reason": "Row 26 has a missing Region value; mark as missing to preserve data integrity."
+        },
+        "reason": "Row 26 has a missing Region value; mark as missing to preserve data integrity.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Region: set 1 value(s) to missing",
+        "code": "df.loc[[26], 'Region'] = pd.NA"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [],
+    "coverage_refusals": 0,
+    "model_turns": 13
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-auto",
+  "dataset": "sales",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 59.0,
+    "North": 56.0,
+    "South": 79.0,
+    "West": 72.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}
