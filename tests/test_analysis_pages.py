@@ -139,3 +139,16 @@ def test_saved_run_is_found_from_its_report(tmp_path):
     assert analysis.saved_run(tmp_path, "../etc") is None
     (run.out_dir / "report.md").write_text("# DataSage report\n\n- Input: `/etc/hosts`\n")
     assert analysis.run_profile(run.id, {}, tmp_path)[0] == 404
+
+
+def test_results_story_is_plain_and_complete():
+    from app.web import analysis
+    story = analysis.results()["story"]
+    ids = [a["id"] for a in story["approaches"]]
+    assert ids == ["b0", "b1", "b2", "datasage-m3"]
+    final = story["approaches"][-1]
+    assert 0.9 < final["accuracy"] <= 1 and final["damaged"] == 0
+    verdicts = {p["id"]: p["verdict"] for p in story["parts"]}
+    assert verdicts["datasage-m3-reject"] == "matters a lot"
+    assert analysis._verdict(0.3, 0.001) == "matters a lot" and analysis._verdict(0.0, 0.6) == "no clear effect"
+    assert len(story["consistency"]["by_run"]) == story["consistency"]["runs"]

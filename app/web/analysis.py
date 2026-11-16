@@ -133,7 +133,81 @@ def results() -> dict:
         "systems": {s: {"label": SYSTEMS.get(s, (s, s, "datasage"))[0], "about": SYSTEMS.get(s, (s, s, "datasage"))[1],
                         "kind": SYSTEMS.get(s, (s, s, "datasage"))[2]} for s in order},
         "per_split": per_split, "groups": groups, "ablation": ablation, "failures": failures,
+        "story": story(per_split),
     }
+
+
+# ---- the plain-language summary at the top of the results page --------------------------------------
+APPROACHES = [
+    ("b0", "The stakeholder's script", "the rule-based script from the original project"),
+    ("b1", "A fixed cleaning script", "the same cleaning steps on every table"),
+    ("b2", "One LLM call", "the model reads the table and answers at once, with no tools"),
+    ("datasage-m3", "DataSage", "an agent that checks, fixes with your approval, then answers"),
+]
+PARTS = [
+    ("datasage-m3-reject", "Without approvals", "every risky fix is refused"),
+    ("datasage-m3-compact", "With short memory", "the model sees a summary instead of the full history"),
+    ("datasage-m3-nocoverage", "Without the coverage check", "nothing makes sure every needed check ran before answering"),
+    ("datasage-m3-novalidator", "Without the validator", "fixes are not double-checked after they run"),
+    ("datasage-m3-nomerge", "Without the merge rule", "the prompt does not say how to merge misspelled labels"),
+]
+
+
+def _verdict(diff: float, p: float) -> str:
+    if p < 0.05 and diff >= 0.2:
+        return "matters a lot"
+    if p < 0.05 and diff > 0:
+        return "matters"
+    if diff > 0.02:
+        return "helps a little (not certain)"
+    return "no clear effect"
+
+
+def _pooled(per_split: dict, splits: list[str], system: str) -> dict | None:
+    rows = [per_split.get(s, {}).get(system) for s in splits]
+    if not all(rows):
+        return None
+    n = sum(r["tasks"] for r in rows)
+    right = sum(round(r["analysis_accuracy"] * r["tasks"]) for r in rows)
+    return {"n": n, "correct": right, "accuracy": right / n if n else 0.0}
+
+
+def story(per_split: dict) -> dict:
+    """The few numbers a visitor needs, in plain words. Read from the study files; parts are left out when missing."""
+    out: dict = {}
+    path = RESULTS / "study_scale_ablations.json"
+    if path.exists():
+        study = json.loads(path.read_text())
+        abl = study.get("ablations", {})
+        paired = {p["system"]: p for p in study.get("paired", [])}
+        out["questions"] = abl.get("datasage-m3", {}).get("n")
+        out["approaches"] = [
+            {"id": sid, "label": label, "about": about, "accuracy": abl[sid]["accuracy"], "ci95": abl[sid]["ci95"],
+             "damaged": abl[sid].get("damage_cells_rows", 0), "tasks_with_damage": abl[sid].get("tasks_with_damage", 0)}
+            for sid, label, about in APPROACHES if sid in abl]
+        out["parts"] = [
+            {"id": sid, "label": label, "about": about, "accuracy": abl[sid]["accuracy"], "ci95": abl[sid]["ci95"],
+             "drop": paired[sid]["diff"], "verdict": _verdict(paired[sid]["diff"], paired[sid]["mcnemar_p"])}
+            for sid, label, about in PARTS if sid in abl and sid in paired]
+        var = study.get("variance", {}).get("pooled: all five splits")
+        if var:
+            out["consistency"] = {"runs": var["runs"], "by_run": list(var["accuracy_by_run"].values()),
+                                  "min": var["min"], "max": var["max"], "mean": var["mean"]}
+        exp = study.get("exposure_to_rule_breaking_rows_on_unused_columns", {}).get("out_of_range")
+        if exp:
+            out["misses"] = {"exposed": exp["exposed"], "not_exposed": exp["not exposed"]}
+    hard = {}
+    for sid, label in (("b1", "A fixed cleaning script"), ("b2", "One LLM call"), ("datasage-m3", "DataSage"),
+                       ("datasage-m3-large", "DataSage, 235B model")):
+        pooled = _pooled(per_split, ["sales-hard", "penguins-hard"], sid)
+        if pooled:
+            hard[sid] = {"label": label, **pooled}
+    if "datasage-m3" in hard:
+        out["hard"] = hard
+    models = RESULTS / "study_models.json"
+    if models.exists():
+        out["models_file"] = True  # filled in once the model study's format is final
+    return out
 
 
 # ---- data profile ---------------------------------------------------------------------------------
