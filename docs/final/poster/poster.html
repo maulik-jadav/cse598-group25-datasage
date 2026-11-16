@@ -30,13 +30,12 @@ a{color:#1F4E99}a:hover{color:#14284B}
 
 <div style="display: flex; flex-direction: column; gap: 30px; min-width: 0">
 
-<div style="background: #1F4E99; color: #FFFFFF; padding: 30px 36px; font-size: 44px; line-height: 1.28">An LLM agent that <b>checks, fixes and asks before it answers</b> gets <b>92.5%</b> of questions on messy tables right, against <b>54%</b> for a single LLM call, and never damaged a valid cell.</div>
+<div style="background: #1F4E99; color: #FFFFFF; padding: 30px 36px; font-size: 44px; line-height: 1.28">An LLM agent that <b>checks, fixes and asks before it answers</b> gets <b>95.5%</b> of 200 unseen questions on messy tables right, against <b>46.5%</b> for a single LLM call, and never damaged a valid cell.</div>
 
 <section style="display: flex; flex-direction: column; gap: 16px">
 <h2 style="margin: 0; background: #14284B; color: #FFFFFF; font-size: 32px; font-weight: 700; padding: 8px 20px">Problem</h2>
 <ul style="margin: 0; padding-left: 34px">
-<li>People ask simple questions (“total revenue by category?”) of messy CSV and Excel files.</li>
-<li>Duplicates, misspelled labels, bad dates and impossible values quietly change the answer.</li>
+<li>People ask simple questions (“total revenue by category?”) of messy CSV and Excel files, where duplicates, misspelled labels, bad dates and impossible values quietly change the answer.</li>
 <li>A fixed cleaning script misses what it was not written for. A single LLM call edits data it should leave alone and leaves no record of what it changed.</li>
 <li>Our stakeholder asked for: correct answers, no damaged data, every change logged, and a question before any risky change.</li>
 </ul>
@@ -70,10 +69,8 @@ a{color:#1F4E99}a:hover{color:#14284B}
 </div>
 <p style="margin: 0; text-align: center; font-size: 23px; line-height: 1.35"><span style="color: #1F4E99; font-weight: 700">Figure 1:</span> The DataSage loop. Only the planner (blue) uses a language model; orange marks approval decisions. Steps 2 to 4 repeat, one fix per step, until the columns the question uses are clean.</p>
 <ul style="margin: 0; padding-left: 34px">
-<li><b>Tools, not free-form code.</b> The model sees a profile and sample rows, never the whole table, and acts only through tools. Python does every calculation.</li>
-<li><b>Approval gate.</b> Code, not the model, sets each fix's risk. Low risk runs; medium and high risk ask the user. A rejected fix becomes a caveat and is not retried.</li>
-<li><b>Validator.</b> Every fix makes a new version. If rows or totals don't reconcile, the change is rolled back.</li>
-<li><b>Coverage check.</b> Before answering, code runs any check the rules require for the question's columns and sends open problems back to the planner.</li>
+<li><b>Tools, not free-form code:</b> the model sees a profile and sample rows and acts only through tools; Python does every calculation. A <b>validator</b> rolls back any fix whose rows or totals don't reconcile.</li>
+<li><b>Code decides what is risky, and what is still unchecked:</b> risky fixes wait for the user (a rejected fix becomes a caveat), and a <b>coverage check</b> runs any check the rules require before answering.</li>
 </ul>
 </section>
 
@@ -94,17 +91,8 @@ a{color:#1F4E99}a:hover{color:#14284B}
 </tbody>
 </table>
 <p style="margin: 0; text-align: center; font-size: 23px"><span style="color: #1F4E99; font-weight: 700">Table 1:</span> The input file (8 rows). Shaded cells break a rule; order 1004 appears twice.</p>
-<table style="border-collapse: collapse; width: 100%; font-size: 24px; line-height: 1.25; border-top: 3px solid #111111; border-bottom: 3px solid #111111">
-<thead><tr style="border-bottom: 1.5px solid #111111; text-align: left"><th style="padding: 7px 12px">Fix proposed by the planner</th><th style="padding: 7px 12px">Risk</th><th style="padding: 7px 12px">Decision</th></tr></thead>
-<tbody>
-<tr><td style="padding: 5px 12px">drop_duplicates (second copy of 1004)</td><td style="padding: 5px 12px">medium</td><td style="padding: 5px 12px">approved</td></tr>
-<tr><td style="padding: 5px 12px">normalize_labels (electronics, accessories)</td><td style="padding: 5px 12px">low</td><td style="padding: 5px 12px">applied, no question</td></tr>
-<tr><td style="padding: 5px 12px">exclude_rows (Quantity −1)</td><td style="padding: 5px 12px">high</td><td style="padding: 5px 12px">rejected → caveat</td></tr>
-<tr><td style="padding: 5px 12px">set_missing (“not-a-date”)</td><td style="padding: 5px 12px">high</td><td style="padding: 5px 12px">rejected → caveat</td></tr>
-</tbody>
-</table>
-<p style="margin: 0; text-align: center; font-size: 23px"><span style="color: #1F4E99; font-weight: 700">Table 2:</span> One run with Qwen3-30B: 14 tool calls, 3 questions to the user, 13 s.</p>
-<p style="margin: 0"><b>Answer:</b> Electronics 2,185 and Accessories 830 (7 rows used), with both rejected fixes listed as caveats. The run also writes replay.py, plain pandas that repeats the approved fixes.</p>
+<img src="figs/app_shot.png" alt="The DataSage browser app: a risky fix to drop six rows waits on a card under the first affected row, listing each row with its rule-breaking Quantity highlighted" style="width: 100%; height: auto; display: block; border: 1px solid #C9CDD6">
+<p style="margin: 0; text-align: center; font-size: 23px"><span style="color: #1F4E99; font-weight: 700">Figure 2:</span> The browser app on a 1,208-row version: a risky fix waits under the row it affects, with the exact rows as evidence. <i>Ask me</i> or <i>Auto</i> mode; every output (cleaned table, report, replay script, step log) can be viewed and downloaded.</p>
 </section>
 
 </div>
@@ -114,39 +102,39 @@ a{color:#1F4E99}a:hover{color:#14284B}
 <section style="display: flex; flex-direction: column; gap: 16px">
 <h2 style="margin: 0; background: #14284B; color: #FFFFFF; font-size: 32px; font-weight: 700; padding: 8px 20px">Benchmark</h2>
 <ul style="margin: 0; padding-left: 34px">
-<li>120 questions on tables with planted errors: a generated sales table and Palmer Penguins [3]. Dev, held-out and test splits, 40 questions each.</li>
-<li>8 kinds of planted error. Answers are scored against the same question on the clean table; an oracle that knows the planted errors answers approvals.</li>
+<li><b>200 unseen questions</b> on generated sales tables and Palmer Penguins [3] (five seeds, 40 each; 40 more were used while building), plus a <b>hard split</b> of 40 questions on tables of 343 to 1,935 rows with many problems at once.</li>
+<li>Answers are scored against the clean table; an oracle that knows the planted errors answers approvals. The final system was run 4 times.</li>
 <li><b>B0</b> the stakeholder's rule-based script · <b>B1</b> a fixed cleaning script · <b>B2</b> a single LLM call with no tools.</li>
-<li>Models: Qwen3-30B-A3B and Qwen3-235B-A22B [2] on ASU Research Computing.</li>
+<li>Planner: Qwen3-30B-A3B [2] on ASU Research Computing; 41 models on the same API were fully run as the planner.</li>
 </ul>
 </section>
 
 <section style="display: flex; flex-direction: column; gap: 16px">
 <h2 style="margin: 0; background: #14284B; color: #FFFFFF; font-size: 32px; font-weight: 700; padding: 8px 20px">Results</h2>
-<img src="figs/fig_accuracy.png" alt="Grouped bar chart of answer accuracy for B0, B1, B2 and DataSage on four held-out and test splits" style="width: 100%; height: auto; display: block">
-<p style="margin: 0; text-align: center; font-size: 23px"><span style="color: #1F4E99; font-weight: 700">Figure 2:</span> Answer accuracy on held-out (seed 101) and test (seed 202) tables, 20 questions per bar.</p>
+<img src="figs/fig_accuracy.png" alt="Bar chart of right answers by approach on 200 standard questions with 95% ranges, and on 40 hard questions" style="width: 100%; height: auto; display: block">
+<p style="margin: 0; text-align: center; font-size: 23px"><span style="color: #1F4E99; font-weight: 700">Figure 3:</span> Right answers by approach: 200 standard unseen questions (solid, with 95% ranges) and 40 hard questions (hatched).</p>
 <table style="border-collapse: collapse; width: 100%; font-size: 24px; line-height: 1.25; border-top: 3px solid #111111; border-bottom: 3px solid #111111">
-<thead><tr style="border-bottom: 1.5px solid #111111"><th style="padding: 7px 12px; text-align: left">System</th><th style="padding: 7px 12px; text-align: right">Held-out (%)</th><th style="padding: 7px 12px; text-align: right">Test (%)</th><th style="padding: 7px 12px; text-align: right">Damaged cells</th><th style="padding: 7px 12px; text-align: right">s / question</th></tr></thead>
+<thead><tr style="border-bottom: 1.5px solid #111111"><th style="padding: 7px 12px; text-align: left">System</th><th style="padding: 7px 12px; text-align: right">200 standard (%)</th><th style="padding: 7px 12px; text-align: right">40 hard (%)</th><th style="padding: 7px 12px; text-align: right">Damaged cells</th></tr></thead>
 <tbody>
-<tr><td style="padding: 5px 12px">B0 stakeholder script</td><td style="padding: 5px 12px; text-align: right">2.5</td><td style="padding: 5px 12px; text-align: right">5.0</td><td style="padding: 5px 12px; text-align: right">0</td><td style="padding: 5px 12px; text-align: right">&lt; 1</td></tr>
-<tr><td style="padding: 5px 12px">B1 fixed script</td><td style="padding: 5px 12px; text-align: right">35.0</td><td style="padding: 5px 12px; text-align: right">45.0</td><td style="padding: 5px 12px; text-align: right">0</td><td style="padding: 5px 12px; text-align: right">&lt; 1</td></tr>
-<tr><td style="padding: 5px 12px">B2 single LLM call</td><td style="padding: 5px 12px; text-align: right">60.0</td><td style="padding: 5px 12px; text-align: right">47.5</td><td style="padding: 5px 12px; text-align: right">35</td><td style="padding: 5px 12px; text-align: right">32.5</td></tr>
-<tr style="border-top: 1px solid #111111"><td style="padding: 5px 12px">DataSage, 235B + rule</td><td style="padding: 5px 12px; text-align: right">87.5</td><td style="padding: 5px 12px; text-align: right">n/a</td><td style="padding: 5px 12px; text-align: right">0</td><td style="padding: 5px 12px; text-align: right">153.6</td></tr>
-<tr><td style="padding: 5px 12px"><b>DataSage, 30B (final)</b></td><td style="padding: 5px 12px; text-align: right"><b>92.5</b></td><td style="padding: 5px 12px; text-align: right"><b>92.5</b></td><td style="padding: 5px 12px; text-align: right"><b>0</b></td><td style="padding: 5px 12px; text-align: right"><b>16.6</b></td></tr>
+<tr><td style="padding: 5px 12px">B0 stakeholder script</td><td style="padding: 5px 12px; text-align: right">6.0</td><td style="padding: 5px 12px; text-align: right">not run</td><td style="padding: 5px 12px; text-align: right">0</td></tr>
+<tr><td style="padding: 5px 12px">B1 fixed script</td><td style="padding: 5px 12px; text-align: right">49.0</td><td style="padding: 5px 12px; text-align: right">10.0</td><td style="padding: 5px 12px; text-align: right">0</td></tr>
+<tr><td style="padding: 5px 12px">B2 single LLM call</td><td style="padding: 5px 12px; text-align: right">46.5</td><td style="padding: 5px 12px; text-align: right">55.0</td><td style="padding: 5px 12px; text-align: right">119 + 637</td></tr>
+<tr style="border-top: 1px solid #111111"><td style="padding: 5px 12px"><b>DataSage, 30B (final)</b></td><td style="padding: 5px 12px; text-align: right"><b>95.5</b> (92.0 to 98.5)</td><td style="padding: 5px 12px; text-align: right"><b>90.0</b></td><td style="padding: 5px 12px; text-align: right"><b>0</b></td></tr>
+<tr><td style="padding: 5px 12px">DataSage, 235B</td><td style="padding: 5px 12px; text-align: right">n/a</td><td style="padding: 5px 12px; text-align: right">97.5</td><td style="padding: 5px 12px; text-align: right">0</td></tr>
 </tbody>
 </table>
-<p style="margin: 0; text-align: center; font-size: 23px"><span style="color: #1F4E99; font-weight: 700">Table 3:</span> 40 questions per split. Damaged cells are valid cells changed, summed over both splits; seconds are the median per question. The 235B model was run on held-out only.</p>
-<img src="figs/fig_speed.png" alt="Scatter plot of answer accuracy against median seconds per question on held-out, log scale" style="width: 88%; height: auto; display: block; margin: 0 auto">
-<p style="margin: 0; text-align: center; font-size: 23px"><span style="color: #1F4E99; font-weight: 700">Figure 3:</span> Accuracy against speed on held-out. Only the final 30B setting meets both goals.</p>
+<p style="margin: 0; text-align: center; font-size: 23px"><span style="color: #1F4E99; font-weight: 700">Table 2:</span> Damaged cells are valid cells a system changed (standard + hard). Over 4 runs the final system scored 94.0% to 96.0%; median about 16 s per question.</p>
+<img src="figs/fig_parts.png" alt="Bar chart of right answers when each part of DataSage is turned off, on the same 200 questions" style="width: 88%; height: auto; display: block; margin: 0 auto">
+<p style="margin: 0; text-align: center; font-size: 23px"><span style="color: #1F4E99; font-weight: 700">Figure 4:</span> What each part is worth: one part turned off, same 200 questions.</p>
 </section>
 
 <section style="display: flex; flex-direction: column; gap: 16px">
 <h2 style="margin: 0; background: #14284B; color: #FFFFFF; font-size: 32px; font-weight: 700; padding: 8px 20px">What we learned</h2>
 <ul style="margin: 0; padding-left: 34px">
-<li>The main early failure was blanking rows that break a rule instead of dropping them. One prompt rule fixed most of it (held-out penguins 40% → 80% with 30B).</li>
-<li>Moving a check from the prompt into code worked better than asking the model: the coverage check removed every misspelled-label failure.</li>
-<li>A short state summary meant to save tokens made the 30B model repeat checks, so we kept the full history (about 60k tokens per question).</li>
-<li><b>Limitation:</b> all 6 remaining misses are rule-breaking rows in columns the question doesn't use. Checking only the question's columns was the stakeholder's choice.</li>
+<li><b>Approvals and full history carry the system:</b> refusing every risky fix drops accuracy to 12%, a short memory summary to 86%. The validator and the prompt's merge rule showed no measurable effect.</li>
+<li><b>It holds on bigger, messier tables:</b> 90% on the hard split with zero damaged cells; all 1,750 errors the questions depended on were fixed.</li>
+<li><b>The design matters more than the model:</b> we swapped in 41 models as the planner. With DataSage around it, a model answers a median 20 points more than in one call; the 30B default ranks 4th (93.8%) and is among the fastest. The weakest models fail on tool-call format, never by damaging data.</li>
+<li><b>Limitation:</b> 36 of 39 remaining misses are rows breaking a rule in a column the question does not use (60.9% right on those questions, 99.6% on the rest). Checking only the question's columns was the stakeholder's choice; checking all columns is the next step.</li>
 </ul>
 </section>
 
