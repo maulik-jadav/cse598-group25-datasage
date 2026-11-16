@@ -2,8 +2,8 @@
 
 For: Arsha, Ritik, Maulik and Vatsal. Last updated November 16, 2026.
 
-Milestone 2 is submitted and items 1 and 2 of Section 6 are merged (PR #7). Shrey is building the
-browser app for the demo (item 7's page). The rest of the work is split below. Individual grades draw on commit and PR
+Milestone 2 is submitted and items 1 and 2 of Section 6 are merged (PR #7). The browser app for the demo
+(item 7's page) is in `app/web/`. The rest of the work is split below. Individual grades draw on commit and PR
 authorship, so **each task should end in its own merged PR** under your own GitHub account.
 
 ## Dates
@@ -29,7 +29,7 @@ authorship, so **each task should end in its own merged PR** under your own GitH
 | Item 7 design note | `docs/design/item7_recipes_ui.md` |
 | Poster draft (print-ready PDF, source and figures) | `docs/final/poster/` (see its README) |
 | Demo run with the 30B default | `docs/final/demo/` (13 s, same answer as the Milestone 2 demo) |
-| Browser app (item 7 page) | being built by Shrey; see the README once it lands |
+| Browser app (item 7 page) | `app/web/`; run `python -m app.web.server` and open http://127.0.0.1:8501 (README, "Run DataSage in the browser") |
 
 Final system (`datasage-m3`, Qwen3-30B), share of questions answered correctly:
 
@@ -78,7 +78,7 @@ Every task ends in a PR into `main`. Put a short note of what you did in `docs/t
 
 ### Shrey
 
-Builds the browser app (item 7's page) and the Demo Day plan (a 3-minute walk-through for the poster session plus a backup screen recording, in `docs/final/demo_script.md`, by Nov 30). Also reviews and merges every PR and assembles the final report. Each of you writes the final-report paragraph for your own tasks.
+Owns the browser app (`app/web/`) and the Demo Day plan (a 3-minute walk-through for the poster session plus a backup screen recording, in `docs/final/demo_script.md`, by Nov 30). Also reviews and merges every PR and assembles the final report. Each of you writes the final-report paragraph for your own tasks.
 
 ## Setup (about 5 minutes)
 
