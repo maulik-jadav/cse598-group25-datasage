@@ -111,7 +111,7 @@ function makeRow(id, cells) {
     const v = cells[c] && typeof cells[c] === "object" ? cells[c].text : (cells[c] ?? "");
     const cell = el("div", "cell" + (S.numeric.has(c) ? " num" : "") + (v === "" ? " blank" : ""));
     cell.setAttribute("role", "cell");
-    cell.append(el("span", null, v === "" ? "—" : v));
+    cell.append(el("span", null, vis(v)));
     cell.dataset.text = v; cell.dataset.state = "";
     row.append(cell); S.cellEls.set(`${id}|${c}`, cell);
   });
@@ -182,7 +182,7 @@ function applyTable(t) {
       if (!cell) continue;
       if (cell.dataset.text !== c.text) {
         cell.dataset.text = c.text;
-        const span = el("span", "new", c.text === "" ? "—" : c.text);
+        const span = el("span", "new", vis(c.text));
         cell.replaceChildren(span);
         cell.classList.toggle("blank", c.text === "");
       }
@@ -220,9 +220,23 @@ function showAsk(ev) {
   const text = el("div", "ask-text");
   text.append(el("span", "ask-title", ev.title));
   text.append(el("span", "ask-sub", `${cap(ev.risk)} risk · ${ev.summary}`));
-  if (ev.reason) text.append(el("span", "ask-reason", ev.reason));
   const ex = examplesBlock(ev.examples);
-  if (ex) text.append(ex);
+  if (ev.reason || ex) {
+    const more = el("div", "ask-more"); more.id = `more-${ev.id}`;
+    const inner = el("div", "ask-more-inner");
+    if (ev.reason) inner.append(el("span", "ask-reason", ev.reason));
+    if (ex) inner.append(ex);
+    more.append(inner);
+    const n = ev.examples && ev.examples.rows ? ev.examples.rows.length + (ev.examples.more || 0) : 0;
+    const toggle = el("button", "ask-toggle", n ? `Details · ${n} row${n === 1 ? "" : "s"}` : "Details");
+    toggle.type = "button"; toggle.setAttribute("aria-expanded", "false"); toggle.setAttribute("aria-controls", more.id);
+    toggle.onclick = () => {
+      const open = toggle.getAttribute("aria-expanded") !== "true";
+      toggle.setAttribute("aria-expanded", String(open));
+      more.classList.toggle("open", open);
+    };
+    text.append(toggle, more);
+  }
   const no = el("button", "ghost", "Keep as is"); no.type = "button";
   const yes = el("button", "btn primary", YES[ev.tool] || "Apply"); yes.type = "button";
   no.onclick = () => answer(ev.id, false, wrap); yes.onclick = () => answer(ev.id, true, wrap);
@@ -230,29 +244,46 @@ function showAsk(ev) {
   const targets = (ev.rows || []).map((r) => S.rowEls.get(r)).filter(Boolean);
   targets.forEach((r) => r.classList.add("target"));
   wrap._targets = targets;
-  const anchor = targets[targets.length - 1] || firstFlagged(ev.column);
+  const anchor = targets[0] || firstFlagged(ev.column);
   if (anchor) anchor.after(wrap); else { $("#banner").hidden = false; $("#banner").append(wrap); }
   S.asks.set(ev.id, wrap);
+  const go = el("button", "go-ask", "Go to question"); go.type = "button";
+  go.onclick = () => { wrap.scrollIntoView({ block: "center", behavior: "smooth" }); yes.focus({ preventScroll: true }); };
+  $("#status").replaceChildren(document.createTextNode("Waiting for you · "), go);
   wrap.scrollIntoView({ block: "nearest", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   yes.focus({ preventScroll: true });
+}
+function rowChip(id) {
+  const chip = el("button", "ex-id", `#${id}`); chip.type = "button"; chip.title = "Show this row in the table";
+  chip.onclick = () => jumpTo(id);
+  return chip;
 }
 function examplesBlock(ex) {
   if (!ex || !ex.rows || !ex.rows.length) return null;
   const box = el("div", "ex");
   ex.rows.forEach((r) => {
     const line = el("div", "ex-row");
-    const chip = el("button", "ex-id", `#${r.id}`); chip.type = "button"; chip.title = "Show this row in the table";
-    chip.onclick = () => jumpTo(r.id);
-    line.append(chip);
-    if (ex.kind === "remove") {
-      line.append(el("span", "ex-gone", ex.columns.map((c) => r.cells[c] || "—").join("  ·  ")));
+    if (ex.kind === "duplicates") {
+      line.append(rowChip(r.id), el("span", "ex-note", "repeats"), r.same_as != null ? rowChip(r.same_as) : el("span", "ex-note", "an earlier row"));
+      line.append(el("span", "ex-vals", ex.columns.map((c) => r.cells[c] || "—").join("  ·  ")));
+    } else if (ex.kind === "remove") {
+      line.append(rowChip(r.id));
+      const vals = el("span", "ex-cells");
+      const bad = r.problems || {};
+      ex.columns.forEach((c) => {
+        if (bad[c]) { const b = el("span", "ex-bad"); b.title = bad[c]; b.append(el("span", "ex-col", c), document.createTextNode(` ${r.cells[c] || "—"}`)); vals.append(b); }
+      });
+      vals.append(el("span", "ex-vals", ex.columns.filter((c) => !bad[c]).map((c) => r.cells[c] || "—").join("  ·  ")));
+      line.append(vals);
     } else {
+      line.append(rowChip(r.id));
       const parts = el("span", "ex-changes");
       r.changes.forEach((c) => {
         const item = el("span", "ex-change");
-        item.append(el("span", "ex-col", c.column), el("span", "ex-before", c.before || "—"), el("span", "ex-arrow", "→"), el("span", "ex-after", c.after || "—"));
+        item.append(el("span", "ex-col", c.column), el("span", "ex-before", vis(c.before)), el("span", "ex-arrow", "→"), el("span", "ex-after", vis(c.after)));
         parts.append(item);
       });
+      if (r.inputs && r.inputs.length) parts.append(el("span", "ex-note", "from " + r.inputs.map((i) => `${i.column} ${i.value}`).join(", ")));
       line.append(parts);
     }
     box.append(line);
@@ -440,6 +471,7 @@ function countUp(node, target) {
   setTimeout(() => { done = true; node.textContent = fmt(target); }, 1300);  // final number even if frames stall
 }
 
+const vis = (v) => (v === "" || v == null ? "—" : String(v).replace(/^ +| +$/g, (m) => "␣".repeat(m.length)));  // stray spaces made visible
 const cap = (s) => (s ? s.charAt(0).toUpperCase() + s.slice(1) : "");
 function plain(text) {
   return text.replace(/^drop_duplicates: /, "").replace(/^normalize_labels: /, "").replace(/^exclude_rows: /, "")

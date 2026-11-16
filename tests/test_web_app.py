@@ -143,7 +143,27 @@ def test_approval_wording_and_row_previews():
     preview = {"summary": "", "rows_removed": [], "cells_changed": 1, "before": before, "after": after}
     assert future("normalize_labels", {"column": "Category", "mapping": {"electronics": "Electronics"}}, preview) == \
         "Will merge 1 label in Category, changing 1 cell"
-    assert examples(preview)["rows"] == [{"id": 1, "changes": [{"column": "Category", "before": "electronics", "after": "Electronics"}]}]
+    assert examples(preview, "normalize_labels", {"column": "Category"})["rows"] == [
+        {"id": 1, "changes": [{"column": "Category", "before": "electronics", "after": "Electronics"}], "inputs": []}]
+
+
+def test_details_show_the_evidence_for_each_fix_type():
+    from app.web.runner import examples
+    df = pd.DataFrame({"A": ["x", "y", "x", "y"], "Qty": [1, 2, 1, -2], "Price": [5, 5, 5, 5], "Rev": [5, 10, 5, 99]})
+    s = Session(df, source="t.csv", request="q", rules={"Qty": {"min": 1}})
+    d = Dispatcher(s, AutoApprover())
+    _call(d, "check_out_of_range", column="Qty", minimum=1)
+    # duplicates: the copy points at the earlier row it repeats
+    dup = examples({"rows_removed": [2], "before": df, "after": df.drop(index=[2])}, "drop_duplicates", {}, s)
+    assert dup["kind"] == "duplicates" and dup["rows"][0]["id"] == 2 and dup["rows"][0]["same_as"] == 0
+    # dropped rows: the cell that breaks the rule is named
+    rem = examples({"rows_removed": [3], "before": df, "after": df.drop(index=[3])}, "exclude_rows", {"rows": [3]}, s)
+    assert rem["rows"][0]["problems"] == {"Qty": "values outside the rules"}
+    # recompute: the formula's inputs come with the change
+    after = df.copy(); after.loc[3, "Rev"] = -10
+    rec = examples({"before": df, "after": after}, "recompute_column", {"column": "Rev", "expression": "Qty * Price"}, s)
+    assert rec["rows"][0]["changes"] == [{"column": "Rev", "before": "99", "after": "-10"}]
+    assert rec["rows"][0]["inputs"] == [{"column": "Qty", "value": "-2"}, {"column": "Price", "value": "5"}]
 
 
 def test_health_reports_outcomes_and_the_answer_before_cleaning():
