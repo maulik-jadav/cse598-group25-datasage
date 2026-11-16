@@ -1,0 +1,57 @@
+{
+  "task_id": "penguinst_00_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 3,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1805.09,
+  "tokens": 2897,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3914.84375,
+    "male": 4628.846153846154
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Fix species case variant\n    df['species'] = df['species'].replace('chinstrap', 'Chinstrap')\n    # Strip whitespace from island\n    df['island'] = df['island'].str.strip()\n    # Convert text numbers to numeric\n    for col in ['flipper_length_mm', 'body_mass_g', 'year']:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    # Fix out of range body_mass_g (3650000 -> 3650)\n    df.loc[df['body_mass_g'] > 6500, 'body_mass_g'] = df.loc[df['body_mass_g'] > 6500, 'body_mass_g'] / 1000\n    return df\n\ndef answer(df):\n    df = clean(df)\n    result = df.dropna(subset=['sex']).groupby('sex')['body_mass_g'].mean()\n    return result.to_dict()"
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-minimax-m2-7",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3944.1667,
+    "male": 4668.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

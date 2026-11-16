@@ -1,0 +1,57 @@
+{
+  "task_id": "salesh_06_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 170.01,
+  "tokens": 6081,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    if df['Price'].dtype == object:\n        df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.strip()\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    region_map = {\n        'north': 'North', 'nort': 'North',\n        'east': 'East',\n        'south': 'South', 'suoth': 'South',\n        'west': 'West', 'wst': 'West'\n    }\n    df['Region'] = df['Region'].astype(str).str.strip().str.lower().map(lambda x: region_map.get(x, x.title() if x in region_map.values() else x))\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['Category'].astype(str).str.strip() == 'Electronics']\n    grouped = d.groupby('Region', dropna=True)['Revenue'].sum()\n    result = {}\n    for key, value in sorted(grouped.items()):\n        value = float(value)\n        result[str(key)] = int(value) if value.is_integer() else value\n    return result"
+  },
+  "corrections": 6,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 3,
+  "cleaned_available": true,
+  "system": "b2-beam-1-0",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 4080.0,
+    "North": 960.0,
+    "South": 5540.0,
+    "West": 3750.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

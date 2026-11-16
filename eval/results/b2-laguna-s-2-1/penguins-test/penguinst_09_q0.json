@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 378.76,
+  "tokens": 6472,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 193.16666666666666,
+    "Chinstrap": 196.91666666666666,
+    "Gentoo": 216.68421052631578
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Fix species label variants\n    species_map = {\n        'adelie': 'Adelie',\n        'gentoo': 'Gentoo',\n        'Gentto': 'Gentoo',\n        'chinstrap': 'Chinstrap'\n    }\n    df['species'] = df['species'].replace(species_map)\n    # Convert flipper_length_mm to numeric\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    # Handle negative/out-of-range flipper_length_mm values\n    df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = np.nan\n    return df\n\ndef answer(df):\n    df = clean(df)\n    df = df.dropna(subset=['species'])\n    result = df.groupby('species')['flipper_length_mm'].mean().to_dict()\n    return result"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-laguna-s-2-1",
+  "dataset": "penguins-test",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 193.1667,
+    "Chinstrap": 197.0909,
+    "Gentoo": 216.6842
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ]
+  ]
+}

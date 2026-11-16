@@ -29,6 +29,21 @@ def acc(s):
 
 
 SATURATED = ("qwen3-vl-32b-think", "mistral-large-4")
+def timeouts_left_sentence():
+    left = {}
+    for path in glob.glob("eval/results/*/*/*.json"):
+        system = path.split("/")[2]
+        if not (system.startswith("b2-") or system.startswith("datasage-m3-")):
+            continue
+        r = json.load(open(path))
+        if r["stop_reason"].startswith("api_error") or r["stop_reason"] == "code_timeout":
+            left[system] = left.get(system, 0) + 1
+    if not left:
+        return "No result in the tables ended in an API error or timeout."
+    return ("Results that still ended in an API timeout or code timeout after the retry (counted as wrong): "
+            + ", ".join(f"`{k}` {v}" for k, v in sorted(left.items())) + ".")
+
+
 full = [s for s in M if A(s) and A(s)["tasks"] == 80 and not s.endswith("-original")]
 partial = [s for s in M if A(s) and A(s)["tasks"] < 80]
 tool_ok = [s for s in full if (A(s)["tool_error_rate"] or 0) < 0.05 and A(s)["completion"] >= 0.9]
@@ -41,7 +56,9 @@ think_out = ", ".join(f"{M[t]['model']} {100 * beh(t)['tasks_checking_a_column_t
 gains = [(M[s]["agent_minus_single_call"], s) for s in full if "agent_minus_single_call" in M[s]]
 pos = [g for g, _ in gains if g > 0]
 gmed = sorted(g for g, _ in gains)[len(gains) // 2]
-gain_sentence = (f"For the {len(gains)} fully run models with a complete single-call run, the agent is better for "
+gain_sentence = (f"The column is filled only where the single call answered all 80 questions with no API timeout "
+                 f"(a timeout counts as a wrong answer, which would flatter the agent). For those {len(gains)} models "
+                 f"the agent is better for "
                  f"{len(pos)}, by a median of {100 * gmed:.1f} points (from {100 * min(g for g, _ in gains):+.1f} to "
                  f"{100 * max(g for g, _ in gains):+.1f}).")
 
@@ -93,6 +110,15 @@ vals = {
     "Q30_B2": f"{100 * B('qwen3-30b')['accuracy']:.1f}% ({B('qwen3-30b')['correct']} of {B('qwen3-30b')['tasks']})",
     "Q30_ACC_N": f"{A('qwen3-30b')['correct']} of 80", "Q30O_ACC_N": f"{A('qwen3-30b-original')['correct']} of 80",
     "N_RERUN": sum("Connection error" in r["reason"] for r in reruns),
+    "N_API_TO": sum("timed out" in r["reason"] for r in reruns),
+    "N_API_TO_B2": sum("timed out" in r["reason"] and r["system"].startswith("b2-") for r in reruns),
+    "N_CODE_TO": sum(r["reason"].startswith("code_timeout") for r in reruns),
+    "TIMEOUTS_LEFT": timeouts_left_sentence(),
+    "B2_PARTIAL": ("Single calls not run to the end (the slowest reasoning models often needed more than the 180 s "
+                   "timeout per attempt, and we stopped waiting): " + "; ".join(
+                       f"`{M[x]['model']}` {B(x)['tasks']} of 80" for x in M if B(x) and B(x)['tasks'] < 80)
+                   + ". For these the Agent minus B2 column is left empty.")
+    if any(B(x) and B(x)["tasks"] < 80 for x in M) else "Every single-call run has all 80 questions.",
     "PARTIAL_LIMIT": ("Partial models: " + partial_note + ". Their accuracy is over the questions they finished, which "
                       "are not a random sample (the earlier, mostly sales, splits finished first).") if partial else
                      "Every model in the tables ran all 80 questions.",

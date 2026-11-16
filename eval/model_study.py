@@ -323,7 +323,9 @@ def aggregate() -> None:
         entry["agent"]["scope_split"] = scope_split(agent_system, outside)
         entry["single_call"]["scope_split"] = scope_split(single_system, outside)
         a, b = entry["agent"]["heldout_test"], entry["single_call"]["heldout_test"]
-        if a and b and a["tasks"] == b["tasks"]:
+        # Only when the single call answered the same questions and none of its calls timed out or failed at the API
+        # (a timeout counts as wrong, which would flatter the agent).
+        if a and b and a["tasks"] == b["tasks"] and not b["stop_reasons"].get("api_error"):
             entry["agent_minus_single_call"] = a["accuracy"] - b["accuracy"]
         out["models"][short] = entry
     out["summary"] = summary(out["models"])

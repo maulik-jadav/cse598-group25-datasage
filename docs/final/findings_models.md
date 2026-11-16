@@ -4,7 +4,7 @@ Short answer: keep `qwen3-30b-a3b-instruct-2507` as the default. Across the 43 m
 the API, it is one of four models that no other model beats on both accuracy and speed, and it finishes a question in
 about half a minute even under heavy load. `qwen3-235b-a22b-instruct-2507` was the only model to answer all 80 questions
 correctly, but it took about 7 times as long per question. The biggest surprise is why the other models lose: on the
-40 questions where the question's own columns are the whole story, 28 of the 38 fully run models
+40 questions where the question's own columns are the whole story, 30 of the 41 fully run models
 score 39 or 40 out of 40. Almost all of the spread comes from one habit (whether the model also cleans rows that break
 the rules in columns the question does not use), plus a few models that cannot produce valid tool calls at all.
 
@@ -45,7 +45,7 @@ runs it mostly wrote its tool calls as plain text (see failure modes).
 Two models could not be run to the end because their servers were saturated: during the study a one-line "Say hi"
 request to `qwen3-vl-32b-thinking` and to `mistral-large-4` timed out after 120 s. We stopped them where they were and
 report them as partial (`qwen3-vl-32b-thinking` 23 of 80; `mistral-large-4` 54 of 80). Every single-call attempt for them timed out, so they have no single-call
-result. Also partial when the study ended: `qwen3-235b-a22b-thinking-2507` 55 of 80; `qwen-agentworld-35b-a3b` 77 of 80; `olmo3-32b-think` 76 of 80.
+result. 
 
 ## Results
 
@@ -68,40 +68,40 @@ Table A. Accuracy, single call, scope split, latency and tokens
 | qwen3-coder-next | 80 | 92.5% (74) | 86.2 to 97.5 | 53.8% (43/80) | +38.8 | 37/40 | 37/40 | 43 | 60 | 74,098 |
 | muse-glimmer-30b | 80 | 91.2% (73) | 85.0 to 96.2 | 57.5% (46/80) | +33.8 | 33/40 | 40/40 | 76 | 93 | 82,085 |
 | qwen35-122b-a10b | 80 | 90.0% (72) | 82.5 to 96.2 | 58.8% (47/80) | +31.2 | 33/40 | 39/40 | 110 | 166 | 68,534 |
-| qwen3-vl-32b-thinking | 23 | 87.0% (20) | 69.6 to 100.0 | 0.0% (0/6) | n/a | 4/7 | 16/16 | 379 | 865 | 37,245 |
+| qwen3-vl-32b-thinking | 23 | 87.0% (20) | 69.6 to 100.0 | n/a | n/a | 4/7 | 16/16 | 379 | 865 | 37,245 |
 | gpt-oss-120b | 80 | 83.8% (67) | 75.0 to 91.2 | 60.0% (48/80) | +23.8 | 28/40 | 39/40 | 59 | 95 | 42,975 |
-| qwen35-27b | 80 | 83.8% (67) | 75.0 to 91.2 | 62.9% (39/62) | n/a | 28/40 | 39/40 | 69 | 112 | 62,375 |
+| qwen35-27b | 80 | 83.8% (67) | 75.0 to 91.2 | 62.8% (49/78) | n/a | 28/40 | 39/40 | 69 | 112 | 62,375 |
 | qwen36-35b-a3b | 80 | 82.5% (66) | 73.8 to 90.0 | 57.5% (46/80) | +25.0 | 26/40 | 40/40 | 49 | 84 | 42,626 |
 | llama4-scout-17b | 80 | 80.0% (64) | 71.2 to 88.8 | 0.0% (0/80) | +80.0 | 27/40 | 37/40 | 15 | 21 | 58,359 |
-| beam-1-0 | 80 | 80.0% (64) | 71.2 to 88.8 | 85.7% (6/7) | n/a | 24/40 | 40/40 | 165 | 427 | 27,796 |
+| beam-1-0 | 80 | 80.0% (64) | 71.2 to 88.8 | 43.2% (16/37) | n/a | 24/40 | 40/40 | 165 | 427 | 27,796 |
 | kimi-k2-7-code | 80 | 77.5% (62) | 68.8 to 86.2 | 68.8% (55/80) | +8.8 | 24/40 | 38/40 | 39 | 61 | 26,548 |
 | mimo-v2-6-pro | 80 | 77.5% (62) | 68.8 to 86.2 | 71.2% (57/80) | +6.2 | 22/40 | 40/40 | 99 | 256 | 23,939 |
 | glm-5-3-flash | 80 | 77.5% (62) | 68.8 to 86.2 | 70.0% (56/80) | +7.5 | 22/40 | 40/40 | 109 | 174 | 18,559 |
-| qwen-agentworld-35b-a3b | 77 | 76.6% (59) | 67.5 to 85.7 | 50.0% (8/16) | n/a | 20/38 | 39/39 | 578 | 1019 | 55,288 |
-| glm-5-3-spec | 80 | 76.2% (61) | 66.2 to 85.0 | 52.5% (42/80) | +23.7 | 21/40 | 40/40 | 32 | 47 | 23,900 |
-| glm-5-3 | 80 | 76.2% (61) | 66.2 to 85.0 | 53.8% (43/80) | +22.5 | 21/40 | 40/40 | 33 | 56 | 24,272 |
+| qwen3-235b-a22b-thinking-2507 | 80 | 77.5% (62) | 68.8 to 86.2 | 44.1% (15/34) | n/a | 22/40 | 40/40 | 815 | 1404 | 44,052 |
+| glm-5-3-spec | 80 | 76.2% (61) | 66.2 to 85.0 | 68.8% (55/80) | +7.5 | 21/40 | 40/40 | 32 | 47 | 23,900 |
+| glm-5-3 | 80 | 76.2% (61) | 66.2 to 85.0 | 66.2% (53/80) | +10.0 | 21/40 | 40/40 | 33 | 56 | 24,272 |
 | qwen38-27b | 80 | 76.2% (61) | 67.5 to 85.0 | 65.0% (52/80) | +11.2 | 21/40 | 40/40 | 45 | 98 | 25,775 |
 | mimo-v2-6-flash | 80 | 76.2% (61) | 66.2 to 85.0 | 62.5% (50/80) | +13.7 | 21/40 | 40/40 | 46 | 117 | 20,246 |
 | qwen36-27b | 80 | 76.2% (61) | 67.5 to 85.0 | 56.2% (45/80) | +20.0 | 21/40 | 40/40 | 61 | 101 | 42,036 |
-| deepseek-v4-1-flash | 80 | 75.0% (60) | 65.0 to 83.8 | 56.1% (32/57) | n/a | 20/40 | 40/40 | 69 | 142 | 31,673 |
+| qwen-agentworld-35b-a3b | 80 | 76.2% (61) | 67.5 to 85.0 | 46.1% (35/76) | n/a | 21/40 | 40/40 | 586 | 1142 | 55,194 |
+| deepseek-v4-1-flash | 80 | 75.0% (60) | 65.0 to 83.8 | 55.0% (44/80) | +20.0 | 20/40 | 40/40 | 69 | 142 | 31,673 |
 | qwen3-30b-a3b-thinking-2507 | 80 | 75.0% (60) | 65.0 to 83.8 | 56.2% (45/80) | +18.8 | 20/40 | 40/40 | 121 | 208 | 35,052 |
 | granite41-30b | 80 | 72.5% (58) | 62.5 to 82.5 | 46.2% (37/80) | +26.2 | 20/40 | 38/40 | 19 | 28 | 35,192 |
 | glm-5-2 | 80 | 72.5% (58) | 62.5 to 82.5 | 65.0% (52/80) | +7.5 | 18/40 | 40/40 | 42 | 76 | 23,136 |
-| hemmingway-1-5 | 80 | 72.5% (58) | 62.5 to 82.5 | 58.7% (27/46) | n/a | 18/40 | 40/40 | 355 | 1103 | 24,894 |
-| mistral-large-4 | 54 | 72.2% (39) | 59.3 to 83.3 | 0.0% (0/6) | n/a | 9/24 | 30/30 | 168 | 667 | 22,719 |
-| ornith-1-5-35b-a3b | 80 | 71.2% (57) | 61.3 to 81.2 | 55.2% (37/67) | n/a | 17/40 | 40/40 | 109 | 337 | 33,544 |
+| hemmingway-1-5 | 80 | 72.5% (58) | 62.5 to 82.5 | 48.8% (39/80) | n/a | 18/40 | 40/40 | 355 | 1103 | 24,894 |
+| mistral-large-4 | 54 | 72.2% (39) | 59.3 to 83.3 | n/a | n/a | 9/24 | 30/30 | 168 | 667 | 22,719 |
+| ornith-1-5-35b-a3b | 80 | 71.2% (57) | 61.3 to 81.2 | 52.5% (42/80) | n/a | 17/40 | 40/40 | 109 | 337 | 33,544 |
 | muse-spark-open | 80 | 71.2% (57) | 61.3 to 81.2 | 67.5% (54/80) | +3.7 | 17/40 | 40/40 | 142 | 265 | 35,056 |
 | minimax-m3 | 80 | 70.0% (56) | 60.0 to 80.0 | 53.8% (43/80) | +16.2 | 17/40 | 39/40 | 62 | 97 | 26,222 |
-| laguna-s-2-1 | 80 | 70.0% (56) | 60.0 to 80.0 | 10.0% (2/20) | n/a | 18/40 | 38/40 | 199 | 540 | 26,772 |
-| qwen3-235b-a22b-thinking-2507 | 55 | 69.1% (38) | 56.4 to 81.8 | 33.3% (4/12) | n/a | 10/27 | 28/28 | 790 | 1209 | 39,616 |
-| minimax-m2-7 | 80 | 68.8% (55) | 58.8 to 78.8 | 52.2% (12/23) | n/a | 15/40 | 40/40 | 103 | 257 | 23,942 |
+| laguna-s-2-1 | 80 | 70.0% (56) | 60.0 to 80.0 | 3.8% (3/80) | n/a | 18/40 | 38/40 | 199 | 540 | 26,772 |
+| minimax-m2-7 | 80 | 68.8% (55) | 58.8 to 78.8 | 41.3% (31/75) | n/a | 15/40 | 40/40 | 103 | 257 | 23,942 |
 | gemma4-31b-it | 80 | 67.5% (54) | 57.5 to 77.5 | 58.8% (47/80) | +8.8 | 14/40 | 40/40 | 36 | 105 | 33,745 |
 | devstral2-123b | 80 | 62.5% (50) | 51.2 to 72.5 | 66.2% (53/80) | -3.7 | 15/40 | 35/40 | 299 | 654 | 37,494 |
 | olmo3-32b-instruct | 80 | 58.8% (47) | 47.5 to 70.0 | 3.8% (3/80) | +55.0 | 17/40 | 30/40 | 28 | 43 | 87,740 |
-| olmo3-32b-think | 76 | 48.7% (37) | 38.2 to 60.5 | 36.4% (12/33) | n/a | 10/37 | 27/39 | 533 | 1195 | 17,274 |
+| olmo3-32b-think | 80 | 50.0% (40) | 38.8 to 61.3 | 29.3% (22/75) | n/a | 12/40 | 28/40 | 545 | 1195 | 17,274 |
 | olmo3-7b-instruct | 80 | 17.5% (14) | 10.0 to 26.2 | 0.0% (0/80) | +17.5 | 5/40 | 9/40 | 25 | 37 | 128,642 |
-| olmo3-7b-think | 80 | 17.5% (14) | 10.0 to 26.2 | 16.9% (13/77) | n/a | 2/40 | 12/40 | 542 | 925 | 32,244 |
-| llama4-maverick-17b | 80 | 6.2% (5) | 1.2 to 12.5 | 32.5% (26/80) | -26.2 | 1/40 | 4/40 | 35 | 60 | 36,740 |
+| olmo3-7b-think | 80 | 17.5% (14) | 10.0 to 26.2 | 17.5% (14/80) | +0.0 | 2/40 | 12/40 | 542 | 925 | 32,244 |
+| llama4-maverick-17b | 80 | 6.2% (5) | 1.2 to 12.5 | 41.2% (33/80) | -35.0 | 1/40 | 4/40 | 35 | 60 | 36,740 |
 
 Table B. Cleaning quality and tool use
 
@@ -126,12 +126,13 @@ Table B. Cleaning quality and tool use
 | kimi-k2-7-code | 100.0% | 0.86 | 0.58 | 71.7% | 0 | 3/816 (0.4%) | 3 | 0 | 2.0 | 60.0% | finish 80 |
 | mimo-v2-6-pro | 100.0% | 0.88 | 0.49 | 65.2% | 0 | 4/756 (0.5%) | 4 | 0 | 2.0 | 27.5% | finish 49, answered_without_finish 31 |
 | glm-5-3-flash | 100.0% | 0.93 | 0.45 | 67.2% | 0 | 1/630 (0.2%) | 1 | 0 | 2.0 | 22.5% | finish 80 |
-| qwen-agentworld-35b-a3b | 100.0% | 0.81 | 0.44 | 79.0% | 0 | 0/623 (0.0%) | 0 | 0 | 2 | 68.8% | finish 49, answered_without_finish 28 |
+| qwen3-235b-a22b-thinking-2507 | 100.0% | 0.90 | 0.39 | 65.6% | 0 | 0/614 (0.0%) | 0 | 0 | 2.0 | 30.0% | finish 80 |
 | glm-5-3-spec | 100.0% | 0.89 | 0.44 | 65.6% | 0 | 1/667 (0.1%) | 1 | 0 | 2.0 | 27.5% | finish 80 |
 | glm-5-3 | 100.0% | 0.89 | 0.46 | 66.6% | 0 | 2/678 (0.3%) | 2 | 0 | 2.0 | 27.5% | finish 80 |
 | qwen38-27b | 100.0% | 0.88 | 0.50 | 64.9% | 0 | 0/739 (0.0%) | 0 | 0 | 1.0 | 32.5% | finish 80 |
 | mimo-v2-6-flash | 100.0% | 0.88 | 0.47 | 64.2% | 0 | 1/774 (0.1%) | 1 | 0 | 1.5 | 22.5% | finish 71, answered_without_finish 9 |
 | qwen36-27b | 100.0% | 0.86 | 0.52 | 68.9% | 0 | 11/721 (1.5%) | 11 | 0 | 2.0 | 48.8% | finish 80 |
+| qwen-agentworld-35b-a3b | 100.0% | 0.80 | 0.43 | 78.5% | 0 | 0/641 (0.0%) | 0 | 0 | 2.0 | 70.0% | finish 51, answered_without_finish 29 |
 | deepseek-v4-1-flash | 100.0% | 0.90 | 0.52 | 65.6% | 0 | 0/832 (0.0%) | 0 | 0 | 2.0 | 45.0% | finish 79, answered_without_finish 1 |
 | qwen3-30b-a3b-thinking-2507 | 100.0% | 0.88 | 0.19 | 64.5% | 0 | 0/436 (0.0%) | 0 | 0 | 2.0 | 13.8% | answered_without_finish 73, finish 7 |
 | granite41-30b | 100.0% | 0.84 | 0.40 | 68.0% | 0 | 0/619 (0.0%) | 0 | 0 | 2.0 | 46.2% | finish 73, answered_without_finish 7 |
@@ -142,12 +143,11 @@ Table B. Cleaning quality and tool use
 | muse-spark-open | 100.0% | 0.86 | 0.60 | 65.0% | 0 | 1/1029 (0.1%) | 1 | 0 | 1.0 | 55.0% | finish 79, answered_without_finish 1 |
 | minimax-m3 | 100.0% | 0.92 | 0.61 | 73.0% | 0 | 1/723 (0.1%) | 1 | 0 | 2.0 | 61.3% | finish 80 |
 | laguna-s-2-1 | 100.0% | 0.90 | 0.52 | 64.1% | 0 | 1/699 (0.1%) | 1 | 0 | 1.0 | 28.7% | answered_without_finish 58, finish 22 |
-| qwen3-235b-a22b-thinking-2507 | 100.0% | 0.94 | 0.37 | 63.0% | 0 | 0/397 (0.0%) | 0 | 0 | 1 | 20.0% | finish 55 |
 | minimax-m2-7 | 100.0% | 0.90 | 0.49 | 64.9% | 0 | 7/658 (1.1%) | 7 | 0 | 2.0 | 36.2% | finish 80 |
 | gemma4-31b-it | 98.8% | 0.92 | 0.44 | 62.9% | 0 | 67/751 (8.9%) | 30 | 2 | 1.0 | 18.8% | finish 79, tool_budget_exhausted 1 |
 | devstral2-123b | 100.0% | 0.91 | 0.46 | 60.5% | 0 | 0/725 (0.0%) | 0 | 0 | 1.0 | 27.5% | finish 75, answered_without_finish 5 |
 | olmo3-32b-instruct | 91.2% | 0.79 | 0.83 | 84.0% | 0 | 175/1484 (11.8%) | 72 | 13 | 3.0 | 98.8% | finish 48, answered_without_finish 25, tool_budget_exhausted 6, no_tool_calls 1 |
-| olmo3-32b-think | 93.4% | 0.89 | 0.29 | 55.1% | 0 | 36/546 (6.6%) | 29 | 2 | 1.0 | 10.5% | finish 71, no_tool_calls 5 |
+| olmo3-32b-think | 93.8% | 0.87 | 0.29 | 56.2% | 0 | 37/578 (6.4%) | 30 | 2 | 1.0 | 11.2% | finish 75, no_tool_calls 5 |
 | olmo3-7b-instruct | 32.5% | 0.80 | 0.70 | 73.9% | 0 | 662/1929 (34.3%) | 238 | 87 | 2.0 | 98.8% | tool_budget_exhausted 29, no_tool_calls 25, answered_without_finish 22, finish 4 |
 | olmo3-7b-think | 35.0% | 0.82 | 0.20 | 46.1% | 0 | 280/1084 (25.8%) | 183 | 14 | 1.0 | 22.5% | no_tool_calls 28, finish 27, tool_budget_exhausted 24, answered_without_finish 1 |
 | llama4-maverick-17b | 10.0% | 0.88 | 0.32 | 40.8% | 0 | 3/363 (0.8%) | 1 | 0 | 0.0 | 26.2% | no_tool_calls 72, finish 8 |
@@ -160,11 +160,11 @@ reference answers drop those rows, because a record with an impossible value is 
 every column the question uses ... Columns the question does not use can be left alone", and the coverage check only
 looks at the question's columns. Models differ in how literally they read that line.
 
-- On the 40 questions that do not need such an exclusion, 28 of the 38 fully run models score 39 or
+- On the 40 questions that do not need such an exclusion, 30 of the 41 fully run models score 39 or
   40 out of 40 (see the "Other tasks" column).
 - On the 40 that do, scores range from 40/40 down to 15/40 for models that call tools reliably (under 5% tool errors, at least 90% of questions completed).
-- Across those 32 models, accuracy and "share of questions where the agent ran a check
-  on a column the question does not use" have a Spearman correlation of 0.70.
+- Across those 34 models, accuracy and "share of questions where the agent ran a check
+  on a column the question does not use" have a Spearman correlation of 0.69.
 - On `penguins-heldout`, 12 models (`glm-5-3`, `glm-5-3-flash`, `glm-5-2`, `deepseek-v4-1-flash`, `mimo-v2-6-pro`, `mimo-v2-6-flash`, `muse-spark-open`, `granite41-30b`, `hemmingway-1-5`, `ornith-1-5-35b-a3b`, `qwen3-30b-a3b-thinking-2507`, `gemma4-31b-it`) got the same 13 questions wrong, and
   13 of those 13 need rows excluded because of `flipper_length_mm` or `body_mass_g` while the
   question uses neither. On those same questions `qwen3-30b-a3b-instruct-2507` got 10 of 13, `inkling-small`
@@ -179,8 +179,8 @@ ran `check_out_of_range` on `flipper_length_mm` and proposed `exclude_rows` for 
 reference answer.
 
 The thinking variants show the same effect most clearly. With the same weights family, the thinking model is more
-literal and scores lower: `qwen3-30b-a3b-instruct-2507` 93.8% (75 of 80) against `qwen3-30b-a3b-thinking-2507` 75.0% (60 of 80); `qwen3-235b-a22b-instruct-2507` 100.0% (80 of 80) against `qwen3-235b-a22b-thinking-2507` 69.1% (38 of 55); `qwen3-vl-32b-instruct` 96.2% (77 of 80) against `qwen3-vl-32b-thinking` 87.0% (20 of 23). The thinking variants checked a column outside the question in far fewer
-questions (qwen3-30b-a3b-thinking-2507 14% against 94% for its instruct twin, qwen3-235b-a22b-thinking-2507 20% against 99% for its instruct twin, qwen3-vl-32b-thinking 39% against 90% for its instruct twin).
+literal and scores lower: `qwen3-30b-a3b-instruct-2507` 93.8% (75 of 80) against `qwen3-30b-a3b-thinking-2507` 75.0% (60 of 80); `qwen3-235b-a22b-instruct-2507` 100.0% (80 of 80) against `qwen3-235b-a22b-thinking-2507` 77.5% (62 of 80); `qwen3-vl-32b-instruct` 96.2% (77 of 80) against `qwen3-vl-32b-thinking` 87.0% (20 of 23). The thinking variants checked a column outside the question in far fewer
+questions (qwen3-30b-a3b-thinking-2507 14% against 94% for its instruct twin, qwen3-235b-a22b-thinking-2507 30% against 99% for its instruct twin, qwen3-vl-32b-thinking 39% against 90% for its instruct twin).
 
 This is partly a benchmark convention and partly a real design gap. A data analyst would usually drop a record with an
 impossible value even if the question does not use that column, and our generator encodes that choice, but the prompt
@@ -214,8 +214,8 @@ table, not against earlier runs.
 - **Speed.** The models that no other model beats on both accuracy and median seconds are: `llama4-scout-17b` (80.0%, 15 s), `qwen3-30b-a3b-instruct-2507` (93.8%, 30 s), `inkling-small` (98.8%, 45 s), `qwen3-235b-a22b-instruct-2507` (100.0%, 216 s). Llama 4 Scout
   is fastest but 13.7 points behind Qwen3-30B; Qwen3-30B is near the top; Inkling-Small gains 5.0 points
   for about 1.5 times the time; Qwen3-235B is perfect but about 7 times slower than Qwen3-30B. Across all fully run models, accuracy and median
-  seconds have a Spearman correlation of only 0.07: slower, bigger and reasoning models are not more accurate here.
-- **Tokens.** The token front is `glm-5-3-flash` (77.5%, 18,559 tokens), `beam-1-0` (80.0%, 27,796 tokens), `qwen36-35b-a3b` (82.5%, 42,626 tokens), `gpt-oss-120b` (83.8%, 42,975 tokens), `inkling-small` (98.8%, 46,814 tokens), `qwen3-235b-a22b-instruct-2507` (100.0%, 56,402 tokens). Because the agent resends the whole conversation on every turn, tokens
+  seconds have a Spearman correlation of only 0.02: slower, bigger and reasoning models are not more accurate here.
+- **Tokens.** The token front is `olmo3-32b-think` (50.0%, 17,274 tokens), `glm-5-3-flash` (77.5%, 18,559 tokens), `beam-1-0` (80.0%, 27,796 tokens), `qwen36-35b-a3b` (82.5%, 42,626 tokens), `gpt-oss-120b` (83.8%, 42,975 tokens), `inkling-small` (98.8%, 46,814 tokens), `qwen3-235b-a22b-instruct-2507` (100.0%, 56,402 tokens). Because the agent resends the whole conversation on every turn, tokens
   depend mostly on the number of turns. Reasoning models put several tool calls in one turn, so they use fewer turns
   and fewer tokens (medians per question: `glm-5-3` 8 calls in 5 turns, 24,272 tokens; `mimo-v2-6-pro` 9 calls in 5 turns, 23,939 tokens; `qwen3-30b-a3b-instruct-2507` 12 calls in 12 turns, 59,941 tokens; `qwen3-235b-a22b-instruct-2507` 11 calls in 11 turns, 56,402 tokens), but they are on the wrong side of the scope habit, so the saving
   does not buy accuracy.
@@ -226,10 +226,10 @@ table, not against earlier runs.
 ## What DataSage adds over a single call
 
 The "Agent minus B2" column compares each model's agent with the same model's single call on the same 80 questions.
-For the 30 fully run models with a complete single-call run, the agent is better for 28, by a median of 22.5 points (from -26.2 to +80.0). The single call also damages clean data: the B2 rows above do not show it, but summing
+The column is filled only where the single call answered all 80 questions with no API timeout (a timeout counts as a wrong answer, which would flatter the agent). For those 32 models the agent is better for 29, by a median of 20.0 points (from -35.0 to +80.0). The single call also damages clean data: the B2 rows above do not show it, but summing
 `damaged_rows + damaged_cells` gives 353 for `qwen3-30b-a3b-instruct-2507`, 70 for `qwen3-235b-a22b-instruct-2507`, 174 for `glm-5-3`, 24 for `gpt-oss-120b`, while every agent row has 0.
 
-Models that do worse as agents than as a single call: `llama4-maverick-17b` (-26.2 points), `devstral2-123b` (-3.7 points). Maverick's tool calls are not parsed, so the agent
+Models that do worse as agents than as a single call: `llama4-maverick-17b` (-35.0 points), `devstral2-123b` (-3.7 points). Maverick's tool calls are not parsed, so the agent
 cannot act, while as a single call it simply writes code. Devstral is a coding model that is good at writing one pandas
 script but cleans narrowly when it has to plan with tools. `llama4-scout-17b` is the opposite case: as a single
 call it scores 0 of 80 because its reply never parses as JSON (for example "Expecting ',' delimiter"), while as an
@@ -273,10 +273,15 @@ change the ranking of many models.
 
 - One run per model at temperature 0. The 30B agent scored 75 of 80 in this run and 74 of 80 originally on the
   same 80 questions, so differences of one or two questions are noise.
-- Latency was measured under heavy concurrent load (see above); the laptop running the study crashed once. The
-  472 results that ended in a client-side connection error, plus later timeouts caused by the study's own load,
-  were deleted and run again; every one is listed in `eval/results/model_study_reruns.json`.
-- Partial models: `qwen3-235b-a22b-thinking-2507` 55 of 80; `qwen3-vl-32b-thinking` 23 of 80; `qwen-agentworld-35b-a3b` 77 of 80; `olmo3-32b-think` 76 of 80; `mistral-large-4` 54 of 80. Their accuracy is over the questions they finished, which are not a random sample (the earlier, mostly sales, splits finished first).
+- Latency was measured under heavy concurrent load (see above), and the laptop running the study crashed once.
+  Results that failed for reasons outside the model were deleted and run again: 472 that ended in a client-side
+  connection error (the crash), 258 model calls that timed out while the study itself was overloading that
+  model's server (256 of them single calls), and 42 single-call scripts that passed their 60 s limit
+  while about 100 study processes were starving the laptop's CPU just before the crash. Timeouts were retried once at
+  lower load and a second timeout was kept as the result. Every deleted result is listed in
+  `eval/results/model_study_reruns.json`. Results that still ended in an API timeout or code timeout after the retry (counted as wrong): `b2-beam-1-0` 15, `b2-hemmingway-1-5` 1, `b2-laguna-s-2-1` 75, `b2-minimax-m2-7` 8, `b2-olmo3-32b-think` 7, `b2-ornith-1-5-35b` 6, `b2-qwen-agentworld-35b` 7, `b2-qwen3-235b-think` 14, `b2-qwen35-27b` 4.
+- Partial models: `qwen3-vl-32b-thinking` 23 of 80; `mistral-large-4` 54 of 80. Their accuracy is over the questions they finished, which are not a random sample (the earlier, mostly sales, splits finished first).
+- Single calls not run to the end (the slowest reasoning models often needed more than the 180 s timeout per attempt, and we stopped waiting): `qwen3-235b-a22b-thinking-2507` 34 of 80; `qwen35-27b` 78 of 80; `qwen-agentworld-35b-a3b` 76 of 80; `olmo3-32b-think` 75 of 80; `minimax-m2-7` 75 of 80; `beam-1-0` 37 of 80. For these the Agent minus B2 column is left empty.
 - Only the 80 held-out and test questions; dev splits not run. The approver is the evaluation oracle, not a person.
 
 ## Reproduce

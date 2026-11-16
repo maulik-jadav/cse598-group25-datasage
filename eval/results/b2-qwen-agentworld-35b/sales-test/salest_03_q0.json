@@ -1,0 +1,50 @@
+{
+  "task_id": "salest_03_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 290.17,
+  "tokens": 10212,
+  "stop_reason": "code_error",
+  "note": "    - passing `format='mixed'`, and the format will be inferred for each element individually. You might want to use `dayfirst` alongside this.",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Drop exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Category label variant (strip whitespace)\n    df['Category'] = df['Category'].str.strip()\n    \n    # Convert Price to numeric\n    df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace('$', '', regex=False), errors='coerce')\n    \n    # Ensure Revenue is numeric\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    \n    # Extract month from Date\n    df['Month'] = pd.to_datetime(df['Date']).dt.strftime('%Y-%m')\n    \n    return df\n\ndef answer(df):\n    # Group by Month and sum Revenue\n    result = df.groupby('Month')['Revenue'].sum().to_dict()\n    return result"
+  },
+  "corrections": 0,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-qwen-agentworld-35b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 9858.0,
+    "2026-02": 23613.0,
+    "2026-03": 8246.0,
+    "2026-04": 1391.0,
+    "2026-05": 2346.0,
+    "2026-06": 4690.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

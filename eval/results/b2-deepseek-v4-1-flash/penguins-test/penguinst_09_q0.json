@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinst_09_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 93.68,
+  "tokens": 5379,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 193.0,
+    "Chinstrap": 196.76923076923077,
+    "Gentoo": 216.68421052631578
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    def norm_species(x):\n        if pd.isna(x):\n            return x\n        s = str(x).strip()\n        low = s.lower()\n        mapping = {'adelie': 'Adelie', 'chinstrap': 'Chinstrap', 'gentoo': 'Gentoo', 'gentto': 'Gentoo'}\n        return mapping.get(low, s)\n    df['species'] = df['species'].map(norm_species)\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    neg = df['flipper_length_mm'] < 0\n    df.loc[neg, 'flipper_length_mm'] = df.loc[neg, 'flipper_length_mm'].abs()\n    df.loc[(df['flipper_length_mm'] < 170) | (df['flipper_length_mm'] > 235), 'flipper_length_mm'] = np.nan\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'].astype(str).str.replace(',', '', regex=False), errors='coerce')\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'flipper_length_mm'])\n    out = d.groupby('species')['flipper_length_mm'].mean().to_dict()\n    return {str(k): float(v) for k, v in out.items()}\n"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "penguins-test",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 193.1667,
+    "Chinstrap": 197.0909,
+    "Gentoo": 216.6842
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

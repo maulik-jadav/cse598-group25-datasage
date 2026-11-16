@@ -48,6 +48,15 @@ SYSTEMS = {
     "datasage-reject": ("Every risky fix rejected", "The 235B agent when the person says no to every risky fix", "ablation"),
     "datasage-novalidator": ("No validator", "The 235B agent without the validator that checks each fix and rolls back a bad one", "ablation"),
 }
+# Model study (docs/final/findings_models.md): one agent and one single call per model. They have their own write-up,
+# so the page lists them but leaves them out of the charts (kind "study").
+try:
+    from eval.run_eval import MODEL_SYSTEMS
+except ImportError:  # the study systems need the openai package; the page works without them
+    MODEL_SYSTEMS = {}
+for _short, _model in MODEL_SYSTEMS.items():
+    SYSTEMS[f"datasage-m3-{_short}"] = (f"Model study: agent, {_model}", f"datasage-m3 with {_model} as the model", "study")
+    SYSTEMS[f"b2-{_short}"] = (f"Model study: single call, {_model}", f"Baseline B2 with {_model}", "study")
 PROGRESSION = ["datasage", "datasage-fix", "datasage-small-fix", "datasage-m3"]
 ABLATION = ["datasage", "datasage-novalidator", "datasage-reject"]
 FINAL = "datasage-m3"
@@ -86,7 +95,7 @@ def results() -> dict:
     for gid, label, members in GROUPS:
         systems = {}
         for system in order:
-            if system in ("datasage-reject", "datasage-novalidator"):
+            if system in ("datasage-reject", "datasage-novalidator") or SYSTEMS.get(system, ("", "", ""))[2] == "study":
                 continue
             if not all(system in per_split.get(s, {}) for s in members):
                 continue
