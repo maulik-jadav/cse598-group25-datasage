@@ -220,8 +220,27 @@ def story(per_split: dict) -> dict:
         out["hard"] = hard
     models = RESULTS / "study_models.json"
     if models.exists():
-        out["models_file"] = True  # filled in once the model study's format is final
+        out["models"] = _models_story(json.loads(models.read_text()))
     return out
+
+
+def _models_story(study: dict) -> dict:
+    """Every model tried as DataSage's planner on the 80 held-out and test questions, against its own single call."""
+    rows = []
+    for short, m in study.get("models", {}).items():
+        agent = (m.get("agent") or {}).get("heldout_test")
+        if not agent or agent.get("tasks") != 80 or short.endswith("-original"):
+            continue
+        single = (m.get("single_call") or {}).get("heldout_test") or {}
+        rows.append({"id": short, "model": m.get("model", short), "accuracy": agent["accuracy"], "ci95": agent.get("ci95"),
+                     "seconds": agent.get("seconds_median"), "single": single.get("accuracy") if single.get("tasks") == 80 else None})
+    rows.sort(key=lambda r: -r["accuracy"])
+    lifts = sorted(r["accuracy"] - r["single"] for r in rows if r["single"] is not None)
+    default = next((r for r in rows if r["id"] == "qwen3-30b"), None)
+    rank = 1 + sum(r["accuracy"] > default["accuracy"] for r in rows) if default else None
+    return {"count": len(rows), "rows": rows, "default": default, "rank": rank,
+            "median_lift": lifts[len(lifts) // 2] if lifts else None, "lift_models": len(lifts),
+            "worse_than_single": sum(1 for x in lifts if x < 0)}
 
 
 # ---- data profile ---------------------------------------------------------------------------------
