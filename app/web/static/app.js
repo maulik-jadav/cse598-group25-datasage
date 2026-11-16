@@ -85,7 +85,8 @@ async function start() {
   const question = $("#question").value.trim();
   if (!S.sample && !S.file) { $("#fileChip").animate([{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(0)" }], { duration: 260 }); $("#fileInput").click(); return; }
   if (!question) { $("#question").focus(); return; }
-  const body = S.sample ? { sample: S.sample, question, client_id: CLIENT_ID } : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules, sheet: S.sheet, client_id: CLIENT_ID };
+  const mode = (document.querySelector('input[name="mode"]:checked') || {}).value || "ask";
+  const body = S.sample ? { sample: S.sample, question, client_id: CLIENT_ID, approve: mode } : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules, sheet: S.sheet, client_id: CLIENT_ID, approve: mode };
   setRunning(true); setStatus("Uploading");
   let res;
   try { res = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
@@ -122,7 +123,9 @@ function handle(ev) {
 function reset() {
   S.lastSeq = -1; S.rowEls.clear(); S.cellEls.clear(); S.asks.clear(); S.phase = null; S.ids = []; S.total = 0;
   $("#table").textContent = ""; $("#banner").hidden = true; $("#banner").textContent = "";
-  $("#answer").hidden = true; $("#waiting").hidden = false; $("#health").hidden = true; $("#counts").textContent = ""; $("#more").hidden = true;
+  $("#health").hidden = true; $("#counts").textContent = ""; $("#more").hidden = true; $("#toasts").textContent = "";
+  document.querySelectorAll(".tab").forEach((b) => { if (b.dataset.view !== "table") { b.disabled = true; b.classList.remove("ready"); } });
+  showView("table");
   document.querySelectorAll(".rail li").forEach((li) => li.classList.remove("active", "done"));
 }
 
@@ -135,6 +138,31 @@ function setRunning(on) {
 }
 function setStatus(t) { $("#status").textContent = t; $("#status").classList.remove("error"); }
 function fail(msg) { setRunning(false); setStatus(msg); $("#status").classList.add("error"); if (S.es) S.es.close(); }
+
+// ---------- views ----------
+const FILE_INFO = {
+  "cleaned.csv": { title: "Cleaned table", text: "Your table after the fixes, ready to use in Excel or any tool. Your original file is not changed." },
+  "report.md": { title: "Report", text: "A readable summary: the problems found, every change with who approved it, and the answer." },
+  "replay.py": { title: "Replay script", text: "Python that repeats the same fixes on this file without the AI, so anyone can check or rerun them." },
+  "trace.jsonl": { title: "Step log", text: "Every step the agent took, in order. For auditing or debugging; you rarely need it." },
+};
+function showView(view) {
+  document.querySelectorAll(".tab").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.view === view)));
+  document.querySelectorAll(".view").forEach((v) => {
+    const on = v.id === `view-${view}`;
+    if (on && v.hidden) { v.hidden = false; v.classList.remove("view-in"); void v.offsetWidth; v.classList.add("view-in"); }
+    else if (!on) v.hidden = true;
+  });
+  if (view === "answer") $('.tab[data-view="answer"]').classList.remove("ready");
+}
+document.querySelectorAll(".tab").forEach((b) => b.addEventListener("click", () => showView(b.dataset.view)));
+
+function toast(text) {
+  const t = el("div", "toast");
+  t.append(el("span", "toast-tag", "Auto-approved"), el("span", null, text));
+  $("#toasts").append(t);
+  setTimeout(() => { t.classList.add("leaving"); setTimeout(() => t.remove(), 400); }, 3200);
+}
 
 // ---------- table ----------
 function makeRow(id, cells) {
@@ -247,6 +275,7 @@ function setPhase(p) {
 // ---------- approvals ----------
 function showAsk(ev) {
   setPhase("fix");
+  if (ev.auto) { toast(ev.summary); return; }
   setStatus("Waiting for you");
   const wrap = el("div", "ask"); wrap.dataset.id = ev.id;
   const card = el("div", "ask-card"); card.setAttribute("role", "group"); card.setAttribute("aria-label", ev.title);
@@ -343,6 +372,7 @@ async function answer(id, value, wrap) {
   await fetch(`/api/runs/${S.runId}/approve`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, answer: value }) });
 }
 function closeAsk(id) {
+  if (!S.asks.has(id)) return;
   const wrap = S.asks.get(id);
   if (!wrap) return;
   S.asks.delete(id);
@@ -358,9 +388,8 @@ function finish(ev) {
   if (S.es) S.es.close();
   document.querySelectorAll(".rail li").forEach((li) => { li.classList.remove("active"); li.classList.add("done"); });
   setStatus(ev.finished ? `Done in ${ev.seconds} s` : ev.stop_reason === "cancelled" ? "Stopped" : `Stopped: ${ev.stop_reason}`);
-  $("#waiting").hidden = true;
-  const box = $("#answer"); box.hidden = false;
-  box.style.animation = "none"; void box.offsetWidth; box.style.animation = "";
+  document.querySelectorAll(".tab").forEach((b) => { b.disabled = false; });
+  $('.tab[data-view="answer"]').classList.add("ready");
   const a = ev.analysis;
   $("#aTitle").textContent = a ? `${cap(a.agg)} of ${a.metric}${a.group_by && a.group_by.length ? " by " + a.group_by.join(", ") : ""}` : "No answer";
   $("#aMeta").textContent = a && a.rows_used != null ? `${Number(a.rows_used).toLocaleString("en-US")} rows used` : "";
@@ -369,22 +398,33 @@ function finish(ev) {
   ev.changes.forEach((c, i) => {
     const li = el("li"); li.style.animationDelay = `${0.6 + i * 0.08}s`;
     li.innerHTML = c.applied ? SVG_OK : SVG_KEPT;
-    li.append(el("span", null, plain(c.text)));
+    const body = el("span", "log-text"); body.append(el("span", null, plain(c.text)));
+    if (c.how) body.append(el("span", "log-how", c.how));
+    li.append(body);
     log.append(li);
   });
   if (!ev.changes.length) log.append(el("li", null, "No changes were needed."));
   $("#aSummary").textContent = ev.summary || "";
   const files = $("#aFiles"); files.textContent = "";
-  ev.files.forEach((f) => { const link = el("a", "ghost", f); link.href = `/api/runs/${S.runId}/files/${f}`; link.setAttribute("download", f); files.append(link); });
+  ev.files.forEach((f) => {
+    const info = FILE_INFO[f] || { title: f, text: "" };
+    const li = el("li", "file");
+    const text = el("div", "file-text");
+    text.append(el("span", "file-title", info.title), el("span", "file-name", f), el("span", "file-desc", info.text));
+    const link = el("a", "ghost small", "Download"); link.href = `/api/runs/${S.runId}/files/${f}`; link.setAttribute("download", f);
+    link.setAttribute("aria-label", `Download ${f}`);
+    li.append(text, link); files.append(li);
+  });
   renderHealth(ev.health, ev.answer);
-  $("#aStats").textContent = `${ev.tool_calls} tool calls · ${ev.approvals} question${ev.approvals === 1 ? "" : "s"} to you · ${ev.model}`;
+  const asked = ev.mode === "auto" ? "approved automatically" : `${ev.approvals} question${ev.approvals === 1 ? "" : "s"} to you`;
+  $("#aStats").textContent = `${ev.tool_calls} tool calls · ${asked} · ${ev.model}`;
+  if (ev.finished) setTimeout(() => showView("answer"), matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 700);
 }
 
 function renderHealth(h, after) {
   const box = $("#health"); box.textContent = "";
   if (!h) { box.hidden = true; return; }
   box.hidden = false;
-  box.append(el("h2", "h-title", "Data health"));
   const grid = el("div", "h-grid");
 
   const rows = el("div", "h-card");

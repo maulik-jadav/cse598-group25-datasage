@@ -254,3 +254,11 @@ def test_stop_before_an_approval_does_not_wait(tmp_path):
     t0 = _time.time()
     assert BrowserApprover(run).decide("drop_duplicates", {}, "medium", {"summary": ""}) is False
     assert _time.time() - t0 < 1
+
+
+def test_auto_mode_approves_without_waiting_and_says_so(tmp_path):
+    run = Run(Path("x.csv"), "q", None, tmp_path, None, mode="auto")
+    assert BrowserApprover(run).decide("drop_duplicates", {}, "medium", {"summary": "", "rows_removed": [1]}) is True
+    ask = [e for e in run.events if e["type"] == "approval"][0]
+    assert ask["auto"] is True and run.events[-1]["answer"] is True
+    assert Run(Path("x.csv"), "q", None, tmp_path, None, mode="bogus").mode == "ask"
