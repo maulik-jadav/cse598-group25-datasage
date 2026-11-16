@@ -1,6 +1,6 @@
 # Team handoff: final stretch
 
-For: Arsha, Ritik, Maulik and Vatsal. Last updated November 16, 2026.
+For: Arsha, Ritik, Maulik and Vatsal. Last updated November 16, 2026 (final check against `main` after PR #28).
 
 Milestone 2 is submitted, items 1 and 2 of Section 6 are merged (PR #7), and the browser app for the demo
 (item 7's page) is done (PRs #10 to #19). All four research studies have landed (PRs #21 to #26). The rest of the work is split below. Individual grades draw on commit
@@ -33,7 +33,7 @@ and PR authorship, so **each task should end in its own merged PR** under your o
   - *Model comparison* (`findings_models.md`): 41 models fully run as the planner. The 30B default ranks 4th
     (93.8%) and is among the fastest; with DataSage around it a model answers a median 20 points more than
     in one call. No model damaged clean data; the weakest fail on tool-call format.
-- **Two things for the Nov 20 review** (see R2): 36 of 39 misses on the 200 questions are rows breaking a
+- **Two things for the Nov 20 review** (see R2): 36 of the 39 misses over 4 runs of the 200 questions are rows breaking a
   rule in a column the question does not use (60.9% right on those questions, 99.6% on the rest), which
   is the question-columns-only scope Vyshanth chose. On the hard split, every Qwen miss comes from
   `analyze` grouping by the column it also filters on; a small fix is ready but not merged.
@@ -76,7 +76,7 @@ test splits (the 200-question and hard numbers are in the bullets above and on t
 | B2 single model call | 60.0% | 47.5% | 35 | about 32 |
 | DataSage 30B (final) | 92.5% | 92.5% | 0 | about 17 |
 
-All 6 misses here, and 36 of 39 on the 200 questions, are rows that break a rule in a column the question
+All 6 misses here, and 36 of the 39 over 4 runs of the 200 questions, are rows that break a rule in a column the question
 doesn't use. Vyshanth chose to check only the question's columns, so we raise this at the Nov 20 review
 rather than change it.
 
