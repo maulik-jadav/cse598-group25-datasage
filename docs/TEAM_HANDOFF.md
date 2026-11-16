@@ -2,9 +2,29 @@
 
 For: Arsha, Ritik, Maulik and Vatsal. Last updated November 16, 2026.
 
-Milestone 2 is submitted and items 1 and 2 of Section 6 are merged (PR #7). The browser app for the demo
-(item 7's page) is in `app/web/`. The rest of the work is split below. Individual grades draw on commit and PR
-authorship, so **each task should end in its own merged PR** under your own GitHub account.
+Milestone 2 is submitted, items 1 and 2 of Section 6 are merged (PR #7), and the browser app for the demo
+(item 7's page) is done (PRs #10 to #19). The rest of the work is split below. Individual grades draw on commit
+and PR authorship, so **each task should end in its own merged PR** under your own GitHub account.
+
+**New since the last version of this doc (please skim before starting):**
+
+- **Browser app** (`python -m app.web.server`, then http://127.0.0.1:8501): pick *Ask me* or *Auto* on the
+  start screen, drop one file or several with the same columns (CSV or Excel, any common separator or
+  encoding), and watch the table get cleaned. Risky fixes wait on a card under the affected row with a
+  Details view of the exact rows. Tabs: Table, Answer, Data health. Each output file has View and Download.
+  Samples: sales (8 and 1,208 rows), 3 monthly files, HR, inventory.
+- **Analysis pages:** `/results` (evaluation dashboard over all splits and systems) and a column profile
+  for each run.
+- **Agent changes:** `exclude_where` drops every row outside a range rule, however many (checks list only
+  10 row ids); extra tool arguments no longer fail a call; the coverage check now also requires the
+  metric's formula check. A no-regression re-run on held-out and test after these changes gave 74/80,
+  the same as recorded.
+- **Testing:** 79 unit tests run on GitHub for every PR (CI). `python scripts/smoke_e2e.py` is an
+  end-to-end check with the real model (123 checks, a few minutes). There is also a Dockerfile.
+- **Research studies in progress** (Shrey, results land as `docs/final/findings_*.md`): a hard benchmark
+  split with bigger tables, the cost of Auto mode, a scale-up with new seeds, repeated runs and ablations,
+  and a comparison of the 42 models on the ASU API. Early model numbers: the 30B default is at or near the
+  top (75/80) and much faster than most larger models.
 
 ## Dates
 
@@ -30,6 +50,10 @@ authorship, so **each task should end in its own merged PR** under your own GitH
 | Poster draft (print-ready PDF, source and figures) | `docs/final/poster/` (see its README) |
 | Demo run with the 30B default | `docs/final/demo/` (13 s, same answer as the Milestone 2 demo) |
 | Browser app (item 7 page) | `app/web/`; run `python -m app.web.server` and open http://127.0.0.1:8501 (README, "Run DataSage in the browser") |
+| Evaluation dashboard, column profile, file viewer | `/results`, `/profile?run=<id>`, `/view?run=<id>` in the app (`app/web/analysis.py`, `app/web/static/`) |
+| Demo tables with known answers | `examples/large_sales.csv`, `examples/demo/` (HR, inventory, 3 monthly files); `python examples/make_demo_files.py` prints the right answers |
+| End-to-end check with the real model | `python scripts/smoke_e2e.py` |
+| Research findings (arriving) | `docs/final/findings_hard.md`, `findings_auto_mode.md`, `findings_scale_and_ablations.md`, `findings_models.md` |
 
 Final system (`datasage-m3`, Qwen3-30B), share of questions answered correctly:
 
@@ -50,9 +74,9 @@ Every task ends in a PR into `main`. Put a short note of what you did in `docs/t
 
 | # | Task | Done when | Due |
 |---|---|---|---|
-| A1 | **Ratings packet (item 6).** Run DataSage on 10 questions: Vyshanth's two files plus questions from the held-out tables. Send him the 10 `report.md` files and a short form (correct? clear? would you trust it? each 1 to 5, plus a comment). Collect his answers. | His ratings are summarised in `docs/final/ratings.md` (scores and quotes, no copy of his files). | Send Nov 17, collect Nov 20 |
+| A1 | **Ratings packet (item 6).** Run DataSage on 10 questions (the browser app in *Ask me* mode is easiest; each run's report has a View and Download button): Vyshanth's two files plus questions from the held-out tables. Send him the 10 `report.md` files and a short form (correct? clear? would you trust it? each 1 to 5, plus a comment). Collect his answers. | His ratings are summarised in `docs/final/ratings.md` (scores and quotes, no copy of his files). | Send Nov 17, collect Nov 20 |
 | A2 | **Acceptance test (item 6).** 3 files (Vyshanth's two plus one test-split table), each with questions and expected answers. Pass = at least 90% correct and no valid cell changed. | `docs/final/acceptance_test.md` with the command, each question, expected and actual answer, pass or fail. | Nov 25 |
-| A3 | **Poster.** Check every number on the draft against `eval/results/summary.md`, collect team edits, export the PDF at 24 × 36 in and submit it on Canvas. | `Group25_Poster.pdf` submitted and copied to `docs/final/`. | Submit by Nov 22 |
+| A3 | **Poster.** Check every number on the draft against `eval/results/summary.md`, collect team edits, export the PDF at 24 × 36 in and submit it on Canvas. The draft predates the browser app and the research studies: add a small panel for the app (a screenshot of the Table tab) and, if the findings have landed by Nov 21, one line from the model comparison. Rebuild steps are in `docs/final/poster/README.md`. | `Group25_Poster.pdf` submitted and copied to `docs/final/`. | Submit by Nov 22 |
 
 ### Ritik
 
@@ -66,19 +90,19 @@ Every task ends in a PR into `main`. Put a short note of what you did in `docs/t
 | # | Task | Done when | Due |
 |---|---|---|---|
 | M1 | **Dates (item 3).** Blank unreadable dates and convert clear formats automatically as low risk, logged. Ask only for ambiguous dates such as 03/04/2026. | Tests cover all three cases; the change log shows each conversion. | Nov 24 |
-| M2 | **Refund rule (item 3).** Add an `allow_negative_quantities` rules key. When it is set, negative quantities are kept as refunds without asking. | Tests for both settings; the README's rules section mentions the key. | Nov 24 |
-| M3 | **No-regression run.** After M1 and M2 merge, re-run `datasage-m3` on held-out and test into a new results folder and compare with the current numbers. | A short write-up in `docs/final/regression_check.md`; any drop explained from the traces. | Nov 27 |
+| M2 | **Refund rule (item 3).** Add an `allow_negative_quantities` rules key. When it is set, negative quantities are kept as refunds without asking. Note the coverage check (`required_checks` in `datasage/tools.py`) and the new `exclude_where` fix both treat a `min` rule as a reason to drop rows, so the key has to stop both from flagging or dropping negative quantities. | Tests for both settings; the README's rules section mentions the key. | Nov 24 |
+| M3 | **No-regression run.** After M1 and M2 merge, re-run `datasage-m3` on held-out and test into a new results folder and compare with the current numbers (the baseline to beat: 74/80 on Nov 16, 0 damaged cells, 0 tool errors). Also run `python scripts/smoke_e2e.py`. | A short write-up in `docs/final/regression_check.md`; any drop explained from the traces. | Nov 27 |
 
 ### Vatsal
 
 | # | Task | Done when | Due |
 |---|---|---|---|
-| V1 | **Repeated runs (item 5).** Run `datasage-m3` 3 times on held-out and test (separate `--results` folders), and report the mean and range of accuracy and seconds per question. | `docs/final/repeated_runs.md` with a table and the commands used. | Nov 24 |
-| V2 | **Real messy files (item 4).** Pick 2 public messy CSV files with a license that allows reuse. Write 3 questions, a rules file and the correct answers by hand for each, then run DataSage. | Data, rules and questions in `eval/real/`; results and what went wrong in `docs/final/real_files.md`. | Nov 27 |
+| V1 | **Repeated runs (item 5).** The scale-up study is already repeating held-out and test 3 times, so to avoid doing the same work: once the hard benchmark lands (`sales-hard`, `penguins-hard`, Shrey will say when), run `datasage-m3` 3 times on it (separate `--results` folders) and report the mean and range of accuracy and seconds per question, next to the held-out and test numbers from `findings_scale_and_ablations.md`. | `docs/final/repeated_runs.md` with a table and the commands used. | Nov 25 |
+| V2 | **Real messy files (item 4).** The tables in `examples/demo/` are synthetic, so real files are still needed. Pick 2 public messy CSV files with a license that allows reuse. Write 3 questions, a rules file and the correct answers by hand for each, then run DataSage. | Data, rules and questions in `eval/real/`; results and what went wrong in `docs/final/real_files.md`. | Nov 27 |
 
 ### Shrey
 
-Owns the browser app (`app/web/`) and the Demo Day plan (a 3-minute walk-through for the poster session plus a backup screen recording, in `docs/final/demo_script.md`, by Nov 30). Also reviews and merges every PR and assembles the final report. Each of you writes the final-report paragraph for your own tasks.
+Owns the browser app (`app/web/`), the research studies (`docs/final/findings_*.md`) and the Demo Day plan (a 3-minute walk-through for the poster session plus a backup screen recording, in `docs/final/demo_script.md`, by Nov 30). Also reviews and merges every PR and assembles the final report. Each of you writes the final-report paragraph for your own tasks.
 
 ## Setup (about 5 minutes)
 
@@ -90,12 +114,16 @@ cd cse598-group25-datasage
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m pytest -q tests                          # 36 tests, no API key needed
+python -m pytest -q tests                          # 79 tests, no API key needed
 python -m eval.summarize                           # prints the results tables
+python -m app.web.server                           # the browser app at http://127.0.0.1:8501 (needs the key)
 ```
 
-Running DataSage needs an ASU RC model key in a `.env` file (copy `.env.example`). Use your own key. A1,
-A2, M3, V1 and V2 need one; check your quota before starting V1, which makes the most calls.
+Running DataSage needs an ASU RC model key and `RC_LLM_BASE_URL` in a `.env` file (copy `.env.example`; the
+app now refuses to start without the base URL rather than fall back to OpenAI). Use your own key. A1, A2, M3,
+V1 and V2 need one; check your quota before starting V1, which makes the most calls. When running many
+questions, raise `--workers` rather than starting many processes at once: one laptop crashed under ~100
+parallel Python processes.
 
 ## How to commit and open a PR
 
