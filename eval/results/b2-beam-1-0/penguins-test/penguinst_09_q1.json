@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinst_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 687.6,
+  "tokens": 5881,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3688.157894736842,
+    "Chinstrap": 322688.46153846156,
+    "Gentoo": 5081.578947368421
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    species = df['species'].astype('string').str.strip().str.title()\n    species = species.replace({'Gentto': 'Gentoo'})\n    df['species'] = species\n\n    body_mass = df['body_mass_g']\n    if pd.api.types.is_numeric_dtype(body_mass):\n        df['body_mass_g'] = pd.to_numeric(body_mass, errors='coerce')\n    else:\n        body_mass = body_mass.astype('string').str.replace(',', '', regex=False).str.strip()\n        df['body_mass_g'] = pd.to_numeric(body_mass, errors='coerce')\n\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'body_mass_g'])\n    means = d.groupby('species', dropna=True)['body_mass_g'].mean()\n    return {str(label): float(value) for label, value in means.items()}"
+  },
+  "corrections": 6,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-beam-1-0",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3701.3889,
+    "Chinstrap": 3754.5455,
+    "Gentoo": 5081.5789
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}
