@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinshard_06_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 40.49,
+  "tokens": 3124,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 39.28,
+    "Dream": 45.59,
+    "Torgersen": 41.52
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Standardize species\n    species_map = {'ADELIE': 'Adelie', 'adelie': 'Adelie', '  Adelie ': 'Adelie'}\n    df['species'] = df['species'].replace(species_map)\n    \n    # Standardize island\n    island_map = {\n        ' Biscoe': 'Biscoe', 'bISCOE': 'Biscoe', 'Bicoe': 'Biscoe', '  Dream ': 'Dream',\n        'biscoe': 'Biscoe', 'dream': 'Dream', '  Biscoe ': 'Biscoe', 'BISCOE': 'Biscoe',\n        'Dream ': 'Dream', 'dREAM': 'Dream', 'Bisco': 'Biscoe', 'DREAM': 'Dream',\n        'orgersen': 'Torgersen'\n    }\n    df['island'] = df['island'].replace(island_map)\n    \n    # Standardize sex\n    sex_map = {\n        'MALE': 'male', ' male': 'male', 'mlae': 'male', 'mle': 'male', 'male ': 'male',\n        'emale': 'female', 'FEMALE': 'female', 'femael': 'female', ' female': 'female',\n        'ale': 'male'  # assuming 'ale' is a typo for 'male'\n    }\n    df['sex'] = df['sex'].replace(sex_map)\n    \n    # Fix body_mass_g: remove commas and convert to numeric\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '').astype(float)\n    \n    # Remove negative bill_length_mm values\n    df = df[df['bill_length_mm'] >= 0]\n    \n    # Filter species to only allowed values (in case of any remaining invalid)\n    df = df[df['species'].isin(['Adelie', 'Chinstrap', 'Gentoo'])]\n    \n    # Ensure island is in allowed list\n    df = df[df['island'].isin(['Biscoe', 'Dream', 'Torgersen'])]\n    \n    return df\n\ndef answer(df):\n    # Filter for Adelie penguins only\n    adlie_df = df[df['species'] == 'Adelie']\n    # Group by island and compute average bill length\n    result = adlie_df.groupby('island')['bill_length_mm'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 61,
+  "planted": 78,
+  "damaged_rows": 6,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "penguins-hard",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 39.2764,
+    "Dream": 38.5928,
+    "Torgersen": 38.8489
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "bill_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

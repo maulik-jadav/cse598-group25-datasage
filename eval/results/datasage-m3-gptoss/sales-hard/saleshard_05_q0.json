@@ -1,0 +1,194 @@
+{
+  "task_id": "saleshard_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 5,
+  "tool_calls": 18,
+  "tool_errors": 7,
+  "recovered_errors": 1,
+  "approvals_asked": 4,
+  "seconds": 86.56,
+  "tokens": 109150,
+  "stop_reason": "answered_without_finish",
+  "note": "",
+  "answer": {
+    "Accessories": 205.0,
+    "Electricals": 170.0,
+    "Electronics": 168.0,
+    "Furniture": 201.0,
+    "Office Supplies": 206.0,
+    "Outdoor Supplies": 210.0
+  },
+  "extra": {
+    "final_summary": "**Answer**\n\nUnits sold in each product category for the **South** region:\n\n| Category          | Units Sold |\n|-------------------|------------|\n| Accessories       | 205 |\n| Electricals       | 170 |\n| Electronics       | 168 |\n| Furniture         | 201 |\n| Office Supplies   | 206 |\n| Outdoor Supplies  | 210 |\n\n**Summary of data\u2011quality work**\n\n| Issue addressed | Fix applied | Rows affected |\n|-----------------|-------------|---------------|\n| Category label variants & misspellings | `normalize_labels` (Category) | 16 cells |\n| Region label variants & misspellings | `normalize_labels` (Region) | 13 cells |\n| Negative/zero Quantity values (rule: Quantity\u202f\u2265\u202f1) | `exclude_where` (Quantity\u202f<\u202f1) | 6 rows |\n| Exact duplicate rows | `drop_duplicates` | 2 rows |\n\nAll fixes were low\u2011risk and directly relevant to the columns used in the query (Category, Region, Quantity). After cleaning, the analysis summed the **Quantity** for rows where **Region = South**, grouped by **Category**, yielding the totals shown above. No further data issues remain for this question.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "  Electricals ": "Electricals",
+            " Electricals": "Electricals",
+            " Furniture": "Furniture",
+            " Office Supplies": "Office Supplies",
+            "ELECTRONICS": "Electronics",
+            "OUTDOOR SUPPLIES": "Outdoor Supplies",
+            "aCCESSORIES": "Accessories",
+            "electricals": "Electricals",
+            "electronics": "Electronics",
+            "furniture": "Furniture",
+            "office supplies": "Office Supplies",
+            "Accessroies": "Accessories",
+            "Funriture": "Furniture",
+            "Offic Supplies": "Office Supplies"
+          },
+          "reason": "Standardize Category labels for correct grouping"
+        },
+        "reason": "Standardize Category labels for correct grouping",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 16,
+        "summary": "Category: merged 14 label variant(s), 16 cells",
+        "code": "df['Category'] = df['Category'].replace({'  Electricals ': 'Electricals', ' Electricals': 'Electricals', ' Furniture': 'Furniture', ' Office Supplies': 'Office Supplies', 'ELECTRONICS': 'Electronics', 'OUTDOOR SUPPLIES': 'Outdoor Supplies', 'aCCESSORIES': 'Accessories', 'electricals': 'Electricals', 'electronics': 'Electronics', 'furniture': 'Furniture', 'office supplies': 'Office Supplies', 'Accessroies': 'Accessories', 'Funriture': 'Furniture', 'Offic Supplies': 'Office Supplies'})"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "  Northeast ": "Northeast",
+            " North": "North",
+            " Northeast": "Northeast",
+            " South": "South",
+            " West": "West",
+            "NORTH": "North",
+            "SOUTH": "South",
+            "west": "West",
+            "Eaast": "East",
+            "Eastt": "East",
+            "Eats": "East",
+            "SSouth": "South",
+            "oSuth": "South"
+          },
+          "reason": "Standardize Region labels for correct filtering"
+        },
+        "reason": "Standardize Region labels for correct filtering",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 13,
+        "summary": "Region: merged 13 label variant(s), 13 cells",
+        "code": "df['Region'] = df['Region'].replace({'  Northeast ': 'Northeast', ' North': 'North', ' Northeast': 'Northeast', ' South': 'South', ' West': 'West', 'NORTH': 'North', 'SOUTH': 'South', 'west': 'West', 'Eaast': 'East', 'Eastt': 'East', 'Eats': 'East', 'SSouth': 'South', 'oSuth': 'South'})"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_where",
+        "args": {
+          "column": "Quantity",
+          "minimum": 1.0,
+          "maximum": null,
+          "reason": "Quantity must be positive per rules"
+        },
+        "reason": "Quantity must be positive per rules",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          802,
+          846,
+          920,
+          964,
+          1003,
+          1050
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 6 row(s) where Quantity is below 1",
+        "code": "v = pd.to_numeric(df['Quantity'], errors='coerce')\ndf = df[~((v < 1.0))]"
+      },
+      {
+        "version": 4,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Exact duplicate rows would double\u2011count units"
+        },
+        "reason": "Exact duplicate rows would double\u2011count units",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          848,
+          1235
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_where",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 20
+  },
+  "corrections": 51,
+  "planted": 61,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-gptoss",
+  "dataset": "sales-hard",
+  "question": "How many units were sold in each category in the South region?",
+  "reference_answer": {
+    "Accessories": 205.0,
+    "Electricals": 170.0,
+    "Electronics": 168.0,
+    "Furniture": 201.0,
+    "Office Supplies": 206.0,
+    "Outdoor Supplies": 210.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ]
+  ]
+}

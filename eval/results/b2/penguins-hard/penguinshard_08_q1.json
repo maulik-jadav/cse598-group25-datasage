@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinshard_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 36.02,
+  "tokens": 3006,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3762.5,
+    "Chinstrap": 3700.0,
+    "Gentoo": 5075.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean species: strip whitespace and correct known typos\n    species_mapping = {\n        ' Adelie': 'Adelie',\n        'Adeliee': 'Adelie',\n        '  Gentoo ': 'Gentoo',\n        'Chinstrap ': 'Chinstrap',\n        ' Gentoo': 'Gentoo',\n        ' Chinstrap': 'Chinstrap',\n        'Adellie': 'Adelie',\n        'Aedlie': 'Adelie',\n        'Gentoo ': 'Gentoo'\n    }\n    df['species'] = df['species'].replace(species_mapping).str.strip()\n    \n    # Clean island: strip whitespace and correct typos\n    island_mapping = {\n        'Dreaam': 'Dream',\n        'BISCOE': 'Biscoe',\n        'Bisceo': 'Biscoe',\n        'Biscooe': 'Biscoe',\n        'Drem': 'Dream',\n        'Bsicoe': 'Biscoe',\n        'dREAM': 'Dream',\n        'BBiscoe': 'Biscoe'\n    }\n    df['island'] = df['island'].replace(island_mapping).str.strip()\n    \n    # Clean sex: strip whitespace and correct typos\n    sex_mapping = {\n        'MALE': 'male',\n        'emale': 'female',\n        'mael': 'male',\n        'malee': 'male',\n        'FEMALE': 'female',\n        'malle': 'male',\n        'efmale': 'female',\n        'mal': 'male'\n    }\n    df['sex'] = df['sex'].replace(sex_mapping).str.strip()\n    \n    # Convert body_mass_g from text to numeric (it's stored as string with numbers)\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    \n    return df\n\ndef answer(df):\n    # Group by species and compute median body_mass_g\n    result = df.groupby('species')['body_mass_g'].median().dropna().to_dict()\n    return result"
+  },
+  "corrections": 38,
+  "planted": 50,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "penguins-hard",
+  "question": "What is the median body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3750.0,
+    "Chinstrap": 3700.0,
+    "Gentoo": 5075.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

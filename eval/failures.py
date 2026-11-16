@@ -34,6 +34,13 @@ def diagnose(result: dict, trace: list[dict], planted: list[dict]) -> list[str]:
     names = [e["name"] for e in calls]
     fixed = [e for e in calls if e["ok"] and isinstance(e["output"], dict) and e["output"].get("applied")]
     reasons = []
+    analyses = [e for e in calls if e["name"] == "analyze" and e["ok"] and isinstance(e["args"], dict)
+                and "result" in e["output"]]
+    if analyses:
+        last = analyses[-1]["args"]
+        filtered = {f.get("column") for f in last.get("filters") or [] if isinstance(f, dict)}
+        if filtered & {g.split(":")[0] for g in last.get("group_by") or []}:
+            reasons.append("grouped by the filter column too (answer keys carry the filter value)")
     exclude_rows_planted = [p for p in planted if p["resolution"] == "exclude"]
     if exclude_rows_planted:
         excluders = ("exclude_rows", "exclude_where")

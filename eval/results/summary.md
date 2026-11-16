@@ -77,3 +77,39 @@
 | B2 single LLM call | 20 | 50% | 95% | 0.92 | 0.80 | 82% | 0 | n/a | n/a | n/a | 42.5 | 2,524 |
 | DataSage (30B) + exclusion rule | 20 | 85% | 100% | 0.89 | 0.78 | 92% | 0 | 100% | n/a | 2.0 | 14.3 | 53,600 |
 | DataSage M3 (30B, default) | 20 | 85% | 100% | 0.89 | 0.74 | 93% | 0 | 100% | n/a | 2.0 | 15.0 | 56,854 |
+
+## sales-hard
+
+| System | n | Answer correct | Completed | Detect P | Detect R | Errors handled | Damage | Tool-call OK | Recovery | Approvals (med) | Latency s (med) | Tokens (med) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| B1 fixed script | 20 | 20% | 100% | 0.79 | 0.84 | 79% | 0 | n/a | n/a | n/a | 0.0 | 0 |
+| B2 single LLM call | 20 | 45% | 85% | 0.82 | 0.67 | 73% | 37 | n/a | n/a | n/a | 56.9 | 3,036 |
+| DataSage M3 (30B, default) | 20 | 80% | 100% | 0.94 | 0.81 | 89% | 0 | 100% | n/a | 5.0 | 39.8 | 105,546 |
+| DataSage M3 (235B) | 20 | 95% | 100% | 0.88 | 0.89 | 94% | 0 | 100% | n/a | 5.0 | 213.3 | 113,134 |
+| DataSage M3 (gpt-oss-120b) | 20 | 80% | 100% | 0.92 | 0.62 | 81% | 0 | 82% | 25% | 4.0 | 81.6 | 100,166 |
+
+## penguins-hard
+
+| System | n | Answer correct | Completed | Detect P | Detect R | Errors handled | Damage | Tool-call OK | Recovery | Approvals (med) | Latency s (med) | Tokens (med) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| B1 fixed script | 20 | 0% | 100% | 1.00 | 0.89 | 66% | 0 | n/a | n/a | n/a | 0.0 | 0 |
+| B2 single LLM call | 20 | 65% | 95% | 0.99 | 0.76 | 78% | 600 | n/a | n/a | n/a | 42.2 | 3,052 |
+| DataSage M3 (30B, default) | 20 | 100% | 100% | 1.00 | 0.82 | 95% | 0 | 100% | n/a | 5.0 | 43.8 | 94,346 |
+| DataSage M3 (235B) | 20 | 100% | 100% | 1.00 | 0.80 | 99% | 0 | 100% | n/a | 4.5 | 134.3 | 92,750 |
+| DataSage M3 (gpt-oss-120b) | 20 | 100% | 100% | 1.00 | 0.58 | 81% | 0 | 89% | 30% | 3.5 | 50.0 | 69,716 |
+
+## sales-hard2
+
+| System | n | Answer correct | Completed | Detect P | Detect R | Errors handled | Damage | Tool-call OK | Recovery | Approvals (med) | Latency s (med) | Tokens (med) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| B1 fixed script | 20 | 10% | 100% | 0.78 | 0.86 | 83% | 0 | n/a | n/a | n/a | 0.0 | 0 |
+| DataSage M3 (30B, default) | 20 | 70% | 100% | 0.89 | 0.81 | 88% | 0 | 100% | n/a | 5.0 | 20.1 | 90,590 |
+| DataSage M3 (235B) | 4 | 100% | 100% | 0.87 | 0.87 | 86% | 0 | 100% | n/a | 5.0 | 141.5 | 99,540 |
+| DataSage M3 (gpt-oss-120b) | 10 | 100% | 100% | 0.96 | 0.75 | 81% | 0 | 86% | 26% | 4.5 | 88.5 | 109,268 |
+
+## penguins-hard2
+
+| System | n | Answer correct | Completed | Detect P | Detect R | Errors handled | Damage | Tool-call OK | Recovery | Approvals (med) | Latency s (med) | Tokens (med) |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| B1 fixed script | 20 | 5% | 100% | 1.00 | 0.89 | 64% | 0 | n/a | n/a | n/a | 0.0 | 0 |
+| DataSage M3 (30B, default) | 20 | 100% | 100% | 1.00 | 0.84 | 97% | 0 | 100% | n/a | 4.0 | 19.5 | 95,370 |

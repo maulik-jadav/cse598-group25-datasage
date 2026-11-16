@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinshard_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 57.54,
+  "tokens": 2840,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3700.0,
+    "Chinstrap": 3750.0,
+    "Gentoo": 5000.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix species typos\n    species_map = {\n        'Genoo': 'Gentoo', 'Aelie': 'Adelie', 'Adeliee': 'Adelie',\n        'gENTOO': 'Gentoo', 'AAdelie': 'Adelie', 'Adellie': 'Adelie',\n        'GENTOO': 'Gentoo'\n    }\n    df = df.copy()\n    df['species'] = df['species'].replace(species_map)\n    \n    # Fix island typos\n    island_map = {\n        'dream': 'Dream', 'Torgesren': 'Torgersen', 'dREAM': 'Dream',\n        'iscoe': 'Biscoe', 'TORGERSEN': 'Torgersen'\n    }\n    df['island'] = df['island'].replace(island_map)\n    \n    # Fix sex typos\n    sex_map = {\n        'MALE': 'male', 'ale': 'male', 'mael': 'male', 'mmale': 'male',\n        'FEMALE': 'female', 'femmale': 'female', 'emale': 'female'\n    }\n    df['sex'] = df['sex'].replace(sex_map)\n    \n    # Convert body_mass_g from text to number (remove commas and convert)\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '').astype(float)\n    \n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    return df\n\ndef answer(df):\n    result = df.groupby('species')['body_mass_g'].median().round(1).to_dict()\n    return result"
+  },
+  "corrections": 40,
+  "planted": 63,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "penguins-hard",
+  "question": "What is the median body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3700.0,
+    "Chinstrap": 3750.0,
+    "Gentoo": 5000.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

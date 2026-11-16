@@ -1,0 +1,73 @@
+{
+  "task_id": "saleshard_04_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 48.12,
+  "tokens": 3184,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 267970.0,
+    "North": 347270.0,
+    "Northeast": 186660.0,
+    "South": 229360.0,
+    "Southeast": 354540.0,
+    "West": 199700.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Clean Category: standardize to title case and correct known typos\n    category_mapping = {\n        'Accessories ': 'Accessories',\n        'Accessoriies': 'Accessories',\n        'fOfice Supplies': 'Office Supplies',\n        'OfficeS upplies': 'Office Supplies',\n        'office supplies': 'Office Supplies',\n        'Furniturre': 'Furniture',\n        'Furniture ': 'Furniture',\n        'Furiture': 'Furniture',\n        'Outdoor Suppleis': 'Outdoor Supplies',\n        'oUTDOOR sUPPLIES': 'Outdoor Supplies',\n        'outdoor supplies': 'Outdoor Supplies',\n        'eLECTRICALS': 'Electricals'\n    }\n    df['Category'] = df['Category'].replace(category_mapping).str.title()\n    \n    # Clean Region: strip spaces and correct typos\n    region_mapping = {\n        'West ': 'West',\n        '  Northeast ': 'Northeast',\n        'Easst': 'East',\n        '  Southeast ': 'Southeast',\n        'Eas': 'East',\n        '  West ': 'West',\n        'Wet': 'West',\n        'Norh': 'North'\n    }\n    df['Region'] = df['Region'].replace(region_mapping).str.strip()\n    \n    # Clean Price: remove $ and commas, convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)\n    \n    # Clean Revenue: remove $ and commas, convert to float\n    df['Revenue'] = df['Revenue'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)\n    \n    # Fix Quantity negatives: take absolute value (assuming error in sign)\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recompute Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = df[df['Category'] == 'Electronics']\n    result = df.groupby('Region')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 48,
+  "planted": 59,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-hard",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 267970.0,
+    "North": 347270.0,
+    "Northeast": 186660.0,
+    "South": 229360.0,
+    "Southeast": 354540.0,
+    "West": 199700.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

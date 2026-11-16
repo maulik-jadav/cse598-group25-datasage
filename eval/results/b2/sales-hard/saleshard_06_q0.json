@@ -1,0 +1,73 @@
+{
+  "task_id": "saleshard_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 2,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 73.28,
+  "tokens": 2950,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 50.0,
+    "Electricals": 1450.0,
+    "Electronics": 2400.0,
+    "Furniture": 1250.0,
+    "Office Supplies": 18.0,
+    "Outdoor Supplies": 1100.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Clean Category: strip whitespace and fix known typos\n    category_mapping = {\n        '  Electricals ': 'Electricals',\n        ' Electricals': 'Electricals',\n        'Electricals ': 'Electricals',\n        'Accessorries': 'Accessories',\n        'Acecssories': 'Accessories',\n        'Accessores': 'Accessories',\n        'Furnitre': 'Furniture',\n        '  Furniture ': 'Furniture',\n        'Outdoor Supplies ': 'Outdoor Supplies',\n        'Outdoor Suppiles': 'Outdoor Supplies',\n        'Elctricals': 'Electricals',\n        '  Electronics ': 'Electronics',\n        'Eletcronics': 'Electronics'\n    }\n    df['Category'] = df['Category'].str.strip().replace(category_mapping)\n    \n    # Clean Region: strip whitespace and fix typos\n    region_mapping = {\n        'eAST': 'East',\n        '  Northeast ': 'Northeast',\n        'South ': 'South',\n        'Nroth': 'North',\n        'Souh': 'South',\n        '  East ': 'East',\n        ' South': 'South',\n        'EAST': 'East',\n        'Sotuheast': 'Southeast',\n        ' West': 'West',\n        'West ': 'West',\n        'Northeas': 'Northeast'\n    }\n    df['Region'] = df['Region'].str.strip().replace(region_mapping)\n    \n    # Clean Price: remove $ and commas, convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace(',', '', regex=False)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Fix Revenue: recalculate based on Quantity and Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Filter for East region\n    east_df = df[df['Region'] == 'East']\n    # Group by Category and get max Price\n    result = east_df.groupby('Category')['Price'].max().round(2).to_dict()\n    return result"
+  },
+  "corrections": 50,
+  "planted": 80,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-hard",
+  "question": "What is the highest unit price in each category in the East region?",
+  "reference_answer": {
+    "Accessories": 50.0,
+    "Electricals": 1450.0,
+    "Electronics": 2400.0,
+    "Furniture": 1250.0,
+    "Office Supplies": 18.0,
+    "Outdoor Supplies": 1100.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Price"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -23,6 +23,7 @@ from datasage.analyze import answers_match
 from datasage.session import load_table
 from eval.generate_hard import question_columns
 from eval.scoring import id_key, load_bundle
+from eval.summarize import aggregate, load
 from datasage.values import comparable, is_missing
 
 ROOT = Path(__file__).resolve().parent
@@ -166,6 +167,19 @@ def main() -> None:
                 report.setdefault(dataset, {})[system] = found
                 brief = {k: v for k, v in found.items() if k != "per_task"}
                 print(dataset, system, json.dumps(brief))
+    # Pooled over sales + penguins of the same split (and over the standard held-out and test splits, to compare).
+    pools = {"hard": ["sales-hard", "penguins-hard"], "hard2": ["sales-hard2", "penguins-hard2"],
+             "heldout": ["sales-heldout", "penguins-heldout"], "test": ["sales-test", "penguins-test"]}
+    for name, datasets in pools.items():
+        for system in SYSTEMS:
+            rows = [r for d in datasets for r in load(system, d)]
+            if rows:
+                agg = aggregate(rows)
+                agg["correct"] = sum(r["analysis_correct"] for r in rows)
+                agg["seconds_total"] = round(sum(r["seconds"] for r in rows), 1)
+                agg["tokens_total"] = sum(r["tokens"] for r in rows)
+                report.setdefault("pooled", {}).setdefault(name, {})[system] = agg
+                print("pooled", name, system, json.dumps(agg))
     (RESULTS / "hard_analysis.json").write_text(json.dumps(report, indent=2, default=str))
 
 
