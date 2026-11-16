@@ -1,0 +1,185 @@
+{
+  "task_id": "saless_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 13,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 40.51,
+  "tokens": 64763,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "Accessories": 11.0,
+    "Electronics": 9.0,
+    "Furniture": 15.0,
+    "Office Supplies": 11.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the analysis: 3 invalid dates in the 'Date' column were fixed by setting them to missing; two label variants in 'Category' (' Accessories' and 'Office Suplies') were normalized to 'Accessories' and 'Office Supplies' respectively; the 'Price' column was converted from text with a dollar sign to numeric; 3 rows with negative 'Quantity' values (violating the rule that Quantity >= 1) were excluded; and 3 rows where 'Revenue' did not match 'Quantity * Price' were corrected. After these fixes, the analysis shows 15 orders in Furniture, 11 in Accessories, 11 in Office Supplies, and 9 in Electronics.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Fix invalid dates to missing values to ensure proper date format for analysis"
+        },
+        "reason": "Fix invalid dates to missing values to ensure proper date format for analysis",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Date: 3 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            " Accessories": "Accessories",
+            "Office Suplies": "Office Supplies"
+          },
+          "reason": "Merge case and space variants and correct misspelling of 'Office Supplies' to match allowed labels"
+        },
+        "reason": "Merge case and space variants and correct misspelling of 'Office Supplies' to match allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Category: merged 2 label variant(s), 2 cells",
+        "code": "df['Category'] = df['Category'].replace({' Accessories': 'Accessories', 'Office Suplies': 'Office Supplies'})"
+      },
+      {
+        "version": 3,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Convert price from text with dollar sign to numeric for accurate calculation"
+        },
+        "reason": "Convert price from text with dollar sign to numeric for accurate calculation",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (49 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            14,
+            17,
+            20
+          ],
+          "reason": "Quantity is negative, but rules require Quantity >= 1; these rows are invalid and should be excluded from analysis"
+        },
+        "reason": "Quantity is negative, but rules require Quantity >= 1; these rows are invalid and should be excluded from analysis",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          14,
+          17,
+          20
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [14, 17, 20]",
+        "code": "df = df.drop(index=[14, 17, 20])"
+      },
+      {
+        "version": 5,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            0,
+            16,
+            21
+          ],
+          "reason": "Revenue does not match Quantity * Price; recompute using correct formula for these rows"
+        },
+        "reason": "Revenue does not match Quantity * Price; recompute using correct formula for these rows",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[0, 16, 21], 'Revenue'] = [2100.0, 1260.0, 100.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 13
+  },
+  "corrections": 12,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-s303",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 11.0,
+    "Electronics": 9.0,
+    "Furniture": 15.0,
+    "Office Supplies": 11.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

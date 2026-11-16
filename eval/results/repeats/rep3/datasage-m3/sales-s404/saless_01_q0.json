@@ -1,0 +1,195 @@
+{
+  "task_id": "saless_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 15,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 31.36,
+  "tokens": 74126,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 6978.0,
+    "2026-02": 7492.0,
+    "2026-03": 5551.0,
+    "2026-04": 4884.0,
+    "2026-05": 6350.0,
+    "2026-06": 2102.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the total revenue per month calculation: 2 duplicate rows were removed; 3 rows with negative Quantity (violating the rule Quantity >= 1) were excluded; 2 case variants in Region ('east', 'north') were normalized to 'East' and 'North'; 2 invalid dates were set to missing; and 3 rows had incorrect Revenue values (10x too high) that were fixed by recomputing as Quantity * Price. After these fixes, the total revenue per month was calculated. The results are: January 2026: $6,978, February 2026: $7,492, March 2026: $5,551, April 2026: $4,884, May 2026: $6,350, June 2026: $2,102.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found 2 exact duplicate rows (row 3 and row 32), likely data entry error. Keeping only the first occurrence."
+        },
+        "reason": "Found 2 exact duplicate rows (row 3 and row 32), likely data entry error. Keeping only the first occurrence.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          3,
+          32
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            12,
+            19,
+            68
+          ],
+          "reason": "Quantity is negative (rows 12, 19, 68), but rules require Quantity >= 1. These are likely data entry errors or returns, but since the question is about total revenue per month (sales), we exclude them."
+        },
+        "reason": "Quantity is negative (rows 12, 19, 68), but rules require Quantity >= 1. These are likely data entry errors or returns, but since the question is about total revenue per month (sales), we exclude them.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          12,
+          19,
+          68
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [12, 19, 68]",
+        "code": "df = df.drop(index=[12, 19, 68])"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "east": "East",
+            "north": "North"
+          },
+          "reason": "Standardize case variants: 'east' and 'north' are valid labels with different case; merge them into 'East' and 'North'."
+        },
+        "reason": "Standardize case variants: 'east' and 'north' are valid labels with different case; merge them into 'East' and 'North'.",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Region: merged 2 label variant(s), 2 cells",
+        "code": "df['Region'] = df['Region'].replace({'east': 'East', 'north': 'North'})"
+      },
+      {
+        "version": 4,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Two invalid dates found: 'not-a-date' and '2026-02-30' (February 30th does not exist). These are invalid and cannot be parsed. Marking them as missing."
+        },
+        "reason": "Two invalid dates found: 'not-a-date' and '2026-02-30' (February 30th does not exist). These are invalid and cannot be parsed. Marking them as missing.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Date: 2 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      },
+      {
+        "version": 5,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            9,
+            55,
+            65
+          ],
+          "reason": "Revenue does not match Quantity * Price in 3 rows (9, 55, 65). The values in Revenue are 10x too high, likely due to a formatting error (e.g., $1350 instead of 135). Recompute using the correct formula."
+        },
+        "reason": "Revenue does not match Quantity * Price in 3 rows (9, 55, 65). The values in Revenue are 10x too high, likely due to a formatting error (e.g., $1350 instead of 135). Recompute using the correct formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 3,
+        "summary": "Revenue: recomputed as Quantity * Price on 3 row(s)",
+        "code": "df.loc[[9, 55, 65], 'Revenue'] = [135.0, 60.0, 2100.0]  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "parse_dates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 15
+  },
+  "corrections": 14,
+  "planted": 14,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-s404",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 6978.0,
+    "2026-02": 7492.0,
+    "2026-03": 5551.0,
+    "2026-04": 4884.0,
+    "2026-05": 6350.0,
+    "2026-06": 2102.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}
