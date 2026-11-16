@@ -262,3 +262,33 @@ def test_auto_mode_approves_without_waiting_and_says_so(tmp_path):
     ask = [e for e in run.events if e["type"] == "approval"][0]
     assert ask["auto"] is True and run.events[-1]["answer"] is True
     assert Run(Path("x.csv"), "q", None, tmp_path, None, mode="bogus").mode == "ask"
+
+
+def test_no_base_url_means_no_silent_fallback_to_openai(monkeypatch):
+    import pytest
+    from datasage import agent
+    monkeypatch.setattr("dotenv.load_dotenv", lambda *a, **k: False)
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
+    monkeypatch.delenv("RC_LLM_API_KEY", raising=False)
+    monkeypatch.delenv("RC_LLM_BASE_URL", raising=False)
+    with pytest.raises(RuntimeError, match="RC_LLM_BASE_URL"):
+        agent.make_client()
+
+
+def test_files_of_an_earlier_session_still_download(tmp_path, monkeypatch):
+    folder = tmp_path / "abcdef0123"
+    folder.mkdir()
+    (folder / "report.md").write_text("# DataSage report\n")
+    monkeypatch.setattr(server, "RUNS", {})
+    httpd, base = _serve(tmp_path, monkeypatch)
+    try:
+        with urllib.request.urlopen(base + "/api/runs/abcdef0123/files/report.md") as r:
+            assert r.read().startswith(b"# DataSage report")
+        for bad in ("/api/runs/..%2F..%2Fetc/files/report.md", "/api/runs/abcdef0123/files/secret.txt"):
+            try:
+                urllib.request.urlopen(base + bad)
+                raise AssertionError(bad)
+            except urllib.error.HTTPError as err:
+                assert err.code == 404
+    finally:
+        httpd.shutdown()

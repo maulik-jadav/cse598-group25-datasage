@@ -78,14 +78,19 @@ class RunResult:
 
 
 def make_client():
-    from dotenv import load_dotenv
+    from dotenv import find_dotenv, load_dotenv
     from openai import OpenAI
 
-    load_dotenv()
+    load_dotenv()                              # a .env next to the code or above it
+    load_dotenv(find_dotenv(usecwd=True))      # and one in or above the folder you run from
     key = os.environ.get("RC_LLM_API_KEY") or os.environ.get("OPENAI_API_KEY")
     base_url = os.environ.get("RC_LLM_BASE_URL")
     if not key:
-        raise RuntimeError("set RC_LLM_API_KEY (and RC_LLM_BASE_URL) in .env")
+        raise RuntimeError("set RC_LLM_API_KEY and RC_LLM_BASE_URL in .env")
+    if not base_url:
+        # Without a base URL the client would quietly send the table's profile and sample rows to OpenAI.
+        raise RuntimeError("set RC_LLM_BASE_URL in .env (https://openai.rc.asu.edu/v1 for ASU Research Computing, "
+                           "or https://api.openai.com/v1 only if you mean to use OpenAI)")
     # The client retries connection errors, timeouts, 429s and 5xx responses with exponential back-off.
     return OpenAI(api_key=key, base_url=base_url, max_retries=int(os.environ.get("DATASAGE_MAX_RETRIES", "4")))
 

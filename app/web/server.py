@@ -51,6 +51,7 @@ RUNS: dict[str, Run] = {}
 MAX_RUNS = 50              # finished runs kept in memory; older ones are dropped with their folders
 OUTPUT_TTL = 24 * 3600     # output folders older than this are deleted
 CLIENT_ID = re.compile(r"^[A-Za-z0-9-]{1,64}$")
+RUN_ID = re.compile(r"^[0-9a-f]{10}$")
 MODEL: str | None = None
 
 
@@ -104,11 +105,13 @@ class Handler(BaseHTTPRequestHandler):
             return self._events(run, int(parse_qs(url.query).get("from", ["0"])[0])) if run else self._error(404, "no such run")
         if len(parts) == 5 and parts[:2] == ["api", "runs"] and parts[3] == "files":
             run, name = self._run(parts[2]), parts[4]
-            if not run or name not in FILES or not (run.out_dir / name).exists():
+            # A run from an earlier server session is no longer in memory, but its folder is still on disk.
+            folder = run.out_dir if run else (OUT / parts[2] if RUN_ID.match(parts[2]) else None)
+            if not folder or name not in FILES or not (folder / name).exists():
                 return self._error(404, "file not ready")
-            data = (run.out_dir / name).read_bytes()
+            data = (folder / name).read_bytes()
             return self._send(200, data, FILES[name], {"Content-Disposition": f'attachment; filename="{name}"'})
-        if parts in (["results"], ["profile"]):  # analysis pages, see app/web/analysis.py
+        if parts in (["results"], ["profile"], ["view"]):  # analysis pages, see app/web/analysis.py
             return self._static(parts[0] + ".html")
         if parts == ["api", "results"]:
             return self._json(analysis.results())

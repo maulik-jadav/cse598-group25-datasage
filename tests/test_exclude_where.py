@@ -79,3 +79,32 @@ def test_coverage_requires_the_metric_formula_check():
     _call(d, "recompute_column", column="Rev", expression="Qty * Price", rows=[2], reason="formula")
     out, ok = _call(d, "analyze", group_by=["Cat"], metric="Rev", agg="sum")
     assert out["result"] == {"A": 40.0, "B": 20.0}
+
+
+def test_replay_of_a_recompute_on_a_text_column(tmp_path):
+    from datasage.agent import RunResult
+    from datasage.report import replay_script
+    from datasage.session import load_table
+    f = tmp_path / "t.csv"
+    f.write_text('Qty,Price,Rev\n2,10,"1,200"\n3,10,30\n')
+    s = Session(load_table(f), source=str(f), request="q", rules={})
+    d = Dispatcher(s, AutoApprover())
+    out, ok = _call(d, "recompute_column", column="Rev", expression="Qty * Price", rows=[0], reason="formula")
+    assert ok and out["applied"], out
+    script = replay_script(RunResult(session=s, model="m", finished=True, stop_reason="finish", final_summary=""))
+    ns = {}
+    exec(script, ns)
+    assert ns["df"]["Rev"].tolist() == s.current["Rev"].tolist() == [20.0, 30.0]
+
+
+def test_replay_of_a_recompute_on_a_whole_number_column(tmp_path):
+    from datasage.agent import RunResult
+    from datasage.report import replay_script
+    from datasage.session import load_table
+    f = tmp_path / "t.csv"
+    f.write_text("Qty,Price,Rev\n2,10,999\n3,10,30\n")
+    s = Session(load_table(f), source=str(f), request="q", rules={})
+    _call(Dispatcher(s, AutoApprover()), "recompute_column", column="Rev", expression="Qty * Price", rows=[0], reason="f")
+    ns = {}
+    exec(replay_script(RunResult(session=s, model="m", finished=True, stop_reason="finish", final_summary="")), ns)
+    assert ns["df"]["Rev"].tolist() == [20, 30]
