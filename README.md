@@ -48,6 +48,10 @@ cp .env.example .env    # then put your ASU RC LLM key in .env
 python -m pytest -q tests
 ```
 
+An end-to-end check with the real model (needs the `.env` key, a few minutes): `python scripts/smoke_e2e.py`
+drives the browser app through every sample in Auto and Ask mode, uploads (CSV dialects, Excel sheets,
+several files), Stop, downloads, the file viewer and profile, replay.py and the command line.
+
 The tests also run on GitHub for every pull request (`.github/workflows/tests.yml`); they need no API key.
 
 The agent calls an OpenAI-compatible endpoint. We use ASU Research Computing
@@ -93,8 +97,9 @@ an inventory table (606 rows, stock value by warehouse, with 18 rule-breaking ro
 `python examples/make_demo_files.py`, which also prints the right answers. You can also pick or drop
 several files with the same columns at once.
 
-- **Ask me or Auto.** Next to Run: *Ask me* (default) stops at every risky fix; *Auto* applies every fix
-  without asking, shows each one briefly, and still logs it as approved automatically.
+- **Ask me or Auto.** Chosen on the start screen: *Ask me* (default) stops at every risky fix; *Auto*
+  applies every fix without asking, shows each one briefly, and still logs it as approved automatically.
+  During a run the mode is locked and shown in the header; *New run* goes back to change it.
 - **Three tabs.** *Table* is the live run on one screen; *Answer* opens by itself when the run ends; *Data
   health* shows what the run found and did.
 - **Live table.** The first 40 rows show at once; any row with a problem, anywhere in the file, slides in
@@ -103,8 +108,10 @@ several files with the same columns at once.
 - **Approvals on the row.** Each risky fix opens a card under the affected row, saying what it will do and
   showing the exact rows: removed rows in full, or each changed cell as old → new. Click a row number to
   jump to it. Keep or Apply decides it.
-- **Answer.** The result counts up, with every change and who approved it, and the four output files,
-  each with a line on what it is for (cleaned table, report, replay script, step log).
+- **Answer.** The result counts up, with every change and who approved it, the agent's summary as short
+  bullets, and the four output files, each with a line on what it is for. **View** opens any of them in a
+  new tab (the table, the report rendered, the replay script, the step log as a timeline) with its own
+  Download button; earlier runs stay viewable after a server restart.
 - **Data health.** After the run: rows before and after, every problem found by column (fixed, kept as a
   caveat, or not needed for the question), and the answer before cleaning next to the answer after.
 
