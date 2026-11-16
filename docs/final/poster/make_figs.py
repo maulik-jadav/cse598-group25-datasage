@@ -89,25 +89,22 @@ plt.close(fig)
 models_path = RESULTS / "study_models.json"
 if models_path.exists():
     data = json.loads(models_path.read_text())
-    entries = data.get("models") or data.get("systems") or []
-    if isinstance(entries, dict):
-        entries = [{"name": k, **v} for k, v in entries.items()]
     pts = []
-    for e in entries:
-        acc = e.get("accuracy") or (e.get("agent") or {}).get("accuracy")
-        sec = e.get("seconds_median") or e.get("median_seconds") or (e.get("agent") or {}).get("seconds_median")
-        name = e.get("short") or e.get("name") or e.get("model")
-        if acc is not None and sec:
-            pts.append((name, float(sec), 100 * float(acc) if acc <= 1 else float(acc)))
+    for short, m in data.get("models", {}).items():
+        a = (m.get("agent") or {}).get("heldout_test") or {}
+        if a.get("tasks") == 80 and a.get("seconds_median") and not short.endswith("-original"):
+            pts.append((short, float(a["seconds_median"]), 100 * float(a["accuracy"])))
     if pts:
         fig, ax = plt.subplots(figsize=(10, 4.6), dpi=220)
         for name, sec, acc in pts:
-            default = "qwen3-30b" in str(name) and "think" not in str(name) and "coder" not in str(name)
+            default = name == "qwen3-30b"
             ax.scatter(sec, acc, s=70 if default else 28, color=TEAL if default else GREY, zorder=3 if default else 2)
-            if default or acc >= 92 or acc < 30:
+            if name in ("qwen3-30b", "qwen3-235b", "inkling-small", "llama4-scout", "llama4-maverick"):
                 ax.annotate(name, (sec, acc), xytext=(5, 4), textcoords="offset points", fontsize=9,
                             color=TEAL if default else "#333", fontweight="bold" if default else None)
         ax.set_xscale("log")
+        ax.set_xticks([15, 30, 60, 120, 240, 480], ["15", "30", "60", "120", "240", "480"])
+        ax.minorticks_off()
         ax.set_xlabel("Median seconds per question (log scale, measured under shared load)")
         ax.set_ylabel("Right answers (%)")
         ax.set_ylim(0, 103)

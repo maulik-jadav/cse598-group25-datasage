@@ -21,10 +21,12 @@ DataSage is an agent that takes a messy CSV or Excel file and a question about i
 - Almost every remaining miss is a row that breaks a rule in a column the question does not use (the
   question-columns-only scope chosen with the stakeholder).
 - *Auto* approval mode costs about one question in 120 against a careful approver.
-<!--MODELS-README-->
+- Swapping the planner across 41 models on the ASU API: with DataSage around it, a model answers a median
+  20 points more than in one call; the Qwen3-30B default ranks 4th (93.8%) and is among the fastest.
+  No model damaged clean data; the weakest fail because they cannot produce valid tool calls.
 
 Write-ups: [scale, variance and ablations](docs/final/findings_scale_and_ablations.md) ·
-[hard benchmark](docs/final/findings_hard.md) · [Auto mode](docs/final/findings_auto_mode.md)<!--MODELS-LINK-->.
+[hard benchmark](docs/final/findings_hard.md) · [Auto mode](docs/final/findings_auto_mode.md) · [model comparison](docs/final/findings_models.md).
 The browser app's **Results** page (`/results`) shows the same numbers as charts.
 
 ## Team (Group 25)
@@ -190,10 +192,21 @@ prompt; `-strict` also uses a stricter approval oracle). Milestone 3: `datasage-
 coverage check before `analyze`, spelling merges into the rules' allowed labels); `datasage-m3-compact` is the
 same with compact memory, and `datasage-m3-large` uses the 235B model. Later studies added `datasage-m3-auto`
 (every risky fix approved, like the app's Auto mode), `datasage-m3-gptoss` (gpt-oss-120b as the planner) and
-the ablations above. Datasets: `sales`, `penguins`, `sales-heldout`, `penguins-heldout`, `sales-test`,
+the ablations above; the model comparison adds `datasage-m3-<model>` and `b2-<model>` for 44 models. Datasets: `sales`, `penguins`, `sales-heldout`, `penguins-heldout`, `sales-test`,
 `penguins-test`, `sales-s303` / `-s404` / `-s505` and the penguin twins, `sales-hard`, `penguins-hard`,
 `sales-hard2`, `penguins-hard2`. Results are cached per task, so an
 interrupted run can be restarted.
+
+Model comparison (`docs/final/findings_models.md`): the final system and the B2 baseline with each chat model on
+the ASU API as the planner, on the 80 held-out and test questions.
+
+```bash
+python -m eval.model_study probe                   # which models return valid tool calls -> eval/results/model_probe.json
+python -m eval.model_study_driver agent 48 6       # all unfinished datasage-m3-<model> pairs from one process
+python -m eval.model_study_driver b2 4 6           # the same for b2-<model>
+python -m eval.model_study aggregate               # -> eval/results/study_models.json
+python -m eval.model_study_doc                     # fills docs/final/findings_models.md from the results
+```
 
 ## Run the stakeholder baseline on its own
 
