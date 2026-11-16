@@ -13,11 +13,14 @@ import binascii
 import json
 import mimetypes
 import re
+import tempfile
 import uuid
 from http import HTTPStatus
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
+
+from datasage.session import detect_csv, excel_sheets
 
 from .runner import Run
 
@@ -100,6 +103,8 @@ class Handler(BaseHTTPRequestHandler):
             return self._error(400, str(err))
         if parts == ["api", "runs"]:
             return self._start(body)
+        if parts == ["api", "inspect"]:
+            return self._inspect(body)
         if len(parts) == 4 and parts[:2] == ["api", "runs"]:
             run = self._run(parts[2])
             if not run:
@@ -119,6 +124,35 @@ class Handler(BaseHTTPRequestHandler):
         ctype = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
         self._send(200, path.read_bytes(), ctype + ("; charset=utf-8" if ctype.startswith("text/") or ctype.endswith("javascript") else ""))
 
+    def _decode(self, body: dict) -> tuple[str, bytes]:
+        name = Path(str(body.get("file_name") or "")).name
+        suffix = Path(name).suffix.lower()
+        if suffix not in (".csv", ".xlsx"):
+            raise ValueError("upload a .csv or .xlsx file")
+        try:
+            data = base64.b64decode(body.get("file_b64") or "", validate=True)
+        except (binascii.Error, ValueError):
+            raise ValueError("could not read the file")
+        if not data or len(data) > MAX_UPLOAD:
+            raise ValueError("the file is empty or larger than 20 MB")
+        return suffix, data
+
+    def _inspect(self, body: dict) -> None:
+        """Before a run: the sheets of an Excel file, or the separator and encoding found in a CSV."""
+        try:
+            suffix, data = self._decode(body)
+        except ValueError as err:
+            return self._error(400, str(err))
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / ("inspect" + suffix)
+            path.write_bytes(data)
+            try:
+                if suffix == ".xlsx":
+                    return self._json({"kind": "excel", "sheets": excel_sheets(path)})
+                return self._json({"kind": "csv", **detect_csv(path)})
+            except Exception as err:  # a damaged file: say so instead of failing later
+                return self._error(400, f"could not open the file: {type(err).__name__}")
+
     def _start(self, body: dict) -> None:
         question = str(body.get("question") or "").strip()
         if not question:
@@ -130,16 +164,10 @@ class Handler(BaseHTTPRequestHandler):
             s = SAMPLES.get(str(body["sample"]), SAMPLES["small"])
             input_path, rules_path = s["input"], s["rules"]
         else:
-            name = Path(str(body.get("file_name") or "")).name
-            suffix = Path(name).suffix.lower()
-            if suffix not in (".csv", ".xlsx"):
-                return self._error(400, "upload a .csv or .xlsx file")
             try:
-                data = base64.b64decode(body.get("file_b64") or "", validate=True)
-            except (binascii.Error, ValueError):
-                return self._error(400, "could not read the file")
-            if not data or len(data) > MAX_UPLOAD:
-                return self._error(400, "the file is empty or larger than 20 MB")
+                suffix, data = self._decode(body)
+            except ValueError as err:
+                return self._error(400, str(err))
             input_path = folder / ("input" + suffix)
             input_path.write_bytes(data)
             rules_path = None
@@ -153,7 +181,8 @@ class Handler(BaseHTTPRequestHandler):
         for old in RUNS.values():  # one live run at a time; an older one stops asking for approvals
             if not old.done:
                 old.cancel()
-        run = Run(input_path, question, rules_path, folder, MODEL)
+        sheet = body.get("sheet")
+        run = Run(input_path, question, rules_path, folder, MODEL, sheet=str(sheet) if sheet not in (None, "") else None)
         RUNS[run_id] = run
         run.start()
         self._json({"run_id": run_id})

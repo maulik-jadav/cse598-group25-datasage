@@ -253,9 +253,11 @@ class BrowserApprover(Approver):
 
 
 class Run:
-    def __init__(self, input_path: Path, question: str, rules_path: Path | None, out_dir: Path, model: str | None):
+    def __init__(self, input_path: Path, question: str, rules_path: Path | None, out_dir: Path, model: str | None,
+                 sheet: str | None = None):
         self.id = out_dir.name
         self.input_path, self.question, self.rules_path, self.out_dir, self.model = input_path, question, rules_path, out_dir, model
+        self.sheet = sheet
         self.events: list[dict] = []
         self.cond = threading.Condition()
         self.pending: dict[str, dict] = {}
@@ -308,12 +310,13 @@ class Run:
     def _work(self) -> None:
         start = time.time()
         try:
-            df = load_table(self.input_path)
+            df = load_table(self.input_path, sheet=self.sheet)
             self.emit({"type": "start", "question": self.question, "columns": [str(c) for c in df.columns],
-                       "total_rows": len(df), "rows": initial_rows(self.input_path)})
+                       "total_rows": len(df), "rows": initial_rows(self.input_path, self.sheet),
+                       "read": df.attrs.get("read", {})})
             kwargs = {"model": self.model} if self.model else {}
             result = run_agent(self.input_path, self.question, BrowserApprover(self), rules_path=self.rules_path,
-                               on_event=self._on_event, **kwargs)
+                               on_event=self._on_event, sheet=self.sheet, **kwargs)
             write_outputs(result, self.out_dir)
             analysis = result.session.analyses[-1] if result.session.analyses else None
             changes = [{"applied": True, "text": plural(c.summary), "approval": c.approval}
@@ -386,6 +389,6 @@ def health(session, analyze_args: dict | None) -> dict:
             "cells_changed": int(sum(c.cells_changed for c in session.changes)), "issues": issues, "raw_answer": raw}
 
 
-def initial_rows(path: Path) -> list[dict]:
-    df = load_table(path)
+def initial_rows(path: Path, sheet: str | None = None) -> list[dict]:
+    df = load_table(path, sheet=sheet)
     return [{"id": int(r), "cells": {str(c): _text(df.at[r, c]) for c in df.columns}} for r in df.index[:FIRST_ROWS]]

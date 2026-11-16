@@ -13,12 +13,35 @@ const S = { file: null, rules: null, sample: false, runId: null, es: null, lastS
   cellEls: new Map(), numeric: new Set(), asks: new Map(), phase: null, running: false, ids: [], total: 0, sampleSize: "small" };
 
 // ---------- inputs ----------
+const SEP_NAMES = { ";": "semicolon", "\t": "tab", "|": "pipe" };
+const ENC_NAMES = { cp1252: "Windows-1252", "latin-1": "Latin-1" };
 function setFile(file) {
-  S.file = file; S.sample = false;
+  S.file = file; S.sample = false; S.sheet = null;
   $("#fileName").textContent = file ? file.name : "Choose file";
   $("#fileChip").classList.toggle("set", !!file);
-  if (file) $("#question").focus();
+  $("#fileChip").title = "Choose a CSV or Excel file";
+  $("#sheetChip").hidden = true;
+  if (file) { $("#question").focus(); inspect(file); }
 }
+async function inspect(file) {
+  try {
+    const res = await fetch("/api/inspect", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ file_name: file.name, file_b64: await toB64(file) }) });
+    const info = await res.json();
+    if (S.file !== file) return;
+    if (!res.ok) { setStatus(info.error || "Could not open the file"); return; }
+    if (info.kind === "excel") {
+      const sel = $("#sheetSel"); sel.textContent = "";
+      info.sheets.forEach((s) => { const o = el("option", null, s); o.value = s; sel.append(o); });
+      S.sheet = info.sheets[0] || null;
+      $("#sheetChip").hidden = info.sheets.length < 2;
+    } else {
+      const notes = [SEP_NAMES[info.sep] ? `${SEP_NAMES[info.sep]}-separated` : "", ENC_NAMES[info.encoding] || ""].filter(Boolean);
+      if (notes.length) { $("#fileName").textContent = `${file.name} · ${notes.join(", ")}`; $("#fileChip").title = `Read as ${notes.join(", ")}`; }
+    }
+  } catch { /* the run itself will report a problem with the file */ }
+}
+$("#sheetSel").addEventListener("change", (e) => { S.sheet = e.target.value; });
 $("#fileInput").addEventListener("change", (e) => setFile(e.target.files[0] || null));
 $("#rulesInput").addEventListener("change", async (e) => {
   const f = e.target.files[0];
@@ -38,7 +61,7 @@ drop.addEventListener("drop", (e) => {
 document.querySelectorAll("[data-sample]").forEach((b) => b.addEventListener("click", async () => {
   const size = b.dataset.sample;
   const s = await (await fetch(`/api/sample?size=${size}`)).json();
-  S.sample = size; S.file = null;
+  S.sample = size; S.file = null; $("#sheetChip").hidden = true;
   $("#fileName").textContent = s.input; $("#fileChip").classList.add("set");
   $("#rulesName").textContent = s.rules; $("#rulesChip").classList.add("set");
   $("#question").value = s.question;
@@ -53,7 +76,7 @@ async function start() {
   const question = $("#question").value.trim();
   if (!S.sample && !S.file) { $("#fileChip").animate([{ transform: "translateX(0)" }, { transform: "translateX(-4px)" }, { transform: "translateX(4px)" }, { transform: "translateX(0)" }], { duration: 260 }); $("#fileInput").click(); return; }
   if (!question) { $("#question").focus(); return; }
-  const body = S.sample ? { sample: S.sample, question } : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules };
+  const body = S.sample ? { sample: S.sample, question } : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules, sheet: S.sheet };
   setRunning(true); setStatus("Uploading");
   let res;
   try { res = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
