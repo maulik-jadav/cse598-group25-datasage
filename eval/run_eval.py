@@ -5,7 +5,8 @@ Usage:
   python -m eval.run_eval --system b2 --dataset penguins
 Systems: b0, b1, b2, datasage, datasage-small, datasage-reject, datasage-novalidator,
          datasage-fix, datasage-fix-strict, datasage-small-fix, datasage-small-fix-strict,
-         datasage-m3 (small model, the default agent), datasage-m3-compact, datasage-m3-large
+         datasage-m3 (small model, the default agent), datasage-m3-compact, datasage-m3-large,
+         datasage-m3-auto (datasage-m3 with every risky fix approved, like the browser's Auto mode)
 Datasets: sales, penguins (dev), sales-heldout, penguins-heldout, and sales-test, penguins-test (seed 202)
 """
 
@@ -45,6 +46,10 @@ SYSTEMS = {
                                                                      client=c, trace_path=trace),
     "datasage-m3-large": lambda b, t, c, trace: systems.run_datasage(b, t, m3=True, client=c, trace_path=trace),
 }
+
+# The browser app's Auto mode: the same agent as datasage-m3, but every risky fix is approved without a check.
+SYSTEMS["datasage-m3-auto"] = lambda b, t, c, trace: systems.run_datasage(b, t, model=SMALL_MODEL, m3=True, approver="auto",
+                                                                          client=c, trace_path=trace)
 
 
 def run(system: str, dataset: str, workers: int, limit: int | None, results_dir: Path, only: set[str] | None = None) -> None:
