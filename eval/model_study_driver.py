@@ -5,7 +5,7 @@ Usage:
   python -m eval.model_study_driver b2 4 6
   python -m eval.model_study_driver agent 80 2 --skip mistral-large-4,qwen3-vl-32b-think   # leave saturated models
   python -m eval.model_study_driver clean        # delete results that ended in a client-side connection error
-  python -m eval.model_study_driver clean --timeouts   # also those that timed out (retried once, at low load)
+  python -m eval.model_study_driver clean --timeouts   # also API and B2-script timeouts (retried once)
 
 Threads, not processes: the study ran on a laptop with 8 GB of memory, and one process per pair crashed it.
 B2 runs each generated script in a subprocess; here a lock lets only one such subprocess exist at a time.
@@ -40,7 +40,9 @@ def clean(timeouts: bool = False) -> None:
     log["note"] = ("Results deleted and run again with the same command. 'Connection error': the laptop running the "
                    "study crashed and lost its network (client side, not a model error). 'Request timed out': a call "
                    "exceeded the 180 s timeout while the study itself was overloading that model's server; these were "
-                   "retried once at low load, and a second timeout was kept as the result.")
+                   "retried once at low load, and a second timeout was kept as the result. 'code_timeout': B2's generated "
+                   "script passed its 60 s limit while about 100 study processes were starving the laptop's CPU (all of "
+                   "them happened in the 12 minutes before the crash); also retried once.")
     removed = 0
     for path in sorted(glob.glob(str(RESULTS / "datasage-m3-*/*/*.json")) + glob.glob(str(RESULTS / "b2-*/*/*.json"))):
         p = Path(path)
@@ -49,8 +51,9 @@ def clean(timeouts: bool = False) -> None:
             continue
         result = json.loads(p.read_text())
         text = f"{result['stop_reason']} {result.get('note', '')}"
-        transient = "Connection error" in text or (timeouts and "timed out" in text)
-        if result["stop_reason"].startswith("api_error") and transient:
+        transient = result["stop_reason"].startswith("api_error") and (
+            "Connection error" in text or (timeouts and "timed out" in text))
+        if transient or (timeouts and result["stop_reason"] == "code_timeout"):
             log["removed"].append({"system": system, "dataset": p.parent.name, "task_id": p.stem,
                                    "reason": text.strip()[:120], "at": time.strftime("%Y-%m-%d %H:%M")})
             p.unlink()

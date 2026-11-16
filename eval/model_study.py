@@ -224,6 +224,31 @@ def study_systems() -> list[tuple[str, str, str, str]]:
     return rows + [("qwen3-30b-original", SMALL_MODEL, "datasage-m3", "b2-qwen3-30b")]
 
 
+def out_of_scope_tasks(datasets: list[str]) -> set[str]:
+    """Tasks whose reference answer needs rows excluded because of a planted error in a column the question does
+    not use (e.g. a negative flipper length when the question counts penguins per island)."""
+    from eval.scoring import all_bundles
+
+    out = set()
+    for dataset in datasets:
+        for bundle in all_bundles(dataset):
+            excl = {p["column"] for p in bundle.planted if p["resolution"] == "exclude"}
+            for task in bundle.tasks:
+                spec = task["spec"]
+                used = set(spec.get("group_by") or []) | {spec.get("metric")} | {f["column"] for f in spec.get("filters") or []}
+                if excl - used:
+                    out.add(task["task_id"])
+    return out
+
+
+def scope_split(system: str, outside: set[str]) -> dict:
+    rows = [r for d in HELDOUT_TEST for r in _load(system, d)]
+    a = [r for r in rows if r["task_id"] in outside]
+    b = [r for r in rows if r["task_id"] not in outside]
+    return {"needs_exclusion_outside_question": {"tasks": len(a), "correct": sum(r["analysis_correct"] for r in a)},
+            "other_tasks": {"tasks": len(b), "correct": sum(r["analysis_correct"] for r in b)}}
+
+
 def _ranks(values: list[float]) -> list[float]:
     order = sorted(range(len(values)), key=lambda i: values[i])
     ranks = [0.0] * len(values)
@@ -269,6 +294,8 @@ def summary(models: dict) -> dict:
             "models": len(clean),
             "rho": spearman([a["accuracy"] for a, _ in clean],
                             [b["tasks_checking_a_column_the_question_does_not_use"] for _, b in clean])},
+        "models_with_80_tasks_at_least_39_of_40_on_other_tasks": sorted(
+            s for s, _, _ in rows if models[s]["agent"]["scope_split"]["other_tasks"]["correct"] >= 39),
         "spearman_accuracy_vs_median_seconds": spearman([a["accuracy"] for _, a, _ in rows],
                                                         [a["seconds_median"] for _, a, _ in rows]),
     }
@@ -280,6 +307,8 @@ def aggregate() -> None:
     out = {"note": "heldout_test pools sales-heldout, penguins-heldout, sales-test and penguins-test (80 tasks); "
                    "ci95 is a 10,000-sample bootstrap of the per-task accuracy; seconds and tokens are per task.",
            "probe": probe_data, "models": {}}
+    outside = out_of_scope_tasks(HELDOUT_TEST)
+    out["tasks_needing_exclusion_outside_question_columns"] = sorted(outside)
     for short, model, agent_system, single_system in study_systems():
         entry = {"model": model, "agent_system": agent_system, "single_call_system": single_system}
         for label, system in (("agent", agent_system), ("single_call", single_system)):
@@ -289,6 +318,8 @@ def aggregate() -> None:
             entry[label] = {"heldout_test": aggregate_rows(pooled) if pooled else None,
                             "dev": aggregate_rows(dev) if dev else None, "per_dataset": per}
         entry["agent"]["behaviour"] = trace_stats(agent_system, HELDOUT_TEST)
+        entry["agent"]["scope_split"] = scope_split(agent_system, outside)
+        entry["single_call"]["scope_split"] = scope_split(single_system, outside)
         a, b = entry["agent"]["heldout_test"], entry["single_call"]["heldout_test"]
         if a and b and a["tasks"] == b["tasks"]:
             entry["agent_minus_single_call"] = a["accuracy"] - b["accuracy"]
@@ -303,31 +334,43 @@ def aggregate() -> None:
 
 
 def table() -> None:
-    """Print the comparison table (Markdown) from study_models.json, best agent accuracy first."""
+    """Print the comparison tables (Markdown) from study_models.json, best agent accuracy first."""
     data = json.loads((RESULTS / "study_models.json").read_text())["models"]
 
     def pct(x):
         return "n/a" if x is None else f"{100 * x:.1f}"
 
-    rows = []
-    for short, e in data.items():
-        a, b = e["agent"]["heldout_test"], e["single_call"]["heldout_test"]
-        if not a:
-            continue
-        rows.append((a["accuracy"], short, e, a, b))
-    print("| Model | n | Agent correct | 95% CI | Single call | Gain | Done | Detect P/R | Errors handled | Damage "
-          "| Tool errors | Recovered | Approvals | Median s | p90 s | Median tokens |")
-    print("|---|---:|---:|---|---:|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|---:|")
-    for acc, short, e, a, b in sorted(rows, key=lambda r: (-r[0], r[3]["seconds_median"])):
+    rows = sorted(((e["agent"]["heldout_test"], short, e) for short, e in data.items() if e["agent"]["heldout_test"]),
+                  key=lambda r: (-r[0]["accuracy"], r[0]["seconds_median"]))
+
+    def name(short, e):
+        return e["model"] + (" (original M3 run)" if short.endswith("-original") else "")
+
+    print("Table A. Accuracy, single call, scope split, latency and tokens\n")
+    print("| Model | n | Agent correct | 95% CI | Single call (B2) | Agent minus B2 | Needs exclusion outside "
+          "question | Other tasks | Median s | p90 s | Median tokens |")
+    print("|---|---:|---:|---|---:|---:|---:|---:|---:|---:|---:|")
+    for a, short, e in rows:
+        b = e["single_call"]["heldout_test"]
         single = f"{pct(b['accuracy'])}% ({b['correct']}/{b['tasks']})" if b else "n/a"
         gain = e.get("agent_minus_single_call")
-        terr = f"{a['tool_errors']}/{a['tool_calls']} ({pct(a['tool_error_rate'])}%)"
-        name = e["model"] + (" (original M3 run)" if short.endswith("-original") else "")
-        print(f"| {name} | {a['tasks']} | {pct(acc)}% ({a['correct']}) | {pct(a['ci95'][0])}-{pct(a['ci95'][1])} "
-              f"| {single} | {'n/a' if gain is None else f'{100 * gain:+.1f}'} | {pct(a['completion'])}% "
-              f"| {a['detect_precision']:.2f}/{a['detect_recall']:.2f} | {pct(a['errors_handled'])}% "
-              f"| {a['damaged_cells_rows']} | {terr} | {a['recovered_errors']} | {a['approvals_median']} "
+        sc = e["agent"]["scope_split"]
+        o, t = sc["needs_exclusion_outside_question"], sc["other_tasks"]
+        print(f"| {name(short, e)} | {a['tasks']} | {pct(a['accuracy'])}% ({a['correct']}) "
+              f"| {pct(a['ci95'][0])} to {pct(a['ci95'][1])} | {single} "
+              f"| {'n/a' if gain is None else f'{100 * gain:+.1f}'} | {o['correct']}/{o['tasks']} | {t['correct']}/{t['tasks']} "
               f"| {a['seconds_median']:.0f} | {a['seconds_p90']:.0f} | {a['tokens_median']:,.0f} |")
+    print("\nTable B. Cleaning quality and tool use\n")
+    print("| Model | Completed | Detect P | Detect R | Errors handled | Damage | Tool errors / calls | Recovered "
+          "| Error loops | Approvals (med) | Checked a column outside the question | Stop reasons |")
+    print("|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|")
+    for a, short, e in rows:
+        beh = e["agent"]["behaviour"]
+        stops = ", ".join(f"{k} {v}" for k, v in sorted(a["stop_reasons"].items(), key=lambda kv: -kv[1]))
+        print(f"| {name(short, e)} | {pct(a['completion'])}% | {a['detect_precision']:.2f} | {a['detect_recall']:.2f} "
+              f"| {pct(a['errors_handled'])}% | {a['damaged_cells_rows']} | {a['tool_errors']}/{a['tool_calls']} "
+              f"({pct(a['tool_error_rate'])}%) | {a['recovered_errors']} | {beh['error_loops']} | {a['approvals_median']} "
+              f"| {pct(beh['tasks_checking_a_column_the_question_does_not_use'])}% | {stops} |")
 
 
 def main() -> None:

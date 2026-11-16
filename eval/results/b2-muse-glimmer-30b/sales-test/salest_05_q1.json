@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 122.72,
+  "tokens": 5074,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # strip whitespace from all object columns\n    for col in df.select_dtypes(include='object').columns:\n        df[col] = df[col].apply(lambda x: x.strip() if isinstance(x, str) else x)\n    # normalise Category variants caused by extra spaces\n    # Region typo fixes and strip\n    region_map = {\"Suoth\": \"South\", \"Nort\": \"North\"}\n    df['Region'] = df['Region'].replace(region_map)\n    # ensure numeric types\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # cross-column rule: Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    # optional date normalisation \u2013 keep ISO format where possible\n    # invalid dates will become NaT and stay non-ISO, which is acceptable for the question\n    return df\n\ndef answer(df):\n    dfc = clean(df)\n    # total revenue by cleaned Category\n    grouped = dfc.groupby('Category', dropna=False)['Revenue'].sum()\n    result = {}\n    for cat, val in grouped.items():\n        if pd.isna(cat):\n            continue\n        result[str(cat)] = float(val)\n    return result\n"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

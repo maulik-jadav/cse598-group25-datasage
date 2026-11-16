@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 325.66,
+  "tokens": 5660,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    d = df.copy()\n    for c in ['Category', 'Region', 'Product']:\n        if c in d.columns:\n            d[c] = d[c].astype('string').str.strip()\n    d['Region'] = d['Region'].str.title()\n    d['Region'] = d['Region'].replace({'Suoth': 'South', 'Nort': 'North'})\n    d['Date'] = pd.to_datetime(d['Date'], errors='coerce')\n    for c in ['Quantity', 'Price', 'Revenue']:\n        if c in d.columns:\n            d[c] = pd.to_numeric(d[c], errors='coerce')\n    d['Revenue'] = d['Quantity'] * d['Price']\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d[d['Category'].fillna('').eq('Electronics')]\n    d = d[d['Region'].isin(['North', 'South', 'East', 'West'])]\n    d = d.dropna(subset=['Region'])\n    out = d.groupby('Region', dropna=True)['Revenue'].sum().sort_index()\n    return {str(k): float(v) for k, v in out.items()}\n"
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

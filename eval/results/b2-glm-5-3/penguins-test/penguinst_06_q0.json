@@ -1,0 +1,57 @@
+{
+  "task_id": "penguinst_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 65.55,
+  "tokens": 3404,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3866.346153846154,
+    "male": 4485.227272727273
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # Remove exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates()\n    # Normalize island labels (strip extra spaces)\n    df['island'] = df['island'].astype(str).str.strip()\n    df.loc[df['island'].str.lower() == 'nan', 'island'] = np.nan\n    # Parse body_mass_g: numbers written as text, with commas\n    bm = df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip()\n    bm = pd.to_numeric(bm, errors='coerce')\n    # Fix out-of-range values that appear to be in milligrams (x1000)\n    bm = bm.where(~((bm > 6500) & (bm.notna())), bm / 1000.0)\n    df['body_mass_g'] = bm\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # sex missing means unknown; do not guess -> drop those rows\n    d = df[df['sex'].notna()]\n    d = d[d['body_mass_g'].notna()]\n    g = d.groupby('sex')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3876.0,
+    "male": 4485.2273
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

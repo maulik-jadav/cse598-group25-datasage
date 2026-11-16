@@ -1,0 +1,61 @@
+{
+  "task_id": "penguinst_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 102.7,
+  "tokens": 2639,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3727.4193548387098,
+    "male": 4590.384615384615
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # fix species label variants\n    df['species'] = df['species'].replace({'Gentto': 'Gentoo', 'Adeile': 'Adelie'})\n    # fix island case variant\n    df['island'] = df['island'].str.strip().str.title()\n    # body_mass_g: text -> numeric, strip commas, fix milligram-scale values to grams\n    mass = df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip()\n    mass = pd.to_numeric(mass, errors='coerce')\n    mass = mass.where(mass <= 6500, mass / 1000)  # 3650000 mg -> 3650 g\n    df['body_mass_g'] = mass\n    # flipper_length_mm and year: text -> numeric\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['year'] = pd.to_numeric(df['year'], errors='coerce')\n    return df\n\ndef answer(df):\n    d = df.dropna(subset=['sex', 'body_mass_g'])\n    d = d[d['sex'].isin(['male', 'female'])]\n    grouped = d.groupby('sex')['body_mass_g'].mean()\n    return {str(k): float(v) for k, v in grouped.items()}"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3735.0,
+    "male": 4570.8333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

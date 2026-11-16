@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 115.33,
+  "tokens": 4690,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Strip whitespace for text columns\n    for col in ['Category', 'Region', 'Date']:\n        if col in df.columns:\n            df[col] = df[col].astype(object).where(df[col].isna(), df[col].astype(str).str.strip())\n    # Fix Category label variants (typos, case variants)\n    cat_map = {\n        'accesories': 'Accessories',\n        'accessories': 'Accessories',\n        'electronics': 'Electronics',\n        'electornics': 'Electronics',\n        'furniture': 'Furniture',\n        'office supplies': 'Office Supplies',\n        'office suplies': 'Office Supplies'\n    }\n    if 'Category' in df.columns:\n        def fix_cat(x):\n            if pd.isna(x):\n                return x\n            s = str(x).strip()\n            low = s.lower()\n            return cat_map.get(low, s)\n        df['Category'] = df['Category'].apply(fix_cat)\n    # Fix Region extra spaces / case variants\n    if 'Region' in df.columns:\n        df['Region'] = df['Region'].apply(lambda x: str(x).strip().title() if pd.notna(x) else x)\n    # Ensure numeric types\n    for col in ['Quantity', 'Price', 'Revenue']:\n        if col in df.columns:\n            df[col] = pd.to_numeric(df[col], errors='coerce')\n    # Fix cross-column: Revenue = Quantity * Price\n    if all(c in df.columns for c in ['Quantity', 'Price', 'Revenue']):\n        df['Revenue'] = df['Quantity'] * df['Price']\n    # Fix invalid dates\n    if 'Date' in df.columns:\n        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    return df\n\ndef answer(df):\n    # total revenue by category\n    if 'Category' not in df.columns or 'Revenue' not in df.columns:\n        return {}\n    df = df.dropna(subset=['Category'])\n    # keep only allowed categories after cleaning (optional)\n    grouped = df.groupby('Category', dropna=True)['Revenue'].sum()\n    result = {}\n    for k, v in grouped.items():\n        if pd.isna(k):\n            continue\n        # convert numpy types to python int/float\n        val = float(v)\n        if val.is_integer():\n            val = int(val)\n        result[str(k)] = val\n    return result\n"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-spark-open",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

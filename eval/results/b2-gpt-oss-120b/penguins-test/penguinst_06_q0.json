@@ -1,0 +1,57 @@
+{
+  "task_id": "penguinst_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 22.66,
+  "tokens": 3153,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3876.0,
+    "male": 4485.23
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # 1. Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates().reset_index(drop=True)\n\n    # 2. Standardise island names (strip leading/trailing whitespace)\n    if 'island' in df.columns:\n        df['island'] = df['island'].astype(str).str.strip()\n\n    # 3. Convert numeric\u2011like text columns to proper numeric types\n    #    a) flipper_length_mm may be stored as text\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n\n    #    b) body_mass_g is text with commas and occasional bad values\n    if 'body_mass_g' in df.columns:\n        # remove commas and any surrounding spaces, then convert\n        df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip()\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n        # 4. Flag out\u2011of\u2011range values (2500\u20116500 g) as missing\n        df.loc[~df['body_mass_g'].between(2500, 6500, inclusive='both'), 'body_mass_g'] = pd.NA\n\n    # 5. Ensure sex column stays as is; missing values are already NaN (do not guess)\n    # No further action needed for missing sex values.\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Clean the dataframe first\n    df_clean = clean(df)\n    # Compute average body mass per sex, ignoring missing sex or body_mass_g\n    result = (\n        df_clean.dropna(subset=['sex', 'body_mass_g'])\n        .groupby('sex')['body_mass_g']\n        .mean()\n        .round(2)\n        .to_dict()\n    )\n    return result\n"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3876.0,
+    "male": 4485.2273
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

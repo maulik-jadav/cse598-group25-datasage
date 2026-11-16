@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 29.64,
+  "tokens": 3765,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 39700.0,
+    "Gentoo": 103500.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n    # ---- species standardisation (label variants) ----\n    # strip spaces, lower case, then map known misspellings to allowed values\n    species_map = {\n        \"gentoo\": \"Gentoo\",\n        \"gentoo \": \"Gentoo\",\n        \"gentto\": \"Gentoo\",\n        \"adelie\": \"Adelie\",\n        \"adeile\": \"Adelie\",\n        \"adelie\": \"Adelie\",\n        \"adeile\": \"Adelie\",\n        \"chinstrap\": \"Chinstrap\",\n        \"chinstrap \": \"Chinstrap\",\n        \"chinstarp\": \"Chinstrap\"\n    }\n    # normalise: strip, lower\n    norm = df['species'].astype(str).str.strip().str.lower()\n    df['species'] = norm.map(lambda x: species_map.get(x, x.title()))\n\n    # ---- body_mass_g: text numbers to numeric ----\n    # remove commas, convert to float\n    df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False).astype(float)\n\n    # ---- flipper_length_mm: ensure numeric ----\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n\n    # ---- out\u2011of\u2011range handling ----\n    # flipper length should be between 170 and 235 mm\n    df.loc[~df['flipper_length_mm'].between(170, 235), 'flipper_length_mm'] = np.nan\n    # body mass should be between 2500 and 6500 g\n    df.loc[~df['body_mass_g'].between(2500, 6500), 'body_mass_g'] = np.nan\n\n    return df\n\ndef answer(df):\n    \"\"\"Return a dict mapping each species to the total body mass (grams).\"\"\"\n    clean_df = clean(df)\n    # group by species and sum body_mass_g, ignoring NaNs\n    totals = clean_df.groupby('species', dropna=True)['body_mass_g'].sum(min_count=1).dropna()\n    # round to nearest integer for readability\n    result = totals.round().astype(int).to_dict()\n    return result"
+  },
+  "corrections": 12,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "penguins-test",
+  "question": "What is the total body mass for each species?",
+  "reference_answer": {
+    "Adelie": 50825.0,
+    "Chinstrap": 35900.0,
+    "Gentoo": 103500.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

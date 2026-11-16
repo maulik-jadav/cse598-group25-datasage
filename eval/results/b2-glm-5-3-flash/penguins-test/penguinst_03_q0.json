@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinst_03_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 72.1,
+  "tokens": 2882,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 38.8,
+    "Dream": 37.43,
+    "Torgersen": 39.39
+  },
+  "extra": {
+    "code": "def clean(df):\n    d = df.copy()\n    # drop exact duplicate rows\n    d = d.drop_duplicates().reset_index(drop=True)\n    # normalize island labels (extra spaces / variants)\n    d['island'] = d['island'].astype(str).str.strip().str.title()\n    d.loc[~d['island'].isin(['Biscoe', 'Dream', 'Torgersen']), 'island'] = pd.NA\n    # normalize species\n    d['species'] = d['species'].astype(str).str.strip().str.title()\n    # flipper_length_mm: parse text, fix invalid negative / out-of-range values\n    d['flipper_length_mm'] = pd.to_numeric(d['flipper_length_mm'], errors='coerce')\n    d.loc[(d['flipper_length_mm'] < 170) | (d['flipper_length_mm'] > 235), 'flipper_length_mm'] = pd.NA\n    # body_mass_g: parse text numbers (commas), flag out-of-range as invalid\n    d['body_mass_g'] = pd.to_numeric(\n        d['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    d.loc[(d['body_mass_g'] < 2500) | (d['body_mass_g'] > 6500), 'body_mass_g'] = pd.NA\n    # bill_length_mm range check\n    d['bill_length_mm'] = pd.to_numeric(d['bill_length_mm'], errors='coerce')\n    d.loc[(d['bill_length_mm'] < 30) | (d['bill_length_mm'] > 60), 'bill_length_mm'] = pd.NA\n    return d\n\ndef answer(df):\n    d = clean(df)\n    adelie = d[d['species'] == 'Adelie'].copy()\n    adelie = adelie.dropna(subset=['island', 'bill_length_mm'])\n    means = adelie.groupby('island')['bill_length_mm'].mean()\n    return {str(k): round(float(v), 2) for k, v in means.items()}"
+  },
+  "corrections": 7,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "penguins-test",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 39.025,
+    "Dream": 37.6667,
+    "Torgersen": 39.2667
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 20.79,
+  "tokens": 3053,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 28.0,
+    "Dream": 16.0,
+    "Torgersen": 8.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df: pd.DataFrame) -> pd.DataFrame:\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n\n    # Standardize island names: strip whitespace and fix known variants\n    island_map = {\n        \"Dream \": \"Dream\",\n        \"Torgerson\": \"Torgersen\",\n        \"Bisco\": \"Biscoe\"\n    }\n    df[\"island\"] = df[\"island\"].astype(str).str.strip()\n    df[\"island\"] = df[\"island\"].replace(island_map)\n\n    # Standardize sex values: lower\u2011case and map variants\n    sex_map = {\"FEMALE\": \"female\", \"female\": \"female\", \"male\": \"male\"}\n    df[\"sex\"] = df[\"sex\"].astype(str).str.lower().replace(sex_map)\n\n    # Convert body_mass_g from text (with commas) to numeric\n    df[\"body_mass_g\"] = (\n        df[\"body_mass_g\"].astype(str)\n        .str.replace(\",\", \"\", regex=False)\n        .astype(float)\n    )\n\n    # Ensure flipper_length_mm is numeric (some rows may be strings)\n    df[\"flipper_length_mm\"] = pd.to_numeric(df[\"flipper_length_mm\"], errors=\"coerce\")\n\n    return df\n\ndef answer(df: pd.DataFrame) -> dict:\n    # Count penguins per island after cleaning\n    counts = df[\"island\"].value_counts().to_dict()\n    return counts"
+  },
+  "corrections": 9,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "penguins-test",
+  "question": "How many penguins were measured on each island?",
+  "reference_answer": {
+    "Biscoe": 28.0,
+    "Dream": 16.0,
+    "Torgersen": 8.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "sex"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

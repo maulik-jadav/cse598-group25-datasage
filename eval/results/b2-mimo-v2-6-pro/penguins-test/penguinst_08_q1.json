@@ -1,0 +1,55 @@
+{
+  "task_id": "penguinst_08_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 43.5,
+  "tokens": 3189,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 3506.0,
+    "Chinstrap": 3907.8125,
+    "Gentoo": 5295.3125
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\nSPECIES_MAP = {'adelie': 'Adelie', 'adeile': 'Adelie', 'chinstrap': 'Chinstrap', 'gentoo': 'Gentoo', 'gentto': 'Gentoo'}\nISLAND_MAP = {'biscoe': 'Biscoe', 'dream': 'Dream', 'torgersen': 'Torgersen'}\n\ndef clean(df):\n    d = df.copy()\n    # label variants: species typos / case\n    d['species'] = d['species'].astype(str).str.strip().str.lower().map(SPECIES_MAP).fillna(d['species'].astype(str).str.strip())\n    # label variants: island case\n    d['island'] = d['island'].astype(str).str.strip().str.lower().map(ISLAND_MAP).fillna(d['island'].astype(str).str.strip())\n    # text numbers with thousands separators -> numeric\n    bm = d['body_mass_g'].astype(str).str.replace(',', '', regex=False).str.replace(' ', '', regex=False)\n    d['body_mass_g'] = pd.to_numeric(bm, errors='coerce')\n    # out-of-range values caused by x1000 scaling errors -> rescale into [2500, 6500]\n    mask = d['body_mass_g'].notna() & ((d['body_mass_g'] < 2500) | (d['body_mass_g'] > 6500))\n    while mask.any():\n        d.loc[mask, 'body_mass_g'] = d.loc[mask, 'body_mass_g'] / 1000.0\n        mask = d['body_mass_g'].notna() & ((d['body_mass_g'] < 2500) | (d['body_mass_g'] > 6500))\n    # drop rows that still violate the valid range\n    d = d[d['body_mass_g'].isna() | ((d['body_mass_g'] >= 2500) & (d['body_mass_g'] <= 6500))]\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['species', 'body_mass_g'])\n    g = d.groupby('species')['body_mass_g'].mean()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each species?",
+  "reference_answer": {
+    "Adelie": 3500.0,
+    "Chinstrap": 3907.8125,
+    "Gentoo": 5248.3333
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "task_id": "penguinst_09_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 19.72,
+  "tokens": 2905,
+  "stop_reason": "code_error",
+  "note": "SyntaxError: expected 'else' after 'if' expression",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Parse body_mass_g from text to numeric\n    df[\"body_mass_g\"] = pd.to_numeric(df[\"body_mass_g\"].str.replace(r'\\s|,|\\$', '', regex=True), errors='coerce')\n    # Convert year to datetime (or at least ensure it's numeric and valid)\n    df[\"year\"] = pd.to_datetime(df[\"year\"], errors='coerce').dt.year\n    # Fix negative flipper_length_mm to NaN\n    df.loc[df[\"flipper_length_mm\"] < 170, \"flipper_length_mm\"] = None\n    # Filter out of range flipper_length_mm\n    df = df[(df[\"flipper_length_mm\"] >= 170) & (df[\"flipper_length_mm\"] <= 235)]\n    # Filter out of range body_mass_g\n    df = df[(df[\"body_mass_g\"] >= 2500) & (df[\"body_mass_g\"] <= 6500)]\n    # Normalize species labels to canonical form (Adelie, Chinstrap, Gentoo)\n    species_map = {\"Adelie\": \"Adelie\", \"Adelie \": \"Adelie\", \"adelie\": \"Adelie\",\n                    \"Gentoo\": \"Gentoo\", \"Gentoo \": \"Gentoo\", \"gentoo\": \"Gentoo\",\n                    \"Gentto\": \"Gentoo\",\n                    \"Chinstrap\": \"Chinstrap\", \"Chinstrap \": \"Chinstrap\", \"chinstrap\": \"Chinstrap\"}\n    df[\"species\"] = df[\"species\"].map(species_map).where(df[\"species\"].isin([\"Adelie\", \"Chinstrap\", \"Gentoo\"]), None)\n    # Drop rows where species is now missing\n    df = df.dropna(subset=[\"species\"])\n    # Keep only id column intact (penguin_id)\n    return df\n\ndef answer(df):\n    # Group by species, compute mean flipper_length_mm\n    grouped = df.groupby(\"species\").mean()\n    result = {}\n    for label, row in grouped[\"flipper_length_mm\"].to_frame().iteritems():\n        # If group label is not in allowed set, skip\n        if label not in [\"Adelie\", \"Chinstrap\", \"Gentoo\"]:\n            continue\n        result[label] = round(row[\"flipper_length_mm\"], 1) if not pd.isna(row[\"flipper_length_mm\"])\n        else None\n    # If all species present, add 'all' key\n    if set([k for k in result if not pd.isna(result[k])]) == set([\"Adelie\", \"Chinstrap\", \"Gentoo\"]):\n        all_val = df[df[\"species\"].isin([\"Adelie\", \"Chinstrap\", \"Gentoo\"])][\"flipper_length_mm\"].mean()\n        if not pd.isna(all_val):\n            result[\"all\"] = round(all_val, 1)\n    # Remove keys with NaN values\n    result = {k: v for k, v in result.items() if not pd.isna(v)}\n    return result"
+  },
+  "corrections": 0,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-32b",
+  "dataset": "penguins-test",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 193.1667,
+    "Chinstrap": 197.0909,
+    "Gentoo": 216.6842
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "year"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ]
+  ]
+}

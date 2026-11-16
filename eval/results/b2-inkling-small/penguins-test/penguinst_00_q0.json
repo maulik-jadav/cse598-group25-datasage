@@ -1,0 +1,65 @@
+{
+  "task_id": "penguinst_00_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 3,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 41.93,
+  "tokens": 3662,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "female": 3944.1666666666665,
+    "male": 4668.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Fix label variants and whitespace\n    df['species'] = df['species'].str.strip().replace({'chinstrap': 'Chinstrap'})\n    df['island'] = df['island'].str.strip()\n    # Convert text-encoded numbers to numeric\n    df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n    df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    df['year'] = pd.to_numeric(df['year'], errors='coerce')\n    # Remove out-of-range body masses\n    df.loc[(df['body_mass_g'] < 2500) | (df['body_mass_g'] > 6500), 'body_mass_g'] = float('nan')\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Drop rows with missing sex or missing/invalid body mass\n    sub = df.dropna(subset=['sex', 'body_mass_g'])\n    sub = sub[sub['sex'].isin(['male', 'female'])]\n    result = sub.groupby('sex')['body_mass_g'].mean().to_dict()\n    # Ensure plain float values\n    return {k: float(v) for k, v in result.items()}\n"
+  },
+  "corrections": 3,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "penguins-test",
+  "question": "What is the average body mass for each sex?",
+  "reference_answer": {
+    "female": 3944.1667,
+    "male": 4668.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "label_variant",
+      "species"
+    ],
+    [
+      "missing",
+      "sex"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}
