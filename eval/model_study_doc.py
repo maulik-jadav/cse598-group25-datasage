@@ -115,10 +115,13 @@ vals = {
     "N_CODE_TO": sum(r["reason"].startswith("code_timeout") for r in reruns),
     "TIMEOUTS_LEFT": timeouts_left_sentence(),
     "B2_PARTIAL": ("Single calls not run to the end (the slowest reasoning models often needed more than the 180 s "
-                   "timeout per attempt, and we stopped waiting): " + "; ".join(
+                   "timeout per attempt): " + "; ".join(
                        f"`{M[x]['model']}` {B(x)['tasks']} of 80" for x in M if B(x) and B(x)['tasks'] < 80)
                    + ". For these the Agent minus B2 column is left empty.")
-    if any(B(x) and B(x)["tasks"] < 80 for x in M) else "Every single-call run has all 80 questions.",
+    if any(B(x) and B(x)["tasks"] < 80 for x in M) else
+    "Apart from the two saturated models, every single-call run has all 80 questions.",
+    "B2_SLOW": "; ".join(f"`{M[x]['model']}` {B(x)['stop_reasons'].get('api_error', 0)} of 80"
+                         for x in M if B(x) and B(x)["stop_reasons"].get("api_error", 0) >= 20),
     "PARTIAL_LIMIT": ("Partial models: " + partial_note + ". Their accuracy is over the questions they finished, which "
                       "are not a random sample (the earlier, mostly sales, splits finished first).") if partial else
                      "Every model in the tables ran all 80 questions.",
