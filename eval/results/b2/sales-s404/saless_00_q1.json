@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_00_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 23.66,
+  "tokens": 2479,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 2840.0,
+    "North": 26200.0,
+    "South": 14890.0,
+    "West": 1950.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Clean Price: remove $ and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'\\$|\\\\', '', regex=True).astype(float)\n    \n    # Fix Quantity: ensure positive integers\n    df['Quantity'] = df['Quantity'].astype(int)\n    df.loc[df['Quantity'] <= 0, 'Quantity'] = 1  # Replace non-positive with minimum valid value\n    \n    # Recompute Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Clean Region: strip whitespace and title case\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    \n    # Ensure only valid regions\n    valid_regions = ['North', 'South', 'East', 'West']\n    df = df[df['Region'].isin(valid_regions)].reset_index(drop=True)\n    \n    return df\n\ndef answer(df):\n    # Filter for Electronics category\n    electronics_df = df[df['Category'] == 'Electronics']\n    # Group by Region and sum Revenue\n    result = electronics_df.groupby('Region')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 9,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s404",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 2840.0,
+    "North": 26200.0,
+    "South": 14890.0,
+    "West": 1950.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

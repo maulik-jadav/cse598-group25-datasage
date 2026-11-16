@@ -1,0 +1,65 @@
+{
+  "task_id": "saless_05_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 27.57,
+  "tokens": 2190,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 33.0,
+    "North": 40.0,
+    "South": 50.0,
+    "West": 48.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix invalid dates: filter out invalid date strings\n    df = df[df['Date'].str.match('\\\\d{4}-\\\\d{2}-\\\\d{2}', na=False)]\n    \n    # Clean Category: strip whitespace to fix label variants\n    df['Category'] = df['Category'].str.strip()\n    \n    # Fix negative Quantity: take absolute value (assuming it's a data entry error)\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recompute Revenue to ensure consistency: Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    result = df.groupby('Region')['Quantity'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 6,
+  "planted": 11,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s303",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 33.0,
+    "North": 42.0,
+    "South": 47.0,
+    "West": 48.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

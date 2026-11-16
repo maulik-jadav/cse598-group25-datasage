@@ -1,0 +1,57 @@
+{
+  "task_id": "saless_02_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 20.04,
+  "tokens": 2408,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 8.0,
+    "Electronics": 12.0,
+    "Furniture": 11.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Category label variants\n    category_mapping = {\n        'Furnture': 'Furniture',\n        ' Office Supplies': 'Office Supplies',\n        'Electornics': 'Electronics',\n        'Office Supplies ': 'Office Supplies',\n        'Accessories ': 'Accessories'\n    }\n    df['Category'] = df['Category'].replace(category_mapping)\n    \n    # Fix Region label variants\n    df['Region'] = df['Region'].str.strip().str.title()\n    \n    # Clean Price: remove $ and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace('$', '').str.replace(',', '').astype(float)\n    \n    # Recompute Revenue = Quantity * Price to fix any cross-column inconsistencies\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    return df.groupby('Category').size().to_dict()"
+  },
+  "corrections": 14,
+  "planted": 14,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s404",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 8.0,
+    "Electronics": 12.0,
+    "Furniture": 11.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

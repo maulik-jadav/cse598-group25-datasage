@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 20.08,
+  "tokens": 2410,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 84.0,
+    "North": 84.0,
+    "South": 101.0,
+    "West": 79.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Category: remove leading/trailing spaces\n    df['Category'] = df['Category'].str.strip()\n    \n    # Fix Price: remove $ and convert to float, then to int if whole number\n    df['Price'] = df['Price'].astype(str).str.replace(r'\\$', '', regex=True).astype(float)\n    \n    # Correct Revenue using Quantity and Price, but only where Quantity is positive\n    # For negative Quantity, we'll set Revenue to Quantity * Price (correcting any prior error)\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Fix negative Quantity: set to absolute value (assuming data entry error)\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recompute Revenue after fixing Quantity\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    return df.groupby('Region')['Quantity'].sum().astype(int).to_dict()"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s303",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 84.0,
+    "North": 75.0,
+    "South": 101.0,
+    "West": 79.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

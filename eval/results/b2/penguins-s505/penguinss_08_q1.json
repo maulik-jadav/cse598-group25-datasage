@@ -1,0 +1,51 @@
+{
+  "task_id": "penguinss_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 21.77,
+  "tokens": 2510,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Biscoe": 39.6125,
+    "Dream": 38.166666666666664,
+    "Torgersen": 40.050000000000004
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix case variant in island column: 'dream' -> 'Dream'\n    df['island'] = df['island'].replace({'dream': 'Dream'})\n    \n    # Fix out-of-range body_mass_g (5800000 is way above max 6500)\n    # Assume it's a typo and should be 5800 (close to other values)\n    df['body_mass_g'] = df['body_mass_g'].apply(lambda x: 5800 if x > 6500 else x)\n    \n    return df\n\ndef answer(df):\n    # Filter for Adelie penguins only\n    adelie_df = df[df['species'] == 'Adelie']\n    \n    # Group by island and calculate average bill length\n    result = adelie_df.groupby('island')['bill_length_mm'].mean()\n    \n    # Convert to dictionary with island as key\n    return result.to_dict()"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "penguins-s505",
+  "question": "What is the average bill length by island for Adelie penguins?",
+  "reference_answer": {
+    "Biscoe": 39.6125,
+    "Dream": 38.1667,
+    "Torgersen": 40.05
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "out_of_range",
+      "body_mass_g"
+    ]
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "task_id": "saless_04_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 13.82,
+  "tokens": 2191,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 3000.0,
+    "North": 450.0,
+    "South": 7970.0,
+    "West": 4500.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix region label variants by standardizing case and correcting typos\n    region_mapping = {'Suoth': 'South', 'east': 'East'}\n    df = df.copy()\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Convert Date to datetime, invalid dates (like '13/45/2026') become NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Recompute Revenue as Quantity * Price to fix any cross-column inconsistencies\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    # Filter for Electronics category\n    electronics_df = df[df['Category'] == 'Electronics']\n    # Group by Region and sum Revenue, drop missing regions\n    result = electronics_df.groupby('Region')['Revenue'].sum().dropna()\n    return result.to_dict()"
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 3000.0,
+    "North": 450.0,
+    "South": 7970.0,
+    "West": 4500.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

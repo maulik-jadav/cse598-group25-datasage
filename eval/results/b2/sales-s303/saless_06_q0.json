@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_06_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 16.72,
+  "tokens": 2186,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 1905.0,
+    "Electronics": 25860.0,
+    "Furniture": 15120.0,
+    "Office Supplies": 480.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates()\n    \n    # Fix 'Wst' typo in Region to 'West'\n    df = df.copy()\n    df['Region'] = df['Region'].replace({'Wst': 'West'})\n    \n    # Correct negative Quantity values (they should be positive per business rules)\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recompute Revenue as Quantity * Price to fix any incorrect values (e.g., row 1 has Revenue=210005)\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    # Group by Category and sum Revenue\n    result = df_clean.groupby('Category')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s303",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 1905.0,
+    "Electronics": 25620.0,
+    "Furniture": 12670.0,
+    "Office Supplies": 426.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Region"
+    ]
+  ]
+}

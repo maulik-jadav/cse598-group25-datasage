@@ -1,0 +1,60 @@
+{
+  "task_id": "saless_00_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 4,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 34.84,
+  "tokens": 2391,
+  "stop_reason": "code_error",
+  "note": "AttributeError: Can only use .str accessor with string values, not floating. Did you mean: 'std'?",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix Date: Convert to datetime, invalid dates become NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    \n    # Fix Category: Remove leading/trailing spaces and correct spelling\n    df['Category'] = df['Category'].str.strip()\n    df['Category'] = df['Category'].replace('Office Suplies', 'Office Supplies')\n    \n    # Fix Price: Remove non-numeric characters and convert to float\n    df['Price'] = df['Price'].str.replace(r'[^0-9.]', '', regex=True).astype(float)\n    \n    # Fix Quantity: Take absolute value to correct negative quantities (units sold)\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Recompute Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    # Group by Region and sum Quantity\n    result = df_clean.groupby('Region')['Quantity'].sum().astype(int).to_dict()\n    return result"
+  },
+  "corrections": 0,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2",
+  "dataset": "sales-s303",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 76.0,
+    "North": 60.0,
+    "South": 41.0,
+    "West": 36.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

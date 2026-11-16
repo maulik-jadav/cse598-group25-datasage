@@ -1,0 +1,65 @@
+{
+  "task_id": "saless_04_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 5,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 29.47,
+  "tokens": 2361,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 30.83,
+    "Electronics": 464.55,
+    "Furniture": 143.75,
+    "Office Supplies": 13.06
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Price: remove $ and convert to float\n    df['Price'] = df['Price'].astype(str).str.replace(r'\\$', '', regex=True).astype(float)\n    \n    # Fix Region: standardize case\n    df['Region'] = df['Region'].astype(str).str.capitalize()\n    \n    # Remove rows with negative Quantity or Revenue (invalid sales)\n    df = df[df['Quantity'] > 0]\n    df = df[df['Revenue'] > 0]\n    \n    # Drop rows with missing Region\n    df = df.dropna(subset=['Region'])\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('Category')['Price'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 8,
+  "planted": 9,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s303",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 30.8333,
+    "Electronics": 464.5455,
+    "Furniture": 136.1538,
+    "Office Supplies": 13.0588
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

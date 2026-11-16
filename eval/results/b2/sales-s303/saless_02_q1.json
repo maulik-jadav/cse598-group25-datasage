@@ -1,0 +1,53 @@
+{
+  "task_id": "saless_02_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 21.24,
+  "tokens": 2333,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 11.0,
+    "Electronics": 16.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix Price: remove $ and convert to numeric\n    df = df.copy()\n    df['Price'] = df['Price'].astype(str).str.replace(r'[^0-9.]', '', regex=True).astype(float)\n    \n    # Fix Region: correct label variants\n    region_mapping = {\n        'Wst': 'West',\n        'Suoth': 'South',\n        'East ': 'East',\n        'Nort': 'North',\n        'South ': 'South'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Drop exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    return df\n\ndef answer(df):\n    df_clean = clean(df)\n    result = df_clean.groupby('Category').size().to_dict()\n    return result"
+  },
+  "corrections": 8,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s303",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 11.0,
+    "Electronics": 16.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

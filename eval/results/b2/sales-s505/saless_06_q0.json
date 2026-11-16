@@ -1,0 +1,57 @@
+{
+  "task_id": "saless_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 18.36,
+  "tokens": 2286,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 64.0,
+    "North": 44.0,
+    "South": 20.0,
+    "West": 52.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Region: standardize case, strip whitespace, correct obvious typos\n    region_mapping = {\n        'Wst': 'West',\n        'north': 'North',\n        'east': 'East',\n        'Eats': 'East',\n        ' East': 'East'\n    }\n    df['Region'] = df['Region'].str.strip().replace(region_mapping)\n    \n    # Ensure Quantity and Revenue are numeric and fix negatives if possible\n    # Since Revenue = Quantity * Price, we can recalculate Revenue to fix inconsistencies\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Drop rows where Quantity is negative or missing, as negative sales don't make sense\n    df = df[df['Quantity'] > 0]\n    \n    # Only keep rows with non-missing Region\n    df = df.dropna(subset=['Region'])\n    \n    return df\n\ndef answer(df):\n    result = df.groupby('Region')['Quantity'].sum().round().astype(int)\n    return result.to_dict()"
+  },
+  "corrections": 9,
+  "planted": 12,
+  "damaged_rows": 2,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s505",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 64.0,
+    "North": 44.0,
+    "South": 20.0,
+    "West": 52.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ]
+  ]
+}

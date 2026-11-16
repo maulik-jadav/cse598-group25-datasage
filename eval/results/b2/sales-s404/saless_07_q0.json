@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_07_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 42.82,
+  "tokens": 2315,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2023-01": 1536.0,
+    "2023-02": 5714.0,
+    "2023-03": 5421.0,
+    "2023-04": 696.0,
+    "2023-05": 9622.0,
+    "2023-06": 2299.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Region: standardize case and strip whitespace\n    df['Region'] = df['Region'].str.strip().str.capitalize()\n    # Map common typos\n    region_mapping = {'Eats': 'East', 'Suoth': 'South', 'Wst': 'West'}\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Convert Date to datetime and fix invalid years (e.g., 2026 -> 2023)\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # Assuming current data should be around 2023, not 2026\n    df['Date'] = df['Date'].apply(lambda x: x.replace(year=x.year - 3) if x.year > 2023 else x)\n    \n    # Fix Revenue: recalculate as Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    df['Month'] = df['Date'].dt.to_period('M').astype(str)\n    result = df.groupby('Month')['Revenue'].sum().round(2).to_dict()\n    return result"
+  },
+  "corrections": 15,
+  "planted": 15,
+  "damaged_rows": 0,
+  "damaged_cells": 44,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s404",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 1536.0,
+    "2026-02": 5714.0,
+    "2026-03": 5421.0,
+    "2026-04": 696.0,
+    "2026-05": 9622.0,
+    "2026-06": 2299.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

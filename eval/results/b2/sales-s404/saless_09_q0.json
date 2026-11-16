@@ -1,0 +1,61 @@
+{
+  "task_id": "saless_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 22.77,
+  "tokens": 2473,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 33.12,
+    "Electronics": 339.38,
+    "Furniture": 210.56,
+    "Office Supplies": 10.67
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Remove exact duplicate rows\n    df = df.drop_duplicates().reset_index(drop=True)\n    \n    # Fix Price: convert text to numeric, remove '$' and handle non-numeric\n    df['Price'] = df['Price'].astype(str).str.replace('$', '', regex=False).str.replace('.00', '', regex=False)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    \n    # Fix Region: standardize label variants\n    region_mapping = {\n        'Nort': 'North',\n        ' South': 'South',\n        'West ': 'West',\n        'Eats': 'East'\n    }\n    df['Region'] = df['Region'].replace(region_mapping)\n    \n    # Negative Quantity and Revenue: since Quantity should be >= 1, we take absolute value and fix\n    # But note: negative Quantity leads to negative Revenue. We assume data entry error, so correct sign\n    # However, Quantity must be at least 1, so we take absolute value and ensure positive\n    df['Quantity'] = df['Quantity'].abs()\n    # Recompute Revenue to ensure consistency\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    return df\n\ndef answer(df):\n    df = clean(df)\n    result = df.groupby('Category')['Price'].mean().round(2).to_dict()\n    return result"
+  },
+  "corrections": 7,
+  "planted": 9,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2",
+  "dataset": "sales-s404",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 33.125,
+    "Electronics": 339.375,
+    "Furniture": 202.3529,
+    "Office Supplies": 10.9412
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}
