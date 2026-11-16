@@ -84,13 +84,18 @@ of the two samples: Vyshanth's 8-row `messy_sales.csv`, or `examples/large_sales
 planted problems; rebuild it with `python examples/make_large_sales.py`). Both use
 `examples/messy_sales_rules.json` and the question "What was total revenue by category?".
 
+- **Ask me or Auto.** Next to Run: *Ask me* (default) stops at every risky fix; *Auto* applies every fix
+  without asking, shows each one briefly, and still logs it as approved automatically.
+- **Three tabs.** *Table* is the live run on one screen; *Answer* opens by itself when the run ends; *Data
+  health* shows what the run found and did.
 - **Live table.** The first 40 rows show at once; any row with a problem, anywhere in the file, slides in
   as the agent finds it. Problem cells are amber, fixed cells green, removed rows fold away, and rejected
   fixes stay marked as caveats.
 - **Approvals on the row.** Each risky fix opens a card under the affected row, saying what it will do and
   showing the exact rows: removed rows in full, or each changed cell as old → new. Click a row number to
   jump to it. Keep or Apply decides it.
-- **Answer.** The result counts up on the right, with the change log and the four output files.
+- **Answer.** The result counts up, with every change and who approved it, and the four output files,
+  each with a line on what it is for (cleaned table, report, replay script, step log).
 - **Data health.** After the run: rows before and after, every problem found by column (fixed, kept as a
   caveat, or not needed for the question), and the answer before cleaning next to the answer after.
 

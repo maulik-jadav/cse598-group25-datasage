@@ -190,7 +190,7 @@ class Handler(BaseHTTPRequestHandler):
                 old.cancel()
         sheet = body.get("sheet")
         run = Run(input_path, question, rules_path, folder, MODEL, sheet=str(sheet) if sheet not in (None, "") else None,
-                  client_id=client)
+                  client_id=client, mode=str(body.get("approve") or "ask"))
         RUNS[run_id] = run
         run.start()
         prune()

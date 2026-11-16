@@ -241,13 +241,17 @@ class BrowserApprover(Approver):
         waiter = threading.Event()
         self.run.pending[approval_id] = {"event": waiter, "answer": False}
         rows = list(preview.get("rows_removed") or args.get("rows") or [])
+        auto = self.run.mode == "auto"
         self.run.emit({
-            "type": "approval", "id": approval_id, "tool": tool, "risk": risk,
+            "type": "approval", "id": approval_id, "tool": tool, "risk": risk, "auto": auto,
             "title": QUESTIONS.get(tool, f"Apply {tool}?").format(column=args.get("column", "this column")),
             "summary": future(tool, args, preview), "reason": args.get("reason", ""),
             "rows": [int(r) for r in rows][:20], "column": args.get("column"),
             "examples": examples(preview, tool, args, getattr(self.run, "session", None)),
         })
+        if auto:  # Auto mode: approve at once; the card is shown as a short notice and the change is logged
+            self.run.pending[approval_id]["answer"] = True
+            waiter.set()
         if self.run.cancelled:  # a stop that landed while the card was being sent
             waiter.set()
         answered = waiter.wait(APPROVAL_TIMEOUT) and not self.run.cancelled
@@ -258,11 +262,12 @@ class BrowserApprover(Approver):
 
 class Run:
     def __init__(self, input_path: Path, question: str, rules_path: Path | None, out_dir: Path, model: str | None,
-                 sheet: str | None = None, client_id: str = ""):
+                 sheet: str | None = None, client_id: str = "", mode: str = "ask"):
         self.id = out_dir.name
         self.input_path, self.question, self.rules_path, self.out_dir, self.model = input_path, question, rules_path, out_dir, model
         self.sheet = sheet
         self.client_id = client_id
+        self.mode = mode if mode in ("ask", "auto") else "ask"
         self.created = time.time()
         self.events: list[dict] = []
         self.cond = threading.Condition()
@@ -326,16 +331,19 @@ class Run:
                                should_stop=lambda: self.cancelled, **kwargs)
             write_outputs(result, self.out_dir)
             analysis = result.session.analyses[-1] if result.session.analyses else None
-            changes = [{"applied": True, "text": plural(c.summary), "approval": c.approval}
+            how = {"auto": "safe, applied without asking",
+                   "approved": "approved automatically" if self.mode == "auto" else "you approved"}
+            changes = [{"applied": True, "text": plural(c.summary), "approval": c.approval, "how": how.get(c.approval, "")}
                        for c in result.session.changes]
-            changes += [{"applied": False, "text": plural(f"Not applied: {r['summary']} (kept as a caveat)"),
-                         "approval": "rejected"} for r in result.session.rejected]
+            changes += [{"applied": False, "text": plural(f"Not applied: {r['summary']}"), "approval": "rejected",
+                         "how": "you chose Keep, so it is listed as a caveat"} for r in result.session.rejected]
             self.emit({
                 "type": "done", "finished": result.finished, "stop_reason": result.stop_reason,
                 "answer": analysis["result"] if analysis else None,
                 "analysis": {k: analysis.get(k) for k in ("group_by", "metric", "agg", "rows_used")} if analysis else None,
                 "summary": result.final_summary, "changes": changes, "seconds": round(time.time() - start, 1),
                 "tool_calls": result.tool_calls, "approvals": result.approvals_asked, "model": result.model,
+                "mode": self.mode,
                 "files": ["cleaned.csv", "report.md", "replay.py", "trace.jsonl"], "table": table_state(result.session),
                 "health": health(result.session, self.analyze_args),
             })
