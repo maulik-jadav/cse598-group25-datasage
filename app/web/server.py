@@ -97,9 +97,9 @@ class Handler(BaseHTTPRequestHandler):
         if parts[0] == "static" and len(parts) == 2:
             return self._static(parts[1])
         if parts == ["api", "sample"]:
-            s = SAMPLES.get(parse_qs(url.query).get("size", ["small"])[0], SAMPLES["small"])
-            label = f"{len(s['inputs'])} monthly files" if s.get("inputs") else s["input"].name
-            return self._json({"question": s["question"], "input": label, "rules": s["rules"].name})
+            return self._json(sample_info(parse_qs(url.query).get("size", ["small"])[0]))
+        if parts == ["api", "config"]:  # the page asks how to run: here, one request per step (see hosted.py)
+            return self._json({"hosted": False})
         if len(parts) == 4 and parts[:2] == ["api", "runs"] and parts[3] == "events":
             run = self._run(parts[2])
             return self._events(run, int(parse_qs(url.query).get("from", ["0"])[0])) if run else self._error(404, "no such run")
@@ -129,7 +129,8 @@ class Handler(BaseHTTPRequestHandler):
         if parts == ["api", "runs"]:
             return self._start(body)
         if parts == ["api", "inspect"]:
-            return self._inspect(body)
+            status, data = inspect_upload(body)
+            return self._json(data, status)
         if len(parts) == 4 and parts[:2] == ["api", "runs"]:
             run = self._run(parts[2])
             if not run:
@@ -149,103 +150,12 @@ class Handler(BaseHTTPRequestHandler):
         ctype = mimetypes.guess_type(path.name)[0] or "application/octet-stream"
         self._send(200, path.read_bytes(), ctype + ("; charset=utf-8" if ctype.startswith("text/") or ctype.endswith("javascript") else ""))
 
-    def _decode(self, body: dict) -> tuple[str, bytes]:
-        name = Path(str(body.get("file_name") or "")).name
-        suffix = Path(name).suffix.lower()
-        if suffix not in (".csv", ".xlsx"):
-            raise ValueError("upload a .csv or .xlsx file")
-        try:
-            data = base64.b64decode(body.get("file_b64") or "", validate=True)
-        except (binascii.Error, ValueError):
-            raise ValueError("could not read the file")
-        if not data or len(data) > MAX_UPLOAD:
-            raise ValueError("the file is empty or larger than 20 MB")
-        return suffix, data
-
-    def _inspect(self, body: dict) -> None:
-        """Before a run: the sheets of an Excel file, or the separator and encoding found in a CSV."""
-        try:
-            suffix, data = self._decode(body)
-        except ValueError as err:
-            return self._error(400, str(err))
-        with tempfile.TemporaryDirectory() as tmp:
-            path = Path(tmp) / ("inspect" + suffix)
-            path.write_bytes(data)
-            try:
-                if suffix == ".xlsx":
-                    return self._json({"kind": "excel", "sheets": excel_sheets(path)})
-                return self._json({"kind": "csv", **detect_csv(path)})
-            except Exception as err:  # a damaged file: say so instead of failing later
-                return self._error(400, f"could not open the file: {type(err).__name__}")
-
-    def _rules(self, body: dict, folder: Path):
-        """The uploaded rules file saved in the run folder; None without one, False when it is not valid JSON."""
-        if not body.get("rules_text"):
-            return None
-        try:
-            json.loads(body["rules_text"])
-        except json.JSONDecodeError:
-            return False
-        path = folder / "rules.json"
-        path.write_text(body["rules_text"])
-        return path
-
     def _start(self, body: dict) -> None:
-        question = str(body.get("question") or "").strip()
-        if not question:
-            return self._error(400, "type a question")
-        run_id = uuid.uuid4().hex[:10]
-        folder = OUT / run_id
-        folder.mkdir(parents=True, exist_ok=True)
-        sources = None
-        if body.get("sample"):
-            s = SAMPLES.get(str(body["sample"]), SAMPLES["small"])
-            input_path, rules_path = s["input"], s["rules"]
-            if s.get("inputs"):
-                input_path = folder / "input.csv"
-                sources = stack_files(s["inputs"], input_path)
-        elif isinstance(body.get("files"), list) and len(body["files"]) > 1:
-            parts = []
-            for i, f in enumerate(body["files"][:MAX_FILES]):
-                try:
-                    suffix, data = self._decode(f)
-                except ValueError as err:
-                    return self._error(400, f"{Path(str(f.get('file_name') or '')).name or 'a file'}: {err}")
-                part = folder / "parts" / f"{i:02d}{suffix}"
-                part.parent.mkdir(parents=True, exist_ok=True)
-                part.write_bytes(data)
-                parts.append((part, Path(str(f.get("file_name") or part.name)).name))
-            input_path = folder / "input.csv"
-            try:
-                sources = stack_files([p for p, _ in parts], input_path, [n for _, n in parts])
-            except ValueError as err:
-                return self._error(400, str(err))
-            rules_path = self._rules(body, folder)
-            if rules_path is False:
-                return self._error(400, "the rules file is not valid JSON")
-        else:
-            try:
-                suffix, data = self._decode(body)
-            except ValueError as err:
-                return self._error(400, str(err))
-            input_path = folder / ("input" + suffix)
-            input_path.write_bytes(data)
-            rules_path = self._rules(body, folder)
-            if rules_path is False:
-                return self._error(400, "the rules file is not valid JSON")
-        client = str(body.get("client_id") or "")
-        client = client if CLIENT_ID.match(client) else ""
-        for old in RUNS.values():  # a new run replaces this browser's earlier run, never someone else's
-            if not old.done and client and old.client_id == client:
-                old.cancel()
-        sheet = body.get("sheet")
-        run = Run(input_path, question, rules_path, folder, MODEL, sheet=str(sheet) if sheet not in (None, "") else None,
-                  client_id=client, mode=str(body.get("approve") or "ask"))
-        run.sources = sources
-        RUNS[run_id] = run
+        run, error = prepare_run(body, MODEL)
+        if error:
+            return self._error(400, error)
         run.start()
-        prune()
-        self._json({"run_id": run_id})
+        self._json({"run_id": run.id})
 
     def _events(self, run: Run, start: int) -> None:
         self.send_response(HTTPStatus.OK)
@@ -275,6 +185,115 @@ class Handler(BaseHTTPRequestHandler):
                     break
         except (BrokenPipeError, ConnectionResetError):
             pass
+
+
+def sample_info(size: str) -> dict:
+    s = SAMPLES.get(size, SAMPLES["small"])
+    label = f"{len(s['inputs'])} monthly files" if s.get("inputs") else s["input"].name
+    return {"question": s["question"], "input": label, "rules": s["rules"].name}
+
+
+def decode_upload(body: dict) -> tuple[str, bytes]:
+    """The suffix and bytes of an uploaded file; ValueError with a message for the page when it is not usable."""
+    name = Path(str(body.get("file_name") or "")).name
+    suffix = Path(name).suffix.lower()
+    if suffix not in (".csv", ".xlsx"):
+        raise ValueError("upload a .csv or .xlsx file")
+    try:
+        data = base64.b64decode(body.get("file_b64") or "", validate=True)
+    except (binascii.Error, ValueError):
+        raise ValueError("could not read the file")
+    if not data or len(data) > MAX_UPLOAD:
+        raise ValueError("the file is empty or larger than 20 MB")
+    return suffix, data
+
+
+def inspect_upload(body: dict) -> tuple[int, dict]:
+    """Before a run: the sheets of an Excel file, or the separator and encoding found in a CSV."""
+    try:
+        suffix, data = decode_upload(body)
+    except ValueError as err:
+        return 400, {"error": str(err)}
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / ("inspect" + suffix)
+        path.write_bytes(data)
+        try:
+            if suffix == ".xlsx":
+                return 200, {"kind": "excel", "sheets": excel_sheets(path)}
+            return 200, {"kind": "csv", **detect_csv(path)}
+        except Exception as err:  # a damaged file: say so instead of failing later
+            return 400, {"error": f"could not open the file: {type(err).__name__}"}
+
+
+def save_rules(body: dict, folder: Path):
+    """The uploaded rules file saved in the run folder; None without one, False when it is not valid JSON."""
+    if not body.get("rules_text"):
+        return None
+    try:
+        json.loads(body["rules_text"])
+    except json.JSONDecodeError:
+        return False
+    path = folder / "rules.json"
+    path.write_text(body["rules_text"])
+    return path
+
+
+def prepare_run(body: dict, model: str | None = None) -> tuple[Run | None, str]:
+    """Save the upload, build the Run and register it (not started). Returns (run, "") or (None, message)."""
+    question = str(body.get("question") or "").strip()
+    if not question:
+        return None, "type a question"
+    run_id = uuid.uuid4().hex[:10]
+    folder = OUT / run_id
+    folder.mkdir(parents=True, exist_ok=True)
+    sources = None
+    if body.get("sample"):
+        s = SAMPLES.get(str(body["sample"]), SAMPLES["small"])
+        input_path, rules_path = s["input"], s["rules"]
+        if s.get("inputs"):
+            input_path = folder / "input.csv"
+            sources = stack_files(s["inputs"], input_path)
+    elif isinstance(body.get("files"), list) and len(body["files"]) > 1:
+        parts = []
+        for i, f in enumerate(body["files"][:MAX_FILES]):
+            try:
+                suffix, data = decode_upload(f)
+            except ValueError as err:
+                return None, f"{Path(str(f.get('file_name') or '')).name or 'a file'}: {err}"
+            part = folder / "parts" / f"{i:02d}{suffix}"
+            part.parent.mkdir(parents=True, exist_ok=True)
+            part.write_bytes(data)
+            parts.append((part, Path(str(f.get("file_name") or part.name)).name))
+        input_path = folder / "input.csv"
+        try:
+            sources = stack_files([p for p, _ in parts], input_path, [n for _, n in parts])
+        except ValueError as err:
+            return None, str(err)
+        rules_path = save_rules(body, folder)
+        if rules_path is False:
+            return None, "the rules file is not valid JSON"
+    else:
+        try:
+            suffix, data = decode_upload(body)
+        except ValueError as err:
+            return None, str(err)
+        input_path = folder / ("input" + suffix)
+        input_path.write_bytes(data)
+        rules_path = save_rules(body, folder)
+        if rules_path is False:
+            return None, "the rules file is not valid JSON"
+    client = str(body.get("client_id") or "")
+    client = client if CLIENT_ID.match(client) else ""
+    for old in RUNS.values():  # a new run replaces this browser's earlier run, never someone else's
+        if not old.done and client and old.client_id == client:
+            old.cancel()
+    sheet = body.get("sheet")
+    run = Run(input_path, question, rules_path, folder, model, sheet=str(sheet) if sheet not in (None, "") else None,
+              client_id=client, mode=str(body.get("approve") or "ask"))
+    run.sources = sources
+    RUNS[run_id] = run
+    prune()
+    return run, ""
 
 
 def prune(now: float | None = None) -> None:

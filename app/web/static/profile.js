@@ -6,12 +6,18 @@ const P = { data: null, show: "changed" };
 
 if (!runId) fail("Open this page from a finished run (the Profile link next to the output files).");
 else {
-  fetch(`/api/runs/${encodeURIComponent(runId)}/profile`).then(async (r) => {
+  getRunFile(`/api/runs/${encodeURIComponent(runId)}/profile`).then(async (r) => {
     const d = await r.json();
     if (!r.ok) throw new Error(d.error || `error ${r.status}`);
     P.data = d;
     render();
   }).catch((err) => fail(`Could not load this profile: ${err.message}`));
+}
+
+// The hosted app keeps a run's files in the browser (Cache API, see app.js); the local server serves them.
+async function getRunFile(url) {
+  try { const hit = window.caches && (await caches.match(url)); if (hit) return hit; } catch { /* fall back to the server */ }
+  return fetch(url);
 }
 
 function fail(text) {
