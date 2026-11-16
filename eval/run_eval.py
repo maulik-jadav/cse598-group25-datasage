@@ -7,6 +7,7 @@ Systems: b0, b1, b2, datasage, datasage-small, datasage-reject, datasage-novalid
          datasage-fix, datasage-fix-strict, datasage-small-fix, datasage-small-fix-strict,
          datasage-m3 (small model, the default agent), datasage-m3-compact, datasage-m3-large
 Datasets: sales, penguins (dev), sales-heldout, penguins-heldout, and sales-test, penguins-test (seed 202)
+          sales-hard, penguins-hard (eval/generate_hard.py, seed 303); extra system: datasage-m3-gptoss
 """
 
 from __future__ import annotations
@@ -46,6 +47,13 @@ SYSTEMS = {
     "datasage-m3-large": lambda b, t, c, trace: systems.run_datasage(b, t, m3=True, client=c, trace_path=trace),
 }
 
+# Hard split study: one extra planner model of a different family (same DataSage M3 setup as datasage-m3).
+EXTRA_MODEL = "gpt-oss-120b"
+SYSTEMS["datasage-m3-gptoss"] = lambda b, t, c, trace: systems.run_datasage(b, t, model=EXTRA_MODEL, m3=True, client=c,
+                                                                           trace_path=trace)
+DATASETS = ["sales", "penguins", "sales-heldout", "penguins-heldout", "sales-test", "penguins-test",
+            "sales-hard", "penguins-hard", "sales-hard2", "penguins-hard2"]  # *-hard: eval/generate_hard.py
+
 
 def run(system: str, dataset: str, workers: int, limit: int | None, results_dir: Path, only: set[str] | None = None) -> None:
     out_dir = results_dir / system / dataset
@@ -80,7 +88,7 @@ def run(system: str, dataset: str, workers: int, limit: int | None, results_dir:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--system", required=True, choices=list(SYSTEMS))
-    parser.add_argument("--dataset", required=True, choices=["sales", "penguins", "sales-heldout", "penguins-heldout", "sales-test", "penguins-test"])
+    parser.add_argument("--dataset", required=True, choices=DATASETS)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--limit", type=int)
     parser.add_argument("--only", default="", help="comma list of task ids to run")
