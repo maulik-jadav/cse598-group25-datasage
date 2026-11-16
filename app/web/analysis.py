@@ -26,11 +26,15 @@ SPLITS = [
     ("sales", "Sales", "dev"), ("penguins", "Penguins", "dev"),
     ("sales-heldout", "Sales", "held-out"), ("penguins-heldout", "Penguins", "held-out"),
     ("sales-test", "Sales", "test"), ("penguins-test", "Penguins", "test"),
+    # Hard split (eval/generate_hard.py): 300 to 2,000 rows, mass rule breaks, distractors; hard2 is a second seed.
+    ("sales-hard", "Sales", "hard"), ("penguins-hard", "Penguins", "hard"),
+    ("sales-hard2", "Sales", "hard, seed 2"), ("penguins-hard2", "Penguins", "hard, seed 2"),
 ]
 GROUPS = [
     ("devheld", "Dev + held-out", ["sales", "penguins", "sales-heldout", "penguins-heldout"]),
     ("test", "Test", ["sales-test", "penguins-test"]),
-    ("all", "All six", [s[0] for s in SPLITS]),
+    ("all", "All six", [s[0] for s in SPLITS[:6]]),
+    ("hard", "Hard", ["sales-hard", "penguins-hard"]),
 ]
 # Plain names for the page. kind: baseline, datasage (earlier versions), final, ablation.
 SYSTEMS = {
@@ -45,6 +49,7 @@ SYSTEMS = {
     "datasage-m3": ("DataSage final, 30B", "Milestone 3: coverage check before answering, spelling merges into allowed labels", "final"),
     "datasage-m3-compact": ("Final, compact memory", "Milestone 3 with compact memory", "datasage"),
     "datasage-m3-large": ("Final, 235B", "Milestone 3 with the large model", "datasage"),
+    "datasage-m3-gptoss": ("Final, gpt-oss-120b", "Milestone 3 with gpt-oss-120b as the planner", "datasage"),
     "datasage-reject": ("Every risky fix rejected", "The 235B agent when the person says no to every risky fix", "ablation"),
     "datasage-novalidator": ("No validator", "The 235B agent without the validator that checks each fix and rolls back a bad one", "ablation"),
 }
