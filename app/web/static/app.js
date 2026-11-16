@@ -80,6 +80,7 @@ document.querySelectorAll("[data-sample]").forEach((b) => b.addEventListener("cl
 $("#askForm").addEventListener("submit", (e) => { e.preventDefault(); if (S.running && S.runId) stop(); else start(); });
 async function stop() {
   $("#runBtn").disabled = true; setStatus("Stopping");
+  if (S.ws) { S.ws.send(JSON.stringify({ type: "cancel" })); return; }
   try { await fetch(`/api/runs/${S.runId}/cancel`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" }); } catch { /* the run ends on its own */ }
 }
 // One id per browser, so a new run only replaces this browser's earlier run.
@@ -87,6 +88,9 @@ const CLIENT_ID = (() => {
   try { let id = localStorage.getItem("datasage-client"); if (!id) { id = crypto.randomUUID(); localStorage.setItem("datasage-client", id); } return id; }
   catch { return (crypto.randomUUID && crypto.randomUUID()) || String(Math.random()).slice(2); }
 })();
+
+// The hosted app (app/web/hosted.py) runs over one WebSocket; the local server uses separate requests.
+S.configReady = fetch("/api/config").then((r) => (r.ok ? r.json() : {})).then((c) => { S.hosted = !!c.hosted; }).catch(() => {});
 
 const toB64 = (file) => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1] || ""); r.onerror = rej; r.readAsDataURL(file); });
 
@@ -102,6 +106,8 @@ async function start() {
     : S.files && S.files.length > 1
       ? { question, files: await Promise.all(S.files.map(async (f) => ({ file_name: f.name, file_b64: await toB64(f) }))), rules_text: S.rules, client_id: CLIENT_ID, approve: mode }
       : { question, file_name: S.file.name, file_b64: await toB64(S.file), rules_text: S.rules, sheet: S.sheet, client_id: CLIENT_ID, approve: mode };
+  await S.configReady;
+  if (S.hosted) return startSocket(body);
   setRunning(true); setStatus("Uploading");
   let res;
   try { res = await fetch("/api/runs", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }
@@ -126,6 +132,46 @@ function listen() {
   es.onerror = () => { if (!S.running) es.close(); };
 }
 
+function startSocket(body) {
+  setRunning(true); setStatus("Uploading");
+  let ws;
+  try { ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/ws`); }
+  catch { return fail("Could not reach the DataSage server."); }
+  S.ws = ws;
+  ws.onopen = () => ws.send(JSON.stringify(body));
+  ws.onmessage = (m) => {
+    const ev = JSON.parse(m.data);
+    if (ev.type === "run") { reset(); S.runId = ev.run_id; $("#empty").hidden = true; $("#work").hidden = false; return; }
+    if (ev.type === "files") { keepOutputs(ev); return; }
+    if (ev.type === "notice") { S.notice = ev.message; setStatus(ev.message); return; }
+    if (ev.seq != null) { if (ev.seq <= S.lastSeq) return; S.lastSeq = ev.seq; }
+    handle(ev);
+  };
+  ws.onclose = () => {
+    if (S.ws === ws) S.ws = null;
+    if (S.running) fail("The connection to DataSage closed before the run finished.");
+  };
+}
+
+// Hosted app: the output files arrive over the socket. Keep them in this browser so Download works now and
+// the View and profile tabs (new tabs, same browser) can read them from the Cache API.
+async function keepOutputs(ev) {
+  S.blobs = {};
+  for (const [name, text] of Object.entries(ev.files || {})) S.blobs[name] = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+  try {
+    const cache = await caches.open("datasage-runs");
+    const runOf = (req) => new URL(req.url).pathname.split("/")[3];
+    const keys = await cache.keys();
+    const runs = [...new Set(keys.map(runOf))];
+    const old = new Set(runs.slice(0, Math.max(0, runs.length - 4)));  // keep the last few runs
+    await Promise.all(keys.filter((k) => old.has(runOf(k))).map((k) => cache.delete(k)));
+    const puts = Object.entries(ev.files || {}).map(([name, text]) =>
+      cache.put(`/api/runs/${ev.run_id}/files/${name}`, new Response(text, { headers: { "Content-Type": "text/plain; charset=utf-8" } })));
+    if (ev.profile) puts.push(cache.put(`/api/runs/${ev.run_id}/profile`, new Response(JSON.stringify(ev.profile), { headers: { "Content-Type": "application/json" } })));
+    await Promise.all(puts);
+  } catch { /* no Cache API: View and the profile tab say the file is not there; Download still works */ }
+}
+
 function handle(ev) {
   if (ev.type === "start") buildTable(ev);
   else if (ev.type === "step") step(ev);
@@ -136,6 +182,8 @@ function handle(ev) {
 }
 
 function reset() {
+  if (S.blobs) Object.values(S.blobs).forEach((u) => URL.revokeObjectURL(u));
+  S.blobs = null; S.notice = null;
   S.lastSeq = -1; S.rowEls.clear(); S.cellEls.clear(); S.asks.clear(); S.phase = null; S.ids = []; S.total = 0;
   $("#table").textContent = ""; $("#banner").hidden = true; $("#banner").textContent = "";
   $("#health").hidden = true; $("#counts").textContent = ""; $("#more").hidden = true; $("#toasts").textContent = "";
@@ -158,6 +206,7 @@ function fail(msg) { setRunning(false); setStatus(msg); $("#status").classList.a
 $("#newRun").addEventListener("click", async () => {
   if (S.running && S.runId) await stop();
   if (S.es) S.es.close();
+  if (S.ws) { S.ws.close(); S.ws = null; }
   $("#work").hidden = true; $("#empty").hidden = false; $("#modeBadge").hidden = true;
   $("#runBtn").textContent = "Run"; S.runId = null;
 });
@@ -398,6 +447,7 @@ function firstFlagged(column) {
 async function answer(id, value, wrap) {
   wrap.querySelectorAll("button").forEach((b) => (b.disabled = true));
   setStatus(value ? "Applying" : "Keeping it as a caveat");
+  if (S.ws) { S.ws.send(JSON.stringify({ type: "approve", id, answer: value })); return; }
   await fetch(`/api/runs/${S.runId}/approve`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, answer: value }) });
 }
 function closeAsk(id) {
@@ -416,7 +466,7 @@ function finish(ev) {
   setRunning(false);
   if (S.es) S.es.close();
   document.querySelectorAll(".rail li").forEach((li) => { li.classList.remove("active"); li.classList.add("done"); });
-  setStatus(ev.finished ? `Done in ${ev.seconds} s` : ev.stop_reason === "cancelled" ? "Stopped" : `Stopped: ${ev.stop_reason}`);
+  setStatus(S.notice || (ev.finished ? `Done in ${ev.seconds} s` : ev.stop_reason === "cancelled" ? "Stopped" : `Stopped: ${ev.stop_reason}`));
   document.querySelectorAll(".tab").forEach((b) => { b.disabled = false; });
   $('.tab[data-view="answer"]').classList.add("ready");
   const a = ev.analysis;
@@ -442,7 +492,7 @@ function finish(ev) {
     text.append(el("span", "file-title", info.title), el("span", "file-name", f), el("span", "file-desc", info.text));
     const view = el("a", "ghost small", "View"); view.href = `/view?run=${S.runId}&file=${f}`; view.target = "_blank"; view.rel = "noopener";
     view.setAttribute("aria-label", `View ${f} in a new tab`);
-    const link = el("a", "ghost small", "Download"); link.href = `/api/runs/${S.runId}/files/${f}`; link.setAttribute("download", f);
+    const link = el("a", "ghost small", "Download"); link.href = (S.blobs && S.blobs[f]) || `/api/runs/${S.runId}/files/${f}`; link.setAttribute("download", f);
     link.setAttribute("aria-label", `Download ${f}`);
     const acts = el("div", "file-acts"); acts.append(view, link);
     li.append(text, acts); files.append(li);

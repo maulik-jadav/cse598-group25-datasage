@@ -284,7 +284,7 @@ class BrowserApprover(Approver):
             waiter.set()
         if self.run.cancelled:  # a stop that landed while the card was being sent
             waiter.set()
-        in_time = waiter.wait(APPROVAL_TIMEOUT)
+        in_time = waiter.wait(self.run.approval_timeout)
         answered = in_time and not self.run.cancelled
         answer = bool(self.run.pending.pop(approval_id)["answer"]) if answered else False
         self.run.emit({"type": "approval_closed", "id": approval_id, "answer": answer, "timed_out": not in_time})
@@ -302,6 +302,7 @@ class Run:
         self.client_id = client_id
         self.sources = None  # set by the server when several files were stacked into one table
         self.mode = mode if mode in ("ask", "auto") else "ask"
+        self.approval_timeout = APPROVAL_TIMEOUT  # the hosted app sets a shorter one
         self.created = time.time()
         self.events: list[dict] = []
         self.cond = threading.Condition()
@@ -366,7 +367,7 @@ class Run:
                                should_stop=lambda: self.cancelled, **kwargs)
             write_outputs(result, self.out_dir)
             analysis = result.session.analyses[-1] if result.session.analyses else None
-            changes = change_log(result.session, self.mode, self.refusals)
+            changes = change_log(result.session, self.mode, self.refusals, self.approval_timeout)
             self.emit({
                 "type": "done", "finished": result.finished, "stop_reason": result.stop_reason,
                 "answer": analysis["result"] if analysis else None,
@@ -387,10 +388,14 @@ class Run:
 
 REFUSED = {"keep": "you chose Keep, so it is listed as a caveat",
            "stopped": "not applied because the run was stopped",
-           "timeout": "no answer within 10 minutes, so it is listed as a caveat"}
+           "timeout": "no answer within {wait}, so it is listed as a caveat"}
 
 
-def change_log(session, mode: str, refusals: list[str]) -> list[dict]:
+def _wait_text(seconds: int) -> str:
+    return f"{seconds // 60} minutes" if seconds % 60 == 0 and seconds >= 120 else f"{seconds} seconds"
+
+
+def change_log(session, mode: str, refusals: list[str], wait: int = APPROVAL_TIMEOUT) -> list[dict]:
     """Every applied and refused fix for the Answer tab, with who decided it and how."""
     how = {"auto": "safe, applied without asking", "approved": "approved automatically" if mode == "auto" else "you approved"}
     changes = [{"applied": True, "text": plural(c.summary), "approval": c.approval, "how": how.get(c.approval, "")}
@@ -398,7 +403,7 @@ def change_log(session, mode: str, refusals: list[str]) -> list[dict]:
     for i, r in enumerate(session.rejected):
         reason = refusals[i] if i < len(refusals) else "keep"
         changes.append({"applied": False, "text": plural(f"Not applied: {r['summary']}"), "approval": "rejected",
-                        "how": REFUSED[reason]})
+                        "how": REFUSED[reason].format(wait=_wait_text(wait))})
     return changes
 
 

@@ -13,13 +13,15 @@ and PR authorship, so **each task should end in its own merged PR** under your o
   encoding), and watch the table get cleaned. Risky fixes wait on a card under the affected row with a
   Details view of the exact rows. Tabs: Table, Answer, Data health. Each output file has View and Download.
   Samples: sales (8 and 1,208 rows), 3 monthly files, HR, inventory.
+- **Hosted app:** https://cse598-group25-datasage.vercel.app runs the same app on Vercel (each run over one
+  WebSocket; 4-minute limit per run). Merging to `main` redeploys it. See README, "The hosted version".
 - **Analysis pages:** `/results` (evaluation dashboard over all splits and systems) and a column profile
   for each run.
 - **Agent changes:** `exclude_where` drops every row outside a range rule, however many (checks list only
   10 row ids); extra tool arguments no longer fail a call; the coverage check now also requires the
   metric's formula check. A no-regression re-run on held-out and test after these changes gave 74/80,
   the same as recorded.
-- **Testing:** 105 unit tests run on GitHub for every PR (CI). `python scripts/smoke_e2e.py` is an
+- **Testing:** 111 unit tests run on GitHub for every PR (CI). `python scripts/smoke_e2e.py` is an
   end-to-end check with the real model (123 checks, a few minutes). There is also a Dockerfile.
 - **Research studies, all merged** (write-ups in `docs/final/findings_*.md`, charts on the app's `/results` page):
   - *Scale and ablations* (`findings_scale_and_ablations.md`): 95.5% of 200 unseen questions (95% range 92.0 to
@@ -61,6 +63,7 @@ and PR authorship, so **each task should end in its own merged PR** under your o
 | Item 7 design note | `docs/design/item7_recipes_ui.md` |
 | Poster (print-ready PDF, source and figures) | `docs/final/poster/`: `poster.html` is the source, `Group25_Poster.pdf` the export, `make_figs.py` rebuilds the figures from the result files (see its README). The older Claude Design canvas is out of date; edit the repo copy. |
 | Demo run with the 30B default | `docs/final/demo/` (13 s, same answer as the Milestone 2 demo) |
+| Hosted app (Vercel) | https://cse598-group25-datasage.vercel.app, from `app/web/hosted.py`; redeploys on every merge to `main` |
 | Browser app (item 7 page) | `app/web/`; run `python -m app.web.server` and open http://127.0.0.1:8501 (README, "Run DataSage in the browser") |
 | Evaluation dashboard, column profile, file viewer | `/results`, `/profile?run=<id>`, `/view?run=<id>` in the app (`app/web/analysis.py`, `app/web/static/`) |
 | Demo tables with known answers | `examples/large_sales.csv`, `examples/demo/` (HR, inventory, 3 monthly files); `python examples/make_demo_files.py` prints the right answers |
@@ -128,7 +131,7 @@ cd cse598-group25-datasage
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m pytest -q tests                          # 105 tests, no API key needed
+python -m pytest -q tests                          # 111 tests, no API key needed
 python -m eval.summarize                           # prints the results tables
 python -m app.web.server                           # the browser app at http://127.0.0.1:8501 (needs the key)
 ```

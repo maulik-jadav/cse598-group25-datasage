@@ -13,6 +13,12 @@ const INFO = {
 };
 const MAX_ROWS = 500;
 
+// The hosted app keeps a run's files in the browser (Cache API, see app.js); the local server serves them.
+async function getRunFile(url) {
+  try { const hit = window.caches && (await caches.match(url)); if (hit) return hit; } catch { /* fall back to the server */ }
+  return fetch(url);
+}
+
 function show(file) {
   if (!INFO[file]) file = "cleaned.csv";
   document.querySelectorAll(".tab[data-file]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.file === file)));
@@ -24,8 +30,9 @@ function show(file) {
   $("#download").setAttribute("aria-label", `Download ${file}`);
   history.replaceState(null, "", `/view?run=${RUN}&file=${file}`);
   const box = $("#viewer"); box.textContent = ""; box.append(el("p", "v-note", "Loading."));
-  fetch(url).then((r) => (r.ok ? r.text() : Promise.reject(new Error(r.status === 404 ? "This file is not there. The run may have been cleaned up after a day." : `HTTP ${r.status}`))))
+  getRunFile(url).then((r) => (r.ok ? r.text() : Promise.reject(new Error(r.status === 404 ? "This file is not there. The run may have been cleaned up after a day, or it ran in another browser." : `HTTP ${r.status}`))))
     .then((text) => {
+      $("#download").href = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
       box.textContent = "";
       const render = { "cleaned.csv": csv, "report.md": markdown, "replay.py": code, "trace.jsonl": trace }[file];
       box.append(render(text));
