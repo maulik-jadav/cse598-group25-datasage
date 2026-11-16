@@ -70,20 +70,20 @@ Table A. Accuracy, single call, scope split, latency and tokens
 | qwen35-122b-a10b | 80 | 90.0% (72) | 82.5 to 96.2 | 58.8% (47/80) | +31.2 | 33/40 | 39/40 | 110 | 166 | 68,534 |
 | qwen3-vl-32b-thinking | 23 | 87.0% (20) | 69.6 to 100.0 | n/a | n/a | 4/7 | 16/16 | 379 | 865 | 37,245 |
 | gpt-oss-120b | 80 | 83.8% (67) | 75.0 to 91.2 | 60.0% (48/80) | +23.8 | 28/40 | 39/40 | 59 | 95 | 42,975 |
-| qwen35-27b | 80 | 83.8% (67) | 75.0 to 91.2 | 62.8% (49/78) | n/a | 28/40 | 39/40 | 69 | 112 | 62,375 |
+| qwen35-27b | 80 | 83.8% (67) | 75.0 to 91.2 | 62.5% (50/80) | n/a | 28/40 | 39/40 | 69 | 112 | 62,375 |
 | qwen36-35b-a3b | 80 | 82.5% (66) | 73.8 to 90.0 | 57.5% (46/80) | +25.0 | 26/40 | 40/40 | 49 | 84 | 42,626 |
 | llama4-scout-17b | 80 | 80.0% (64) | 71.2 to 88.8 | 0.0% (0/80) | +80.0 | 27/40 | 37/40 | 15 | 21 | 58,359 |
-| beam-1-0 | 80 | 80.0% (64) | 71.2 to 88.8 | 43.2% (16/37) | n/a | 24/40 | 40/40 | 165 | 427 | 27,796 |
+| beam-1-0 | 80 | 80.0% (64) | 71.2 to 88.8 | 21.2% (17/80) | n/a | 24/40 | 40/40 | 165 | 427 | 27,796 |
 | kimi-k2-7-code | 80 | 77.5% (62) | 68.8 to 86.2 | 68.8% (55/80) | +8.8 | 24/40 | 38/40 | 39 | 61 | 26,548 |
 | mimo-v2-6-pro | 80 | 77.5% (62) | 68.8 to 86.2 | 71.2% (57/80) | +6.2 | 22/40 | 40/40 | 99 | 256 | 23,939 |
 | glm-5-3-flash | 80 | 77.5% (62) | 68.8 to 86.2 | 70.0% (56/80) | +7.5 | 22/40 | 40/40 | 109 | 174 | 18,559 |
-| qwen3-235b-a22b-thinking-2507 | 80 | 77.5% (62) | 68.8 to 86.2 | 44.1% (15/34) | n/a | 22/40 | 40/40 | 815 | 1404 | 44,052 |
+| qwen3-235b-a22b-thinking-2507 | 80 | 77.5% (62) | 68.8 to 86.2 | 20.0% (16/80) | n/a | 22/40 | 40/40 | 815 | 1404 | 44,052 |
 | glm-5-3-spec | 80 | 76.2% (61) | 66.2 to 85.0 | 68.8% (55/80) | +7.5 | 21/40 | 40/40 | 32 | 47 | 23,900 |
 | glm-5-3 | 80 | 76.2% (61) | 66.2 to 85.0 | 66.2% (53/80) | +10.0 | 21/40 | 40/40 | 33 | 56 | 24,272 |
 | qwen38-27b | 80 | 76.2% (61) | 67.5 to 85.0 | 65.0% (52/80) | +11.2 | 21/40 | 40/40 | 45 | 98 | 25,775 |
 | mimo-v2-6-flash | 80 | 76.2% (61) | 66.2 to 85.0 | 62.5% (50/80) | +13.7 | 21/40 | 40/40 | 46 | 117 | 20,246 |
 | qwen36-27b | 80 | 76.2% (61) | 67.5 to 85.0 | 56.2% (45/80) | +20.0 | 21/40 | 40/40 | 61 | 101 | 42,036 |
-| qwen-agentworld-35b-a3b | 80 | 76.2% (61) | 67.5 to 85.0 | 46.1% (35/76) | n/a | 21/40 | 40/40 | 586 | 1142 | 55,194 |
+| qwen-agentworld-35b-a3b | 80 | 76.2% (61) | 67.5 to 85.0 | 45.0% (36/80) | n/a | 21/40 | 40/40 | 586 | 1142 | 55,194 |
 | deepseek-v4-1-flash | 80 | 75.0% (60) | 65.0 to 83.8 | 55.0% (44/80) | +20.0 | 20/40 | 40/40 | 69 | 142 | 31,673 |
 | qwen3-30b-a3b-thinking-2507 | 80 | 75.0% (60) | 65.0 to 83.8 | 56.2% (45/80) | +18.8 | 20/40 | 40/40 | 121 | 208 | 35,052 |
 | granite41-30b | 80 | 72.5% (58) | 62.5 to 82.5 | 46.2% (37/80) | +26.2 | 20/40 | 38/40 | 19 | 28 | 35,192 |
@@ -94,11 +94,11 @@ Table A. Accuracy, single call, scope split, latency and tokens
 | muse-spark-open | 80 | 71.2% (57) | 61.3 to 81.2 | 67.5% (54/80) | +3.7 | 17/40 | 40/40 | 142 | 265 | 35,056 |
 | minimax-m3 | 80 | 70.0% (56) | 60.0 to 80.0 | 53.8% (43/80) | +16.2 | 17/40 | 39/40 | 62 | 97 | 26,222 |
 | laguna-s-2-1 | 80 | 70.0% (56) | 60.0 to 80.0 | 3.8% (3/80) | n/a | 18/40 | 38/40 | 199 | 540 | 26,772 |
-| minimax-m2-7 | 80 | 68.8% (55) | 58.8 to 78.8 | 41.3% (31/75) | n/a | 15/40 | 40/40 | 103 | 257 | 23,942 |
+| minimax-m2-7 | 80 | 68.8% (55) | 58.8 to 78.8 | 41.2% (33/80) | n/a | 15/40 | 40/40 | 103 | 257 | 23,942 |
 | gemma4-31b-it | 80 | 67.5% (54) | 57.5 to 77.5 | 58.8% (47/80) | +8.8 | 14/40 | 40/40 | 36 | 105 | 33,745 |
 | devstral2-123b | 80 | 62.5% (50) | 51.2 to 72.5 | 66.2% (53/80) | -3.7 | 15/40 | 35/40 | 299 | 654 | 37,494 |
 | olmo3-32b-instruct | 80 | 58.8% (47) | 47.5 to 70.0 | 3.8% (3/80) | +55.0 | 17/40 | 30/40 | 28 | 43 | 87,740 |
-| olmo3-32b-think | 80 | 50.0% (40) | 38.8 to 61.3 | 29.3% (22/75) | n/a | 12/40 | 28/40 | 545 | 1195 | 17,274 |
+| olmo3-32b-think | 80 | 50.0% (40) | 38.8 to 61.3 | 27.5% (22/80) | n/a | 12/40 | 28/40 | 545 | 1195 | 17,274 |
 | olmo3-7b-instruct | 80 | 17.5% (14) | 10.0 to 26.2 | 0.0% (0/80) | +17.5 | 5/40 | 9/40 | 25 | 37 | 128,642 |
 | olmo3-7b-think | 80 | 17.5% (14) | 10.0 to 26.2 | 17.5% (14/80) | +0.0 | 2/40 | 12/40 | 542 | 925 | 32,244 |
 | llama4-maverick-17b | 80 | 6.2% (5) | 1.2 to 12.5 | 41.2% (33/80) | -35.0 | 1/40 | 4/40 | 35 | 60 | 36,740 |
@@ -229,6 +229,10 @@ The "Agent minus B2" column compares each model's agent with the same model's si
 The column is filled only where the single call answered all 80 questions with no API timeout (a timeout counts as a wrong answer, which would flatter the agent). For those 32 models the agent is better for 29, by a median of 20.0 points (from -35.0 to +80.0). The single call also damages clean data: the B2 rows above do not show it, but summing
 `damaged_rows + damaged_cells` gives 353 for `qwen3-30b-a3b-instruct-2507`, 70 for `qwen3-235b-a22b-instruct-2507`, 174 for `glm-5-3`, 24 for `gpt-oss-120b`, while every agent row has 0.
 
+Some reasoning models write such long single replies that most of their single calls ran past the 180 s
+per-call timeout even after retries (`qwen3-235b-a22b-thinking-2507` 59 of 80; `beam-1-0` 54 of 80; `laguna-s-2-1` 75 of 80 timed out). Their single-call scores mostly measure speed, so we leave
+their gain out. The agent never hit this limit for these models, because each of its calls is short.
+
 Models that do worse as agents than as a single call: `llama4-maverick-17b` (-35.0 points), `devstral2-123b` (-3.7 points). Maverick's tool calls are not parsed, so the agent
 cannot act, while as a single call it simply writes code. Devstral is a coding model that is good at writing one pandas
 script but cleans narrowly when it has to plan with tools. `llama4-scout-17b` is the opposite case: as a single
@@ -279,9 +283,9 @@ change the ranking of many models.
   model's server (256 of them single calls), and 42 single-call scripts that passed their 60 s limit
   while about 100 study processes were starving the laptop's CPU just before the crash. Timeouts were retried once at
   lower load and a second timeout was kept as the result. Every deleted result is listed in
-  `eval/results/model_study_reruns.json`. Results that still ended in an API timeout or code timeout after the retry (counted as wrong): `b2-beam-1-0` 15, `b2-hemmingway-1-5` 1, `b2-laguna-s-2-1` 75, `b2-minimax-m2-7` 8, `b2-olmo3-32b-think` 7, `b2-ornith-1-5-35b` 6, `b2-qwen-agentworld-35b` 7, `b2-qwen3-235b-think` 14, `b2-qwen35-27b` 4.
+  `eval/results/model_study_reruns.json`. Results that still ended in an API timeout or code timeout after the retry (counted as wrong): `b2-beam-1-0` 54, `b2-hemmingway-1-5` 1, `b2-laguna-s-2-1` 75, `b2-minimax-m2-7` 10, `b2-olmo3-32b-think` 10, `b2-ornith-1-5-35b` 6, `b2-qwen-agentworld-35b` 7, `b2-qwen3-235b-think` 59, `b2-qwen35-27b` 5.
 - Partial models: `qwen3-vl-32b-thinking` 23 of 80; `mistral-large-4` 54 of 80. Their accuracy is over the questions they finished, which are not a random sample (the earlier, mostly sales, splits finished first).
-- Single calls not run to the end (the slowest reasoning models often needed more than the 180 s timeout per attempt, and we stopped waiting): `qwen3-235b-a22b-thinking-2507` 34 of 80; `qwen35-27b` 78 of 80; `qwen-agentworld-35b-a3b` 76 of 80; `olmo3-32b-think` 75 of 80; `minimax-m2-7` 75 of 80; `beam-1-0` 37 of 80. For these the Agent minus B2 column is left empty.
+- Apart from the two saturated models, every single-call run has all 80 questions.
 - Only the 80 held-out and test questions; dev splits not run. The approver is the evaluation oracle, not a person.
 
 ## Reproduce

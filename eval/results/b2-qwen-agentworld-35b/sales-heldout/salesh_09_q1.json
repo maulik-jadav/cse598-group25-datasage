@@ -1,0 +1,61 @@
+{
+  "task_id": "salesh_09_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 1,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 1090.51,
+  "tokens": 11767,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 5420.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    \n    # Fix Quantity: convert to numeric, take absolute value\n    df['Quantity'] = pd.to_numeric(df['Quantity'].astype(str), errors='coerce')\n    df['Quantity'] = df['Quantity'].abs()\n    \n    # Fix Price: remove '$' and convert to numeric\n    df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace('$', '', regex=False).str.strip(), errors='coerce')\n    \n    # Fix Region: strip whitespace, map variants\n    df['Region'] = df['Region'].astype(str).str.strip()\n    df['Region'] = df['Region'].replace({'Wst': 'West', 'Eats': 'East'})\n    \n    # Recalculate Revenue\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Fix Date to YYYY-MM\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m')\n    \n    # Drop rows where Date is NaN\n    df = df.dropna(subset=['Date'])\n    \n    return df\n\ndef answer(df):\n    result = df.groupby('Date')['Revenue'].sum().to_dict()\n    return result"
+  },
+  "corrections": 8,
+  "planted": 12,
+  "damaged_rows": 3,
+  "damaged_cells": 54,
+  "cleaned_available": true,
+  "system": "b2-qwen-agentworld-35b",
+  "dataset": "sales-heldout",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 2665.0,
+    "2026-02": 6096.0,
+    "2026-03": 4160.0,
+    "2026-04": 5575.0,
+    "2026-05": 3045.0,
+    "2026-06": 9941.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}
