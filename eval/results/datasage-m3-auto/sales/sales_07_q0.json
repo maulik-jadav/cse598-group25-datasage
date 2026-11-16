@@ -1,0 +1,177 @@
+{
+  "task_id": "sales_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 2,
+  "detect_fn": 0,
+  "tool_calls": 18,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 5,
+  "seconds": 46.57,
+  "tokens": 93367,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "2026-01": 3834.0,
+    "2026-02": 1940.0,
+    "2026-03": 16790.0,
+    "2026-04": 760.0,
+    "2026-05": 12970.0,
+    "2026-06": 7149.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the question: 3 rows with negative Quantity (invalid per rules), 1 duplicate row, 1 misspelled Category ('Furnture' \u2192 'Furniture'), 1 row with incorrect Revenue (not equal to Quantity \u00d7 Price), and 2 invalid Date values. All were fixed: the invalid rows were excluded or corrected, the label was normalized, the Revenue was recomputed, and invalid dates were set to missing. The analysis now runs cleanly. Total revenue per month is: January 2026: $3,834, February 2026: $1,940, March 2026: $16,790, April 2026: $760, May 2026: $12,970, June 2026: $7,149.",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            13,
+            25,
+            43
+          ],
+          "reason": "Quantity is negative, but rules say Quantity must be at least 1. These rows are invalid."
+        },
+        "reason": "Quantity is negative, but rules say Quantity must be at least 1. These rows are invalid.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          13,
+          25,
+          43
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 3 row(s): [13, 25, 43]",
+        "code": "df = df.drop(index=[13, 25, 43])"
+      },
+      {
+        "version": 2,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            16
+          ],
+          "reason": "Exact duplicate row; keep only the first occurrence."
+        },
+        "reason": "Exact duplicate row; keep only the first occurrence.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          16
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 1 row(s): [16]",
+        "code": "df = df.drop(index=[16])"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furnture": "Furniture"
+          },
+          "reason": "Furnture is a misspelling of Furniture, which is an allowed category."
+        },
+        "reason": "Furnture is a misspelling of Furniture, which is an allowed category.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Category: merged 1 label variant(s), 1 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furnture': 'Furniture'})"
+      },
+      {
+        "version": 4,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            37
+          ],
+          "reason": "Revenue does not match Quantity * Price; fix the value."
+        },
+        "reason": "Revenue does not match Quantity * Price; fix the value.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 1,
+        "summary": "Revenue: recomputed as Quantity * Price on 1 row(s)",
+        "code": "df.loc[[37], 'Revenue'] = [480.0]  # Revenue = Quantity * Price"
+      },
+      {
+        "version": 5,
+        "tool": "parse_dates",
+        "args": {
+          "column": "Date",
+          "reason": "Date values '2026-14-01' and '13/45/2026' are invalid; set them to missing."
+        },
+        "reason": "Date values '2026-14-01' and '13/45/2026' are invalid; set them to missing.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Date: 2 invalid date(s) set to missing",
+        "code": "df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce').dt.strftime('%Y-%m-%d')"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [],
+    "coverage_refusals": 1,
+    "model_turns": 18
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3-auto",
+  "dataset": "sales",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3834.0,
+    "2026-02": 1940.0,
+    "2026-03": 16790.0,
+    "2026-04": 760.0,
+    "2026-05": 12970.0,
+    "2026-06": 7149.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

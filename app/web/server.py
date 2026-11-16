@@ -251,7 +251,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-store")
-        self.send_header("Connection", "keep-alive")
+        # The stream has no length, so closing the connection is what tells the client it has ended.
+        # ("Connection: keep-alive" would make http.server hold the socket open after the run is done.)
+        self.send_header("Connection", "close")
         self.end_headers()
         sent = start
         try:

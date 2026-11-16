@@ -13,6 +13,7 @@
 | DataSage (30B) + exclusion rule | 20 | 95% | 100% | 0.81 | 0.76 | 89% | 0 | 100% | n/a | 2.0 | 15.2 | 56,089 |
 | DataSage (30B) + rule, strict approver | 20 | 100% | 100% | 0.83 | 0.79 | 92% | 0 | 100% | n/a | 2.0 | 14.3 | 54,481 |
 | DataSage M3 (30B, default) | 20 | 100% | 100% | 0.82 | 0.80 | 91% | 0 | 100% | n/a | 2.0 | 15.1 | 61,636 |
+| DataSage M3 (30B), Auto: every risky fix approved | 20 | 100% | 100% | 0.83 | 0.82 | 92% | 0 | 100% | n/a | 2.0 | 30.6 | 60,646 |
 
 ## penguins
 
@@ -29,6 +30,7 @@
 | DataSage (30B) + exclusion rule | 20 | 85% | 100% | 0.88 | 0.77 | 92% | 0 | 100% | n/a | 2.0 | 15.1 | 55,282 |
 | DataSage (30B) + rule, strict approver | 20 | 85% | 100% | 0.88 | 0.77 | 91% | 0 | 100% | n/a | 2.0 | 13.2 | 57,418 |
 | DataSage M3 (30B, default) | 20 | 100% | 100% | 0.88 | 0.79 | 94% | 0 | 100% | n/a | 2.0 | 16.6 | 63,755 |
+| DataSage M3 (30B), Auto: every risky fix approved | 20 | 90% | 100% | 0.88 | 0.79 | 93% | 0 | 100% | n/a | 2.0 | 41.8 | 62,889 |
 
 ## sales-heldout
 
@@ -43,6 +45,7 @@
 | DataSage (30B) + exclusion rule | 20 | 90% | 100% | 0.88 | 0.89 | 88% | 0 | 100% | n/a | 2.0 | 15.1 | 65,225 |
 | DataSage (30B) + rule, strict approver | 20 | 90% | 100% | 0.88 | 0.89 | 88% | 0 | 100% | n/a | 2.0 | 17.3 | 68,653 |
 | DataSage M3 (30B, default) | 20 | 100% | 100% | 0.88 | 0.80 | 89% | 0 | 100% | n/a | 3.0 | 19.0 | 62,978 |
+| DataSage M3 (30B), Auto: every risky fix approved | 20 | 100% | 100% | 0.88 | 0.80 | 89% | 0 | 100% | n/a | 2.0 | 15.9 | 64,388 |
 
 ## penguins-heldout
 
@@ -57,6 +60,7 @@
 | DataSage (30B) + exclusion rule | 20 | 80% | 100% | 0.79 | 0.61 | 85% | 0 | 100% | 100% | 2.0 | 13.2 | 55,258 |
 | DataSage (30B) + rule, strict approver | 20 | 65% | 100% | 0.78 | 0.60 | 83% | 0 | 100% | n/a | 2.0 | 12.7 | 51,670 |
 | DataSage M3 (30B, default) | 20 | 85% | 100% | 0.82 | 0.73 | 92% | 0 | 100% | n/a | 2.0 | 16.2 | 58,389 |
+| DataSage M3 (30B), Auto: every risky fix approved | 20 | 85% | 100% | 0.81 | 0.69 | 91% | 0 | 100% | n/a | 2.0 | 23.7 | 57,676 |
 
 ## sales-test
 
@@ -67,6 +71,7 @@
 | B2 single LLM call | 20 | 45% | 90% | 0.74 | 0.72 | 78% | 4 | n/a | n/a | n/a | 30.0 | 2,283 |
 | DataSage (30B) + exclusion rule | 20 | 100% | 100% | 0.84 | 0.84 | 93% | 0 | 100% | n/a | 2.5 | 16.3 | 63,062 |
 | DataSage M3 (30B, default) | 20 | 100% | 100% | 0.85 | 0.84 | 91% | 0 | 100% | n/a | 2.0 | 16.1 | 61,980 |
+| DataSage M3 (30B), Auto: every risky fix approved | 20 | 100% | 100% | 0.83 | 0.87 | 91% | 3 | 100% | n/a | 3.0 | 19.1 | 68,304 |
 
 ## penguins-test
 
@@ -77,3 +82,4 @@
 | B2 single LLM call | 20 | 50% | 95% | 0.92 | 0.80 | 82% | 0 | n/a | n/a | n/a | 42.5 | 2,524 |
 | DataSage (30B) + exclusion rule | 20 | 85% | 100% | 0.89 | 0.78 | 92% | 0 | 100% | n/a | 2.0 | 14.3 | 53,600 |
 | DataSage M3 (30B, default) | 20 | 85% | 100% | 0.89 | 0.74 | 93% | 0 | 100% | n/a | 2.0 | 15.0 | 56,854 |
+| DataSage M3 (30B), Auto: every risky fix approved | 20 | 90% | 100% | 0.89 | 0.76 | 93% | 0 | 100% | n/a | 2.0 | 24.4 | 62,728 |

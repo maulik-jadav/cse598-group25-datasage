@@ -45,6 +45,7 @@ SYSTEMS = {
     "datasage-m3": ("DataSage final, 30B", "Milestone 3: coverage check before answering, spelling merges into allowed labels", "final"),
     "datasage-m3-compact": ("Final, compact memory", "Milestone 3 with compact memory", "datasage"),
     "datasage-m3-large": ("Final, 235B", "Milestone 3 with the large model", "datasage"),
+    "datasage-m3-auto": ("Final, Auto mode", "The final 30B agent with every risky fix approved, like the browser's Auto mode", "ablation"),
     "datasage-reject": ("Every risky fix rejected", "The 235B agent when the person says no to every risky fix", "ablation"),
     "datasage-novalidator": ("No validator", "The 235B agent without the validator that checks each fix and rolls back a bad one", "ablation"),
 }

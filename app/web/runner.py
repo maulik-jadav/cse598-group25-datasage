@@ -239,6 +239,7 @@ class BrowserApprover(Approver):
 
     def decide(self, tool, args, risk, preview):
         if self.run.cancelled:  # stopped before this question came up: reject without asking
+            self.run.refusals.append("stopped")
             return False
         approval_id = uuid.uuid4().hex[:8]
         waiter = threading.Event()
@@ -257,9 +258,12 @@ class BrowserApprover(Approver):
             waiter.set()
         if self.run.cancelled:  # a stop that landed while the card was being sent
             waiter.set()
-        answered = waiter.wait(APPROVAL_TIMEOUT) and not self.run.cancelled
+        in_time = waiter.wait(APPROVAL_TIMEOUT)
+        answered = in_time and not self.run.cancelled
         answer = bool(self.run.pending.pop(approval_id)["answer"]) if answered else False
-        self.run.emit({"type": "approval_closed", "id": approval_id, "answer": answer, "timed_out": not answered})
+        self.run.emit({"type": "approval_closed", "id": approval_id, "answer": answer, "timed_out": not in_time})
+        if not answer:  # why it was refused, in the same order as session.rejected (used by the change log)
+            self.run.refusals.append("keep" if answered else "stopped" if self.run.cancelled else "timeout")
         return answer
 
 
@@ -276,6 +280,7 @@ class Run:
         self.events: list[dict] = []
         self.cond = threading.Condition()
         self.pending: dict[str, dict] = {}
+        self.refusals: list[str] = []  # "keep", "stopped" or "timeout" for each refused fix, in order
         self.cancelled = False
         self.done = False
         self.counts = {"checks": 0, "fixes": 0}
@@ -335,12 +340,7 @@ class Run:
                                should_stop=lambda: self.cancelled, **kwargs)
             write_outputs(result, self.out_dir)
             analysis = result.session.analyses[-1] if result.session.analyses else None
-            how = {"auto": "safe, applied without asking",
-                   "approved": "approved automatically" if self.mode == "auto" else "you approved"}
-            changes = [{"applied": True, "text": plural(c.summary), "approval": c.approval, "how": how.get(c.approval, "")}
-                       for c in result.session.changes]
-            changes += [{"applied": False, "text": plural(f"Not applied: {r['summary']}"), "approval": "rejected",
-                         "how": "you chose Keep, so it is listed as a caveat"} for r in result.session.rejected]
+            changes = change_log(result.session, self.mode, self.refusals)
             self.emit({
                 "type": "done", "finished": result.finished, "stop_reason": result.stop_reason,
                 "answer": analysis["result"] if analysis else None,
@@ -357,6 +357,23 @@ class Run:
             self.done = True
             with self.cond:
                 self.cond.notify_all()
+
+
+REFUSED = {"keep": "you chose Keep, so it is listed as a caveat",
+           "stopped": "not applied because the run was stopped",
+           "timeout": "no answer within 10 minutes, so it is listed as a caveat"}
+
+
+def change_log(session, mode: str, refusals: list[str]) -> list[dict]:
+    """Every applied and refused fix for the Answer tab, with who decided it and how."""
+    how = {"auto": "safe, applied without asking", "approved": "approved automatically" if mode == "auto" else "you approved"}
+    changes = [{"applied": True, "text": plural(c.summary), "approval": c.approval, "how": how.get(c.approval, "")}
+               for c in session.changes]
+    for i, r in enumerate(session.rejected):
+        reason = refusals[i] if i < len(refusals) else "keep"
+        changes.append({"applied": False, "text": plural(f"Not applied: {r['summary']}"), "approval": "rejected",
+                        "how": REFUSED[reason]})
+    return changes
 
 
 FIX_TOOLS = {
