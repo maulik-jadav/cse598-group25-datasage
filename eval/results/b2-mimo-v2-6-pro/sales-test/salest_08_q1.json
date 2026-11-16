@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 36.67,
+  "tokens": 2662,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "extra": {
+    "code": "import difflib\nimport pandas as pd\n\nALLOWED_CATEGORIES = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\nALLOWED_REGIONS = ['North', 'South', 'East', 'West']\n\ndef _canon(value, allowed):\n    if pd.isna(value):\n        return value\n    s = str(value).strip()\n    # exact match after stripping\n    for a in allowed:\n        if s.lower() == a.lower():\n            return a\n    # fuzzy match to closest allowed label (handles typos like 'Accesories', 'Electornics', 'Office Suplies')\n    match = difflib.get_close_matches(s.lower(), [a.lower() for a in allowed], n=1, cutoff=0.6)\n    if match:\n        for a in allowed:\n            if a.lower() == match[0]:\n                return a\n    return s\n\ndef clean(df):\n    d = df.copy()\n    # normalize category labels (case + spelling variants)\n    d['Category'] = d['Category'].apply(lambda v: _canon(v, ALLOWED_CATEGORIES))\n    # normalize region labels (whitespace + case variants)\n    d['Region'] = d['Region'].apply(lambda v: _canon(v, ALLOWED_REGIONS))\n    # fix / parse dates\n    d['Date'] = pd.to_datetime(d['Date'], errors='coerce')\n    # numeric coercion\n    for c in ['Quantity', 'Price', 'Revenue']:\n        d[c] = pd.to_numeric(d[c], errors='coerce')\n    # enforce Revenue = Quantity * Price\n    d['Revenue'] = d['Quantity'] * d['Price']\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Category', 'Revenue'])\n    g = d.groupby('Category')['Revenue'].sum()\n    return {str(k): float(v) for k, v in g.items()}"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

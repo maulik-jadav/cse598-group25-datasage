@@ -1,0 +1,65 @@
+{
+  "task_id": "salest_03_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 178.23,
+  "tokens": 5295,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    df = df.copy()\n\n    # Normalize text columns\n    for col in ['Order_ID', 'Product', 'Category', 'Region']:\n        if col in df.columns:\n            df[col] = df[col].astype('string').str.strip()\n\n    # Remove exact duplicate rows / enforce unique Order_ID\n    if 'Order_ID' in df.columns:\n        df = df.drop_duplicates(subset=['Order_ID'], keep='first')\n    else:\n        df = df.drop_duplicates()\n\n    # Quantity\n    if 'Quantity' in df.columns:\n        df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n\n    # Price: remove currency symbols/commas and convert to numeric\n    if 'Price' in df.columns:\n        df['Price'] = (\n            df['Price'].astype('string')\n            .str.replace(r'[\\$,]', '', regex=True)\n            .str.strip()\n        )\n        df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n\n    # Revenue: numeric and recompute from Quantity * Price where possible\n    if 'Revenue' in df.columns:\n        df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n        if 'Quantity' in df.columns and 'Price' in df.columns:\n            calc = df['Quantity'] * df['Price']\n            df['Revenue'] = calc.where(calc.notna(), df['Revenue'])\n\n    # Date: parse to datetime, invalid values become NaT\n    if 'Date' in df.columns:\n        df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n\n    # Category label variants are fixed by stripping whitespace above\n    return df\n\ndef answer(df):\n    d = clean(df)\n    d = d.dropna(subset=['Region', 'Quantity'])\n    totals = d.groupby('Region', dropna=True)['Quantity'].sum()\n    return {str(region): int(total) for region, total in totals.items()}"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-deepseek-v4-1-flash",
+  "dataset": "sales-test",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 52.0,
+    "North": 87.0,
+    "South": 45.0,
+    "West": 74.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

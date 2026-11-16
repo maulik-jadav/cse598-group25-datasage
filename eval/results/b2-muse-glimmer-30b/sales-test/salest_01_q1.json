@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_01_q1",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 333.46,
+  "tokens": 6282,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2490.0,
+    "Electronics": 27140.0,
+    "Furniture": 10430.0,
+    "Office Supplies": 780.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Standardize Region label variants\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    # Parse Price: remove $ and convert to numeric\n    df['Price'] = df['Price'].astype(str).str.replace(r'[\\$,]', '', regex=True)\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Ensure Quantity numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # Fix invalid negative quantities -> make positive whole number\n    df['Quantity'] = df['Quantity'].abs()\n    df['Quantity'] = df['Quantity'].astype('Int64').astype(int)\n    # Recompute Revenue to enforce Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    # total revenue by category after cleaning\n    totals = df.groupby('Category', dropna=False)['Revenue'].sum()\n    # return plain dict with numeric values\n    return {str(k): float(v) for k, v in totals.items()}\n"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2390.0,
+    "Electronics": 27140.0,
+    "Furniture": 7665.0,
+    "Office Supplies": 780.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "task_id": "salest_09_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 274.05,
+  "tokens": 2550,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "all": 46.0,
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    # Fix label variants in Category (trim whitespace)\n    df['Category'] = df['Category'].str.strip()\n    \n    # Convert Price from text to numeric (remove $ and commas)\n    df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace('[\\$\\,]', '', regex=True), errors='coerce')\n    \n    # Convert Quantity to numeric\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    \n    # Fix negative Quantity and Revenue (set to 0 or drop if invalid)\n    df = df[df['Quantity'] >= 0].copy()\n    df['Revenue'] = df['Quantity'] * df['Price']\n    \n    # Drop rows with negative Revenue (should not happen if Quantity >= 0 and Price >= 0)\n    df = df[df['Revenue'] >= 0].copy()\n    \n    # Ensure Category is in allowed list; drop invalid\n    allowed_categories = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df = df[df['Category'].isin(allowed_categories)].copy()\n    \n    # Drop exact duplicate rows (based on all columns)\n    df = df.drop_duplicates()\n    \n    # Ensure Order_ID is unique (should be after deduplication)\n    df = df.drop_duplicates(subset=['Order_ID'])\n    \n    return df\n\n\ndef answer(df):\n    # Count orders per category\n    counts = df.groupby('Category').size().to_dict()\n    \n    # Return as dict with key 'all' for total\n    result = {\n        'all': len(df),\n        **counts\n    }\n    \n    return result"
+  },
+  "corrections": 7,
+  "planted": 7,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-qwen3-vl-32b",
+  "dataset": "sales-test",
+  "question": "How many orders are there in each category?",
+  "reference_answer": {
+    "Accessories": 9.0,
+    "Electronics": 11.0,
+    "Furniture": 14.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

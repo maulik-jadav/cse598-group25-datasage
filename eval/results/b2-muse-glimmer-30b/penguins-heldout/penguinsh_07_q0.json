@@ -1,0 +1,63 @@
+{
+  "task_id": "penguinsh_07_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 3,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 124.47,
+  "tokens": 7920,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Adelie": 190.1818181818182,
+    "Chinstrap": 199.53333333333333,
+    "Gentoo": 215.9375
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # standardize island label variants (case and extra spaces)\n    if 'island' in df.columns:\n        df['island'] = df['island'].astype(str).str.strip()\n        df['island'] = df['island'].str.title()\n    # body_mass_g is text with commas / numbers written as text\n    if 'body_mass_g' in df.columns:\n        df['body_mass_g'] = df['body_mass_g'].astype(str).str.replace(',', '', regex=False)\n        df['body_mass_g'] = pd.to_numeric(df['body_mass_g'], errors='coerce')\n    # flipper_length_mm may be text and contains sign errors\n    if 'flipper_length_mm' in df.columns:\n        df['flipper_length_mm'] = pd.to_numeric(df['flipper_length_mm'], errors='coerce')\n        # fix negative sign entry errors\n        df['flipper_length_mm'] = df['flipper_length_mm'].abs()\n    # year may be stored as text\n    if 'year' in df.columns:\n        df['year'] = pd.to_numeric(df['year'], errors='coerce')\n    return df\n\ndef answer(df):\n    d = df.copy()\n    # ensure flipper_length_mm is numeric and sign-corrected\n    if 'flipper_length_mm' in d.columns:\n        d['flipper_length_mm'] = pd.to_numeric(d['flipper_length_mm'], errors='coerce')\n        d['flipper_length_mm'] = d['flipper_length_mm'].abs()\n    # keep only values within the allowed range per rules\n    valid = d['flipper_length_mm'].between(170, 235)\n    d = d[valid]\n    means = d.groupby('species')['flipper_length_mm'].mean()\n    return {str(k): float(v) for k, v in means.items()}\n"
+  },
+  "corrections": 9,
+  "planted": 13,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "penguins-heldout",
+  "question": "What is the average flipper length for each species?",
+  "reference_answer": {
+    "Adelie": 190.2812,
+    "Chinstrap": 199.6429,
+    "Gentoo": 215.1429
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "island"
+    ],
+    [
+      "negative",
+      "flipper_length_mm"
+    ],
+    [
+      "out_of_range",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "body_mass_g"
+    ],
+    [
+      "text_number",
+      "flipper_length_mm"
+    ],
+    [
+      "text_number",
+      "year"
+    ]
+  ]
+}

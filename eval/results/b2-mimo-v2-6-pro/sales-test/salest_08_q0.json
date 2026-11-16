@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 43.68,
+  "tokens": 3029,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "code": "import difflib\n\nALLOWED_CATS = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n\ndef _fix_cat(v):\n    s = str(v).strip()\n    if s in ALLOWED_CATS:\n        return s\n    m = difflib.get_close_matches(s, ALLOWED_CATS, n=1, cutoff=0.6)\n    return m[0] if m else s\n\ndef clean(df):\n    d = df.copy()\n    # --- Date: parse ISO first, fall back to generic parse; drop unparseable rows ---\n    raw = d['Date'].astype(str).str.strip()\n    dt = pd.to_datetime(raw, errors='coerce', format='ISO8601')\n    miss = dt.isna()\n    if miss.any():\n        dt.loc[miss] = pd.to_datetime(raw[miss], errors='coerce')\n    d['Date'] = dt\n    d = d.dropna(subset=['Date'])\n    # --- Category: normalize label variants / misspellings to allowed values ---\n    d['Category'] = d['Category'].map(_fix_cat)\n    # --- Region: strip stray whitespace variants ---\n    d['Region'] = d['Region'].astype(str).str.strip()\n    # --- Quantity / Price numeric ---\n    d['Quantity'] = pd.to_numeric(d['Quantity'], errors='coerce')\n    d['Price'] = pd.to_numeric(d['Price'], errors='coerce')\n    d = d.dropna(subset=['Quantity', 'Price'])\n    # --- Revenue: enforce Revenue = Quantity * Price ---\n    d['Revenue'] = d['Quantity'] * d['Price']\n    return d\n\ndef answer(df):\n    d = clean(df)\n    d['month'] = d['Date'].dt.strftime('%Y-%m')\n    d = d.dropna(subset=['month'])\n    g = d.groupby('month')['Revenue'].sum()\n    return {k: float(v) for k, v in g.items()}"
+  },
+  "corrections": 10,
+  "planted": 11,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-mimo-v2-6-pro",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

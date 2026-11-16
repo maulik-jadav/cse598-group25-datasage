@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_06_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 2,
+  "detect_fn": 1,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 73.67,
+  "tokens": 5210,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.85714285714286,
+    "Office Supplies": 14.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # drop exact duplicate rows\n    df = df.drop_duplicates(keep='first')\n    # fix Region label variant\n    df['Region'] = df['Region'].replace({'Nort': 'North'})\n    # keep only allowed regions\n    df = df[df['Region'].isin(['North', 'South', 'East', 'West'])]\n    # keep only allowed categories\n    df = df[df['Category'].isin(['Electronics', 'Accessories', 'Furniture', 'Office Supplies'])]\n    # Quantity must be positive whole number\n    df = df[pd.to_numeric(df['Quantity'], errors='coerce') >= 1]\n    df = df[df['Quantity'] == df['Quantity'].astype('Int64')]\n    # Price must be >=0\n    df = df[pd.to_numeric(df['Price'], errors='coerce') >= 0]\n    # ensure Revenue follows formula\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    avg_price = d.groupby('Category')['Price'].mean()\n    # return plain dict with float values, drop NaN groups\n    return {cat: float(val) for cat, val in avg_price.items() if pd.notna(val)}\n"
+  },
+  "corrections": 6,
+  "planted": 6,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-muse-glimmer-30b",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 382.5,
+    "Furniture": 177.8571,
+    "Office Supplies": 14.0
+  },
+  "issues_reported": [
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

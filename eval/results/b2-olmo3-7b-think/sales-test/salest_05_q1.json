@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 1,
+  "detect_fp": 4,
+  "detect_fn": 3,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 115.94,
+  "tokens": 10515,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    allowed_categories = ['Electronics', 'Accessories', 'Furniture', 'Office Supplies']\n    df['Category'] = df['Category'].str.strip()\n    df = df[df['Category'].isin(allowed_categories)]\n\n    region_mapping = {'Suoth': 'South', 'Nort': 'North'}\n    df['Region'] = df['Region'].replace(region_mapping)\n\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n\n    df = df[(df['Quantity'] >= 1) & (df['Price'] >= 0)]\n\n    df['Revenue'] = pd.to_numeric(df['Revenue'], errors='coerce')\n    df = df.dropna(subset=['Revenue'])\n    df = df[df['Revenue'] >= 0]\n    return df\n\n\ndef answer(df):\n    grouped = df.groupby('Category')['Revenue'].sum().reset_index()\n    return {category: total for category, total in grouped.values}"
+  },
+  "corrections": 7,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 3255.0,
+    "Electronics": 10700.0,
+    "Furniture": 9635.0,
+    "Office Supplies": 222.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "out_of_range",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ],
+    [
+      "text_number",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Revenue"
+    ]
+  ]
+}

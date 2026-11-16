@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_08_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 385.77,
+  "tokens": 3395,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Strip surrounding whitespace\n    df['Category'] = df['Category'].astype(str).str.strip()\n    df['Region'] = df['Region'].astype(str).str.strip()\n    # Standardize Category values\n    cat_map = {\n        'Accesories': 'Accessories',\n        'Accessories': 'Accessories',\n        'electronics': 'Electronics',\n        'Electronics': 'Electronics',\n        'Electornics': 'Electronics',\n        'office supplies': 'Office Supplies',\n        'Office Supplies': 'Office Supplies',\n        'Office Suplies': 'Office Supplies',\n        'Office supplies': 'Office Supplies'\n    }\n    df['Category'] = df['Category'].map(lambda x: cat_map.get(x, x))\n    # Standardize Region (title case, no extra spaces)\n    df['Region'] = df['Region'].str.title()\n    # Parse dates, coerce errors to NaT\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    # Drop rows with invalid dates (they cannot contribute to monthly totals)\n    df = df.dropna(subset=['Date'])\n    # Ensure numeric types for calculations\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    # Re\u2011calculate Revenue according to the rule Revenue = Quantity * Price\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    # Create a month column in YYYY\u2011MM format\n    df['Month'] = df['Date'].dt.to_period('M').astype(str)\n    # Sum revenue per month\n    result = df.groupby('Month')['Revenue'].sum().to_dict()\n    # Convert possible numpy types to plain Python floats\n    result = {k: float(v) for k, v in result.items()}\n    return result"
+  },
+  "corrections": 10,
+  "planted": 11,
+  "damaged_rows": 1,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-gpt-oss-120b",
+  "dataset": "sales-test",
+  "question": "What is the total revenue per month?",
+  "reference_answer": {
+    "2026-01": 3138.0,
+    "2026-02": 1908.0,
+    "2026-03": 1050.0,
+    "2026-04": 10290.0,
+    "2026-05": 4953.0,
+    "2026-06": 2688.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

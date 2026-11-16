@@ -1,0 +1,53 @@
+{
+  "task_id": "salest_00_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 3,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 328.18,
+  "tokens": 14514,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 37.916666666666664,
+    "Electronics": 401.1111111111111,
+    "Furniture": 152.72727272727272,
+    "Office Supplies": 13.636363636363637
+  },
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    # Convert Price to numeric, handling $ signs\n    df['Price'] = pd.to_numeric(df['Price'].str.replace('$', '').str.strip(), errors='coerce')\n    df = df[df['Price'].notna()]\n\n    # Convert and clean Date\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')\n    df = df[df['Date'].notna()]\n\n    # Clean Region and Category columns\n    allowed_regions = [\"North\", \"South\", \"East\", \"West\"]\n    df['Region'] = df['Region'].str.strip()\n    df['Region'] = df['Region'].apply(lambda x: x if x in allowed_regions else np.nan)\n    df = df[df['Region'].notna()]\n\n    allowed_categories = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    df['Category'] = df['Category'].str.strip()\n    df['Category'] = df['Category'].apply(lambda x: x if x in allowed_categories else np.nan)\n    df = df[df['Category'].notna()]\n\n    return df\n\ndef answer(df):\n    grouped = df.groupby(\"Category\")['Price'].mean().reset_index()\n    result = grouped.dropna()\n    return {k: v for k, v in zip(grouped[\"Category\"], grouped[\"Price\"])}\n"
+  },
+  "corrections": 4,
+  "planted": 8,
+  "damaged_rows": 4,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 37.1429,
+    "Electronics": 369.0,
+    "Furniture": 169.1667,
+    "Office Supplies": 13.6364
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 2,
+  "detect_fp": 3,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 486.47,
+  "tokens": 11771,
+  "stop_reason": "code_error",
+  "note": "pandas.errors.IntCastingNaNError: Cannot convert non-finite values (NA or inf) to integer.Replace or remove non-finite values or cast to an integer typethat supports these values (e.g. 'Int64')",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\ndef clean(df):\n    # Process Category\n    df['Category'] = df['Category'].str.strip()\n    allowed = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n    df['Category'] = df['Category'].apply(lambda x: x if x in allowed else np.nan)\n\n    # Process Price\n    df['Price'] = df['Price'].str.replace('$', '', regex=False).str.replace(',', '')\n    df['Price'] = pd.to_numeric(df['Price'], errors='coerce')\n    df['Price'] = df['Price'].mask(df['Price'] < 0, np.nan)\n\n    # Process Quantity\n    # Check if it's an integer and >=1\n    df['Quantity'] = df['Quantity'].apply(lambda x: x if x.is_integer() else np.nan)\n    df['Quantity'] = df['Quantity'].mask(df['Quantity'] < 1, np.nan)\n    df['Quantity'] = df['Quantity'].astype(int)\n\n    # Filter rows where Category, Price, Quantity are all not NaN\n    df = df.dropna(subset=['Category', 'Price', 'Quantity'])\n    return df\n\ndef answer(df):\n    grouped = df.groupby('Category')['Price'].mean().reset_index()\n    return {row['Category']: row['Price'] for row in grouped.itertuples()}"
+  },
+  "corrections": 0,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-olmo3-7b-think",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "negative",
+      "Price"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

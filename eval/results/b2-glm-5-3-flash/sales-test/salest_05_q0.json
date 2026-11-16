@@ -1,0 +1,57 @@
+{
+  "task_id": "salest_05_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 0,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 92.57,
+  "tokens": 2284,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Normalize category labels (strip stray spaces)\n    df['Category'] = df['Category'].astype(str).str.strip()\n    # Fix region typos\n    df['Region'] = df['Region'].replace({'Suoth': 'South', 'Nort': 'North'})\n    df['Region'] = df['Region'].astype(str).str.strip().replace({'nan': None})\n    # Parse dates, coercing invalid ones to NaT\n    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce')\n    # Ensure numeric columns\n    for col in ['Quantity', 'Price', 'Revenue']:\n        df[col] = pd.to_numeric(df[col], errors='coerce')\n    return df\n\ndef answer(df):\n    d = clean(df)\n    # Keep only Electronics rows with a valid region\n    elec = d[(d['Category'] == 'Electronics') & d['Region'].notna()]\n    grouped = elec.groupby('Region')['Revenue'].sum()\n    return {region: float(total) for region, total in grouped.items()}"
+  },
+  "corrections": 10,
+  "planted": 10,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-flash",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by region for Electronics?",
+  "reference_answer": {
+    "East": 1140.0,
+    "North": 260.0,
+    "South": 4800.0,
+    "West": 2700.0
+  },
+  "issues_reported": [
+    [
+      "invalid_date",
+      "Date"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ]
+  ]
+}

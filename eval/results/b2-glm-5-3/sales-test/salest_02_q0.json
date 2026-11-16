@@ -1,0 +1,64 @@
+{
+  "task_id": "salest_02_q0",
+  "analysis_correct": false,
+  "completed": false,
+  "detect_tp": 6,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 44.83,
+  "tokens": 3076,
+  "stop_reason": "code_error",
+  "note": "SyntaxError: unmatched '}'",
+  "answer": null,
+  "extra": {
+    "code": "import pandas as pd\nimport numpy as np\n\nCATEGORY_FIX = {\n    \"Office Suplies\": \"Office Supplies\",\n    \"Furnture\": \"Furniture\",\n}\n\nALLOWED_CATEGORIES = [\"Electronics\", \"Accessories\", \"Furniture\", \"Office Supplies\"]\n\n\ndef clean(df):\n    df = df.copy()\n    # Drop exact duplicate rows (keep first occurrence)\n    df = df.drop_duplicates(keep=\"first\")\n    # Normalize text columns: strip whitespace\n    for col in [\"Category\", \"Region\", \"Product\"]:\n        if col in df.columns:\n            df[col] = df[col].astype(str).str.strip()\n            df[col] = df[col].replace({\"nan\": np.nan, \"None\": np.nan})\n    # Fix category label variants\n    df[\"Category\"] = df[\"Category\"].replace(CATEGORY_FIX)\n    # Keep only valid categories\n    df = df[df[\"Category\"].isin(ALLOWED_CATEGORIES)]\n    # Fix invalid (negative / zero) quantities: drop rows where Quantity < 1\n    df = df[pd.to_numeric(df[\"Quantity\"], errors=\"coerce\") >= 1]\n    # Recompute Revenue for consistency\n    df[\"Revenue\"] = df[\"Quantity\"] * df[\"Price\"]\n    return df\n\n\ndef answer(df):\n    df = clean(df)\n    grouped = df.groupby(\"Category\")[\"Price\"].mean()\n    return {str(k): float(v) for k, v in grouped.items()}}"
+  },
+  "corrections": 0,
+  "planted": 12,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": false,
+  "system": "b2-glm-5-3",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 32.5,
+    "Electronics": 275.7143,
+    "Furniture": 191.0526,
+    "Office Supplies": 11.3684
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}

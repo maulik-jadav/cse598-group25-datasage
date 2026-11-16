@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": false,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 61.92,
+  "tokens": 4447,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 36.25,
+    "Electronics": 396.42857142857144,
+    "Furniture": 161.07142857142858,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "def clean(df):\n    df = df.copy()\n    # Fix Price: remove $ and convert to float\n    df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[\\$,]', '', regex=True), errors='coerce')\n    # Fix Region case variants\n    df['Region'] = df['Region'].str.title()\n    # Fix Quantity: make positive whole numbers\n    df['Quantity'] = df['Quantity'].abs().astype(int)\n    # Fix Revenue to match formula\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    avg = df.groupby('Category')['Price'].mean()\n    return {str(k): float(v) for k, v in avg.items()}"
+  },
+  "corrections": 5,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

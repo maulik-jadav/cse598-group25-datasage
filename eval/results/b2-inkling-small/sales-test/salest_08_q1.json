@@ -1,0 +1,49 @@
+{
+  "task_id": "salest_08_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 2,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 57.84,
+  "tokens": 4286,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Strip whitespace from text fields\n    for col in ['Category', 'Region', 'Product']:\n        if col in df.columns:\n            df[col] = df[col].astype(str).str.strip()\n    # Fix Category label variants\n    def fix_category(x):\n        s = str(x).strip()\n        low = s.lower()\n        if low == 'electronics' or low == 'electornics':\n            return 'Electronics'\n        if low == 'accessories' or low == 'accesories':\n            return 'Accessories'\n        if low == 'furniture':\n            return 'Furniture'\n        if low == 'office supplies' or low == 'office suplies':\n            return 'Office Supplies'\n        return s\n    df['Category'] = df['Category'].apply(fix_category)\n    # Fix Region whitespace/case variants\n    def fix_region(x):\n        s = str(x).strip()\n        mapping = {'north':'North','south':'South','east':'East','west':'West'}\n        return mapping.get(s.lower(), s)\n    df['Region'] = df['Region'].apply(fix_region)\n    # Standardize Date format\n    df['Date'] = pd.to_datetime(df['Date'], errors='coerce').dt.strftime('%Y-%m-%d')\n    # Enforce Revenue formula\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    df = clean(df)\n    grouped = df.groupby('Category', dropna=True)['Revenue'].sum()\n    result = {str(k): float(v) for k, v in grouped.items() if pd.notnull(k)}\n    return result\n"
+  },
+  "corrections": 11,
+  "planted": 11,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-inkling-small",
+  "dataset": "sales-test",
+  "question": "What is the total revenue by category?",
+  "reference_answer": {
+    "Accessories": 2140.0,
+    "Electronics": 15730.0,
+    "Furniture": 6085.0,
+    "Office Supplies": 552.0
+  },
+  "issues_reported": [
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ]
+  ]
+}

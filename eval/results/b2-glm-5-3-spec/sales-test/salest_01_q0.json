@@ -1,0 +1,61 @@
+{
+  "task_id": "salest_01_q0",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 4,
+  "detect_fp": 1,
+  "detect_fn": 0,
+  "tool_calls": 0,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 0,
+  "seconds": 46.22,
+  "tokens": 3442,
+  "stop_reason": "done",
+  "note": "",
+  "answer": {
+    "Accessories": 35.33,
+    "Electronics": 396.43,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "extra": {
+    "code": "import pandas as pd\n\ndef clean(df):\n    df = df.copy()\n    # Parse Price: strip currency symbols/commas written as text\n    df['Price'] = pd.to_numeric(\n        df['Price'].astype(str).str.replace('$', '', regex=False)\n        .str.replace(',', '', regex=False).str.strip(),\n        errors='coerce'\n    )\n    df['Quantity'] = pd.to_numeric(df['Quantity'], errors='coerce')\n    # Quantity must be a positive whole number (min 1); drop invalid rows\n    df = df[df['Quantity'] >= 1]\n    # Normalize Region label variants\n    df['Region'] = df['Region'].astype(str).str.strip().str.title()\n    # Recompute Revenue for consistency (Revenue = Quantity * Price)\n    df['Revenue'] = df['Quantity'] * df['Price']\n    return df\n\ndef answer(df):\n    d = clean(df)\n    g = d.groupby('Category')['Price'].mean()\n    return {k: round(float(v), 2) for k, v in g.items()}"
+  },
+  "corrections": 8,
+  "planted": 8,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "b2-glm-5-3-spec",
+  "dataset": "sales-test",
+  "question": "What is the average unit price in each category?",
+  "reference_answer": {
+    "Accessories": 35.3333,
+    "Electronics": 396.4286,
+    "Furniture": 155.0,
+    "Office Supplies": 12.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "negative",
+      "Revenue"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}
