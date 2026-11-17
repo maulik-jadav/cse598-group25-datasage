@@ -1,0 +1,220 @@
+{
+  "task_id": "saleshard2_01_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 1,
+  "tool_calls": 14,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 5,
+  "seconds": 25.62,
+  "tokens": 78705,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 520.0,
+    "North": 499.0,
+    "Northeast": 483.0,
+    "South": 455.0,
+    "Southeast": 473.0,
+    "West": 494.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the question: 6 duplicate rows were removed; label variants in 'Category' and 'Region' were normalized to match the allowed values in the rules file; 4 rows with invalid Quantity (negative or zero) were excluded; and 2 rows with incorrect Revenue values were fixed by recomputing using the formula Quantity * Price. After these fixes, the analysis shows the total units sold in each region: East (520), North (499), Northeast (483), South (455), Southeast (473), and West (494).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found 6 exact duplicate rows; keeping only the first occurrence to avoid double-counting in analysis."
+        },
+        "reason": "Found 6 exact duplicate rows; keeping only the first occurrence to avoid double-counting in analysis.",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          255,
+          572,
+          620,
+          625,
+          638,
+          641
+        ],
+        "cells_changed": 0,
+        "summary": "removed 6 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "Furniture ": "Furniture",
+            "Acceessories": "Accessories",
+            "lectronics": "Electronics"
+          },
+          "reason": "Correct case and space variants and fix misspellings to match the allowed values in the rules file."
+        },
+        "reason": "Correct case and space variants and fix misspellings to match the allowed values in the rules file.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 4,
+        "summary": "Category: merged 3 label variant(s), 4 cells",
+        "code": "df['Category'] = df['Category'].replace({'Furniture ': 'Furniture', 'Acceessories': 'Accessories', 'lectronics': 'Electronics'})"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "  East ": "East",
+            " East": "East",
+            "East ": "East",
+            "NORTH": "North",
+            "NORTHEAST": "Northeast",
+            "sOUTH": "South",
+            "west": "West",
+            "Nortth": "North",
+            "Soouth": "South",
+            "Southeastt": "Southeast",
+            "Wes": "West"
+          },
+          "reason": "Correct case, space variants, and misspellings to match the allowed region values in the rules file."
+        },
+        "reason": "Correct case, space variants, and misspellings to match the allowed region values in the rules file.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 13,
+        "summary": "Region: merged 11 label variant(s), 13 cells",
+        "code": "df['Region'] = df['Region'].replace({'  East ': 'East', ' East': 'East', 'East ': 'East', 'NORTH': 'North', 'NORTHEAST': 'Northeast', 'sOUTH': 'South', 'west': 'West', 'Nortth': 'North', 'Soouth': 'South', 'Southeastt': 'Southeast', 'Wes': 'West'})"
+      },
+      {
+        "version": 4,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            105,
+            262,
+            378,
+            587
+          ],
+          "reason": "Quantity is negative or zero in these rows, which violates the rule that Quantity must be a positive whole number (min=1). These rows are invalid for sales data."
+        },
+        "reason": "Quantity is negative or zero in these rows, which violates the rule that Quantity must be a positive whole number (min=1). These rows are invalid for sales data.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          105,
+          262,
+          378,
+          587
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 4 row(s): [105, 262, 378, 587]",
+        "code": "df = df.drop(index=[105, 262, 378, 587])"
+      },
+      {
+        "version": 5,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            172,
+            303
+          ],
+          "reason": "Revenue does not match Quantity * Price in these rows; recompute using the correct formula."
+        },
+        "reason": "Revenue does not match Quantity * Price in these rows; recompute using the correct formula.",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[172, 303], 'Revenue'] = pd.Series([105.0, 900.0], index=[172, 303])  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 14
+  },
+  "corrections": 29,
+  "planted": 35,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-hard2",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 520.0,
+    "North": 499.0,
+    "Northeast": 483.0,
+    "South": 455.0,
+    "Southeast": 473.0,
+    "West": 494.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ]
+  ]
+}
