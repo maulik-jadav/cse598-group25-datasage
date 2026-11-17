@@ -114,7 +114,7 @@
       const h = s.hard;
       const c5 = card("On bigger, messier tables", "Tables of 300 to 2,000 rows with many problems at once, including more rule-breaking rows than a check lists.");
       const list5 = el("div", "g-list");
-      Object.entries(h).forEach(([id, v]) => list5.append(row(v.label, `${v.correct} of ${v.n} right`, v.accuracy, { cls: id.startsWith("datasage") ? "final" : "", highlight: id === "datasage-m3" })));
+      Object.entries(h).forEach(([id, v]) => list5.append(row(v.label, `${v.correct} of ${v.n} right`, v.accuracy, { cls: id.startsWith("datasage") ? "final" : "", highlight: id === (h["datasage-m3-fixed"] ? "datasage-m3-fixed" : "datasage-m3") })));
       c5.append(list5);
       box.append(c5);
     }

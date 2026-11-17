@@ -216,6 +216,14 @@ def story(per_split: dict) -> dict:
         pooled = _pooled(per_split, ["sales-hard", "penguins-hard"], sid)
         if pooled:
             hard[sid] = {"label": label, **pooled}
+    fixed = [json.loads(p.read_text()) for d in ("sales-hard", "penguins-hard")
+             for p in sorted((RESULTS / "fix_groupby" / "datasage-m3" / d).glob("*.json"))]
+    if "datasage-m3" in hard and len(fixed) == hard["datasage-m3"]["n"]:  # findings_hard.md, section 10
+        right = sum(bool(r.get("analysis_correct")) for r in fixed)
+        hard["datasage-m3"]["label"] = "DataSage, before the grouping fix"
+        hard = {k: v for k, v in hard.items() if k != "datasage-m3-large"} | {
+            "datasage-m3-fixed": {"label": "DataSage, with the grouping fix", "n": len(fixed), "correct": right,
+                                  "accuracy": right / len(fixed)}} | {k: v for k, v in hard.items() if k == "datasage-m3-large"}
     if "datasage-m3" in hard:
         out["hard"] = hard
     models = RESULTS / "study_models.json"

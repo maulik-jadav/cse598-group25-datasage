@@ -19,7 +19,7 @@ Where each number comes from:
 | On the poster | Source |
 |---|---|
 | 95.5% of 200 questions, the 95% range, the 4 runs, B0/B1/B2 on 200, ablations, the 36 of 39 misses | `eval/results/study_scale_ablations.json`, `docs/final/findings_scale_and_ablations.md` |
-| Hard split (90.0%, 97.5%, 10.0%, 55.0%, 637 damaged cells, 1,750 errors) | `eval/results/summary.md` (`sales-hard`, `penguins-hard`), `docs/final/findings_hard.md` |
+| Hard split (100% with the grouping fix and 90.0% before it, 80 of 80 over two seeds, 97.5%, 10.0%, 55.0%, 637 damaged cells, 1,750 errors) | `eval/results/summary.md` (`sales-hard`, `penguins-hard`), `eval/results/fix_groupby/` (with the fix), `docs/final/findings_hard.md` sections 3 and 10 |
 | 41 models, rank 4, 93.8%, median 20 points | `eval/results/study_models.json`, `docs/final/findings_models.md` |
 | Table 1 (the example input) | `baseline/examples/messy_sales.csv` and `examples/messy_sales_rules.json` |
 

@@ -43,6 +43,11 @@ def pooled(system: str, splits: list[str]):
 names = [("b0", "Stakeholder's script"), ("b1", "Fixed cleaning script"), ("b2", "One LLM call, no tools"),
          ("datasage-m3", "DataSage (Qwen3-30B)")]
 hard = {k: pooled(k, ["sales-hard", "penguins-hard"]) for k, _ in names}
+# DataSage on the hard split is shown with the grouping fix (findings_hard.md, section 10), run into its own folder.
+fixed = [json.loads(p.read_text()) for d in ("sales-hard", "penguins-hard")
+         for p in sorted((RESULTS / "fix_groupby" / "datasage-m3" / d).glob("*.json"))]
+if len(fixed) == 40:
+    hard["datasage-m3"] = 100 * sum(bool(r["analysis_correct"]) for r in fixed) / len(fixed)
 fig, ax = plt.subplots(figsize=(10, 4.6), dpi=220)
 ys = list(range(len(names)))[::-1]
 for y, (key, label) in zip(ys, names):
