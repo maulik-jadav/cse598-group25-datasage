@@ -284,7 +284,7 @@ wrong answers, and all 17 have the filter-grouping cause.
 
 ## 9. Recommendations
 
-1. **Fix the filter-in-group_by mistake in code, not in the prompt.** In `analyze`, if a group-by column is
+1. **Fix the filter-in-group_by mistake in code, not in the prompt.** (Done, see section 10.) In `analyze`, if a group-by column is
    also filtered to a single value, drop it from the group-by (and say so in the result). This alone would
    turn all 17 Qwen failures on hard, hard2 and the repeat into correct answers
    (`correct_if_filter_key_dropped`). Add questions filtered on one value of a column that could also be a
@@ -305,3 +305,33 @@ wrong answers, and all 17 have the filter-grouping cause.
    recommendation 1 it would match the 235B model at about a fifth of the time. The approval load (median 5
    per question on large files) is the next thing users will notice; grouping related fixes into one approval
    would help.
+
+## 10. The grouping fix (recommendation 1), measured
+
+`run_analysis` (`datasage/analyze.py`) now drops any group-by column that is also filtered, and says so in
+the result (`dropped_group_by` and a `note`, which the report prints). Every filter keeps one value of its
+column, so grouping by it again only repeats that value in every key. No reference answer in the benchmark
+groups by a filtered column (0 of 320 questions), so the change cannot turn a right answer wrong: it only
+changes answers whose keys carried the filter value, and those never matched a reference. B0 and B1 call the
+same function and never group by a filtered column, so their results do not change either.
+
+The default agent (`datasage-m3`, 30B) was run again on both hard seeds with the fix (results in
+`eval/results/fix_groupby/datasage-m3/`, kept apart from the recorded runs):
+
+| Split | Before the fix | With the fix | Damaged cells | Median seconds |
+|---|---:|---:|---:|---:|
+| sales-hard | 16 / 20 | 20 / 20 | 0 | 29.8 |
+| penguins-hard | 20 / 20 | 20 / 20 | 0 | 26.8 |
+| sales-hard2 | 14 / 20 | 20 / 20 | 0 | 28.7 |
+| penguins-hard2 | 20 / 20 | 20 / 20 | 0 | 28.0 |
+| **All 80** | **70 / 80 (87.5%)** | **80 / 80 (100%)** | **0** | |
+
+The fix fired on 13 of the 80 questions (found in the traces by `dropped_group_by`): all 10 that were wrong
+before, plus 3 where the model made the same mistake this time. No question that was right before became
+wrong. Hard seed 303 alone goes from 36/40 (90.0%) to 40/40, level with the 235B model's 97.5% or better at
+about a fifth of its time. Seconds are higher than in the recorded run because the shared API was busier;
+the token counts are the steadier cost measure (section 7).
+
+The standard 200 questions were not re-run: by the argument above the fix can only change answers that
+grouped by a filtered column, and none of the 39 misses there has that cause (36 are rows breaking a rule
+in a column the question does not use).

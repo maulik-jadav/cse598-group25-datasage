@@ -122,3 +122,16 @@ def test_number_grounding_flags_invented_numbers(sales):
     run = RunResult(session=session, model="m", finished=True, stop_reason="finish", trace=trace,
                     final_summary="Accessories 830.0 and Electronics $2,185; growth 37.5%")
     assert ungrounded_numbers(run) == ["37.5"]
+
+
+def test_a_filtered_column_is_not_also_a_group_key():
+    df = pd.DataFrame({"Category": ["A", "A", "B", "B"], "Region": ["East", "West", "East", "East"], "Revenue": [1, 2, 3, 4]})
+    east = [{"column": "Region", "value": "East"}]
+    out = run_analysis(df, ["Category", "Region"], "Revenue", "sum", east)
+    assert out["result"] == {"A": 1.0, "B": 7.0} and out["group_by"] == ["Category"]
+    assert out["dropped_group_by"] == ["Region"] and "Region" in out["note"]
+    only = run_analysis(df, ["Region"], "Revenue", "sum", east)  # nothing left to group by: one total
+    assert only["result"] == {"all": 8.0} and only["dropped_group_by"] == ["Region"]
+    plain = run_analysis(df, ["Category"], "Revenue", "sum", east)
+    assert "dropped_group_by" not in plain and "note" not in plain
+

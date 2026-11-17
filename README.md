@@ -16,7 +16,7 @@ DataSage is an agent that takes a messy CSV or Excel file and a question about i
 | One LLM call, no tools | 46.5% | 119 |
 | A fixed cleaning script | 49.0% | 0 |
 | The stakeholder's rule-based script | 6.0% | 0 |
-| DataSage on the hard split (343 to 1,935 rows) | 90.0% (235B model: 97.5%) | 0 |
+| DataSage on the hard split (343 to 1,935 rows) | 90.0%, and 100% (80 of 80 over two seeds) after the grouping fix | 0 |
 
 - Turning parts off on the same 200 questions: no approvals 12.0%, short memory 86.0%, no coverage check 91.5%;
   the validator and the prompt's merge rule showed no measurable effect.

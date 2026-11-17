@@ -1,0 +1,254 @@
+{
+  "task_id": "saleshard_09_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 6,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 16,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 5,
+  "seconds": 19.64,
+  "tokens": 96117,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 3.7273,
+    "North": 5.0,
+    "Northeast": 4.7273,
+    "South": 5.1538,
+    "Southeast": 3.5833,
+    "West": 3.9091
+  },
+  "extra": {
+    "final_summary": "The data had several issues: 3 duplicate rows were removed; label variants in 'Category' and 'Region' were normalized to standard values; 23 rows with Quantity < 1 were excluded as they violate the rule that Quantity must be at least 1; two rows had incorrect Revenue values that were fixed by recomputing as Quantity * Price. After these fixes, the average quantity per order for Furniture was calculated by region. The results are: East (3.73), North (5.00), Northeast (4.73), South (5.15), Southeast (3.58), West (3.91).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "Found 3 exact duplicate rows; keeping only the first occurrence"
+        },
+        "reason": "Found 3 exact duplicate rows; keeping only the first occurrence",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          309,
+          359,
+          422
+        ],
+        "cells_changed": 0,
+        "summary": "removed 3 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 2,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Category",
+          "mapping": {
+            "  Outdoor Supplies ": "Outdoor Supplies",
+            " Outdoor Supplies": "Outdoor Supplies",
+            "Outdoor Supplies ": "Outdoor Supplies",
+            "electricals": "Electricals",
+            "electronics": "Electronics",
+            "Accessorise": "Accessories",
+            "Elctricals": "Electricals",
+            "Office Suppplies": "Office Supplies",
+            "Outdoor upplies": "Outdoor Supplies"
+          },
+          "reason": "merge case and space variants and known misspellings into allowed labels"
+        },
+        "reason": "merge case and space variants and known misspellings into allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 10,
+        "summary": "Category: merged 9 label variant(s), 10 cells",
+        "code": "df['Category'] = df['Category'].replace({'  Outdoor Supplies ': 'Outdoor Supplies', ' Outdoor Supplies': 'Outdoor Supplies', 'Outdoor Supplies ': 'Outdoor Supplies', 'electricals': 'Electricals', 'electronics': 'Electronics', 'Accessorise': 'Accessories', 'Elctricals': 'Electricals', 'Office Suppplies': 'Office Supplies', 'Outdoor upplies': 'Outdoor Supplies'})"
+      },
+      {
+        "version": 3,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "  Northeast ": "Northeast",
+            " West": "West",
+            "SOUTHEAST": "Southeast",
+            "north": "North",
+            "sOUTHEAST": "Southeast",
+            "southeast": "Southeast",
+            "Noorth": "North",
+            "Souht": "South",
+            "Suth": "South",
+            "oSuth": "South",
+            "oSutheast": "Southeast"
+          },
+          "reason": "merge case and space variants and known misspellings into allowed labels"
+        },
+        "reason": "merge case and space variants and known misspellings into allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 13,
+        "summary": "Region: merged 11 label variant(s), 13 cells",
+        "code": "df['Region'] = df['Region'].replace({'  Northeast ': 'Northeast', ' West': 'West', 'SOUTHEAST': 'Southeast', 'north': 'North', 'sOUTHEAST': 'Southeast', 'southeast': 'Southeast', 'Noorth': 'North', 'Souht': 'South', 'Suth': 'South', 'oSuth': 'South', 'oSutheast': 'Southeast'})"
+      },
+      {
+        "version": 4,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "Price contains values written as text with dollar signs and commas, e.g. '$1,450.00'; convert to numbers"
+        },
+        "reason": "Price contains values written as text with dollar signs and commas, e.g. '$1,450.00'; convert to numbers",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (427 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 5,
+        "tool": "exclude_where",
+        "args": {
+          "column": "Quantity",
+          "minimum": 1.0,
+          "maximum": null,
+          "reason": "Quantity must be at least 1 per rules; found 23 rows with values < 1"
+        },
+        "reason": "Quantity must be at least 1 per rules; found 23 rows with values < 1",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          11,
+          23,
+          30,
+          55,
+          57,
+          62,
+          76,
+          110,
+          118,
+          141,
+          148,
+          158,
+          237,
+          285,
+          305,
+          315,
+          327,
+          342,
+          345,
+          364,
+          368,
+          404,
+          406
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 23 row(s) where Quantity is below 1",
+        "code": "v = pd.to_numeric(df['Quantity'], errors='coerce')\ndf = df[~((v < 1.0))]"
+      },
+      {
+        "version": 6,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            9,
+            127
+          ],
+          "reason": "Revenue does not match Quantity * Price; fix these two rows"
+        },
+        "reason": "Revenue does not match Quantity * Price; fix these two rows",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[9, 127], 'Revenue'] = pd.Series([90.0, 144.0], index=[9, 127])  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_where",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 16
+  },
+  "corrections": 60,
+  "planted": 64,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-hard",
+  "question": "What is the average quantity per order in each region for Furniture?",
+  "reference_answer": {
+    "East": 3.7273,
+    "North": 5.0,
+    "Northeast": 4.7273,
+    "South": 5.1538,
+    "Southeast": 3.5833,
+    "West": 3.9091
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Category"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}

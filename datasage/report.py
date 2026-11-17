@@ -119,8 +119,10 @@ def markdown_report(result: RunResult) -> str:
     out += ["", "## Answer", ""]
     if session.analyses:
         a = session.analyses[-1]
-        out += [f"{a['agg']} of `{a['metric']}` by {a['group_by'] or 'all rows'} (rows used: {a['rows_used']}, version v{a['version']})", "",
-                "| Group | Value |", "|---|---:|"]
+        out += [f"{a['agg']} of `{a['metric']}` by {a['group_by'] or 'all rows'} (rows used: {a['rows_used']}, version v{a['version']})", ""]
+        if a.get("note"):
+            out += [a["note"], ""]
+        out += ["| Group | Value |", "|---|---:|"]
         out += [f"| {k} | {v:,.2f} |" for k, v in a["result"].items()]
     else:
         out.append("No answer was produced.")

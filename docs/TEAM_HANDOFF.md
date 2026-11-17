@@ -21,7 +21,7 @@ and PR authorship, so **each task should end in its own merged PR** under your o
   10 row ids); extra tool arguments no longer fail a call; the coverage check now also requires the
   metric's formula check. A no-regression re-run on held-out and test after these changes gave 74/80,
   the same as recorded.
-- **Testing:** 111 unit tests run on GitHub for every PR (CI). `python scripts/smoke_e2e.py` is an
+- **Testing:** 112 unit tests run on GitHub for every PR (CI). `python scripts/smoke_e2e.py` is an
   end-to-end check with the real model (123 checks, a few minutes). There is also a Dockerfile.
 - **Research studies, all merged** (write-ups in `docs/final/findings_*.md`, charts on the app's `/results` page):
   - *Scale and ablations* (`findings_scale_and_ablations.md`): 95.5% of 200 unseen questions (95% range 92.0 to
@@ -37,8 +37,9 @@ and PR authorship, so **each task should end in its own merged PR** under your o
     in one call. No model damaged clean data; the weakest fail on tool-call format.
 - **Two things for the Nov 20 review** (see R2): 36 of the 39 misses over 4 runs of the 200 questions are rows breaking a
   rule in a column the question does not use (60.9% right on those questions, 99.6% on the rest), which
-  is the question-columns-only scope Vyshanth chose. On the hard split, every Qwen miss comes from
-  `analyze` grouping by the column it also filters on; a small fix is ready but not merged.
+  is the question-columns-only scope Vyshanth chose. On the hard split, every Qwen miss came from
+  `analyze` grouping by the column it also filters on. That is now fixed in code (`datasage/analyze.py`):
+  the 30B model gets 80 of 80 on both hard seeds, up from 70 (`findings_hard.md`, section 10).
 
 ## Dates
 
@@ -100,7 +101,7 @@ Every task ends in a PR into `main`. Put a short note of what you did in `docs/t
 | # | Task | Done when | Due |
 |---|---|---|---|
 | R1 | **Recipe replay (item 7).** Build a recipe from a run's approved fixes and replay it on a new file without the model, as planned in the design note. | Tests in `tests/test_recipes.py` show a recipe from one table replayed on another table with the same columns. | Nov 25 |
-| R2 | **Nov 20 review.** Send Vyshanth an agenda by Nov 19: results, the out-of-question-column misses (ask whether to check all columns with a rule), the hard-split grouping fix, ratings, demo plan. Take notes. | `docs/meetings/2026-11-20-review.md`, same format as the Oct 28 notes. | Nov 20 |
+| R2 | **Nov 20 review.** Send Vyshanth an agenda by Nov 19: results, the out-of-question-column misses (ask whether to check all columns with a rule), the hard-split grouping fix (merged; 80/80 on hard), ratings, demo plan. Take notes. | `docs/meetings/2026-11-20-review.md`, same format as the Oct 28 notes. | Nov 20 |
 
 ### Maulik
 
@@ -114,7 +115,7 @@ Every task ends in a PR into `main`. Put a short note of what you did in `docs/t
 
 | # | Task | Done when | Due |
 |---|---|---|---|
-| V1 | **Repeated runs on the hard split (item 5).** Unblocked: the hard benchmark is merged (`sales-hard`, `penguins-hard`, and a second seed `sales-hard2`, `penguins-hard2`). The scale-up study already repeated the standard splits 4 times, and the hard split has 2 runs so far (90.0% in `eval/results/datasage-m3/`, 87.5% in `eval/results/repeat2/`). Run `datasage-m3` 2 more times on `sales-hard` and `penguins-hard` (`--results eval/results/hard_rep3`, then `hard_rep4`) and report the mean and range of accuracy and seconds per question over the 4 runs, next to the standard-split numbers from `findings_scale_and_ablations.md`. | `docs/final/repeated_runs.md` with a table and the commands used. | Nov 25 |
+| V1 | **Repeated runs on the hard split (item 5).** Unblocked: the hard benchmark is merged (`sales-hard`, `penguins-hard`, and a second seed `sales-hard2`, `penguins-hard2`). The scale-up study already repeated the standard splits 4 times, and the hard split has 2 runs from before the grouping fix (90.0% in `eval/results/datasage-m3/`, 87.5% in `eval/results/repeat2/`) and 1 with it (40/40 in `eval/results/fix_groupby/`). Run `datasage-m3` 2 more times on `sales-hard` and `penguins-hard` with the current code (`--results eval/results/hard_rep3`, then `hard_rep4`) and report the mean and range of accuracy and seconds per question over the 3 runs with the fix (mention the 2 earlier ones separately), next to the standard-split numbers from `findings_scale_and_ablations.md`. | `docs/final/repeated_runs.md` with a table and the commands used. | Nov 25 |
 | V2 | **Real messy files (item 4).** The tables in `examples/demo/` are synthetic, so real files are still needed. Pick 2 public messy CSV files with a license that allows reuse. Write 3 questions, a rules file and the correct answers by hand for each, then run DataSage. | Data, rules and questions in `eval/real/`; results and what went wrong in `docs/final/real_files.md`. | Nov 27 |
 
 ### Shrey
@@ -131,7 +132,7 @@ cd cse598-group25-datasage
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-python -m pytest -q tests                          # 111 tests, no API key needed
+python -m pytest -q tests                          # 112 tests, no API key needed
 python -m eval.summarize                           # prints the results tables
 python -m app.web.server                           # the browser app at http://127.0.0.1:8501 (needs the key)
 ```
