@@ -62,7 +62,7 @@ and PR authorship, so **each task should end in its own merged PR** under your o
 | All results | `eval/results/summary.md`; final system is `datasage-m3` |
 | Report view (Arsha) and recipe format (Ritik) | `app/report_view.py`, `app/preview_report.py`, `datasage/recipes.py` |
 | Item 7 design note | `docs/design/item7_recipes_ui.md` |
-| Poster (print-ready PDF, source and figures) | `docs/final/poster/`: `poster.html` is the source, `Group25_Poster.pdf` the export, `make_figs.py` rebuilds the figures from the result files (see its README). The older Claude Design canvas is out of date; edit the repo copy. |
+| Poster (print-ready PDF and source) | `docs/final/poster/`: `poster.html` is the source (redesigned Nov 18 from a Claude Design export), `Group25_Poster.pdf` the export; the README lists the source of every number. The earlier version is in `previous/`. |
 | Demo run with the 30B default | `docs/final/demo/` (13 s, same answer as the Milestone 2 demo) |
 | Hosted app (Vercel) | https://cse598-group25-datasage.vercel.app, from `app/web/hosted.py`; redeploys on every merge to `main` |
 | Browser app (item 7 page) | `app/web/`; run `python -m app.web.server` and open http://127.0.0.1:8501 (README, "Run DataSage in the browser") |
@@ -94,7 +94,7 @@ Every task ends in a PR into `main`. Put a short note of what you did in `docs/t
 |---|---|---|---|
 | A1 | **Ratings packet (item 6).** Run DataSage on 10 questions (the browser app in *Ask me* mode is easiest; each run's report has a View and Download button): Vyshanth's two files plus questions from the held-out tables. Send him the 10 `report.md` files and a short form (correct? clear? would you trust it? each 1 to 5, plus a comment). Collect his answers. | His ratings are summarised in `docs/final/ratings.md` (scores and quotes, no copy of his files). | Send Nov 17, collect Nov 20 |
 | A2 | **Acceptance test (item 6).** 3 files (Vyshanth's two plus one test-split table), each with questions and expected answers. Pass = at least 90% correct and no valid cell changed. | `docs/final/acceptance_test.md` with the command, each question, expected and actual answer, pass or fail. | Nov 25 |
-| A3 | **Poster check.** The poster is done and up to date (`docs/final/poster/Group25_Poster.pdf`, with the app screenshot and all four studies). Check every number on it against its source: `eval/results/study_scale_ablations.json` and `findings_scale_and_ablations.md` (200 questions, ablations, misses), `findings_hard.md` (hard split), `findings_models.md` (models). Collect team edits, make them in `poster.html`, re-export (steps in `docs/final/poster/README.md`) and check it is still one 24 × 36 in page. Then message Shrey "poster verified". **Shrey submits it on Canvas.** | Your sign-off to Shrey, and a PR with any corrections. | Sign off by Nov 22 |
+| A3 | **Poster check.** The poster was redesigned on Nov 18 (`docs/final/poster/Group25_Poster.pdf`; the earlier version is in `previous/`). Check every number on it against the sources listed in `docs/final/poster/README.md`, including the example table's answers and the six references. Collect team edits, make them in `poster.html`, re-export (steps in `docs/final/poster/README.md`) and check it is still one 24 × 36 in page. Then message Shrey "poster verified". **Shrey submits it on Canvas.** | Your sign-off to Shrey, and a PR with any corrections. | Sign off by Nov 22 |
 
 ### Ritik
 
