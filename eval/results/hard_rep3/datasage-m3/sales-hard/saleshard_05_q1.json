@@ -1,0 +1,215 @@
+{
+  "task_id": "saleshard_05_q1",
+  "analysis_correct": true,
+  "completed": true,
+  "detect_tp": 7,
+  "detect_fp": 0,
+  "detect_fn": 2,
+  "tool_calls": 16,
+  "tool_errors": 0,
+  "recovered_errors": 0,
+  "approvals_asked": 4,
+  "seconds": 23.92,
+  "tokens": 93613,
+  "stop_reason": "finish",
+  "note": "",
+  "answer": {
+    "East": 997.0,
+    "North": 896.0,
+    "Northeast": 1006.0,
+    "South": 1160.0,
+    "Southeast": 876.0,
+    "West": 932.0
+  },
+  "extra": {
+    "final_summary": "The data had several issues affecting the question: 2 missing Region values, 13 label variants in Region (including misspellings like 'Eaast' and 'oSuth'), 2 exact duplicate rows, 6 rows with invalid Quantity (negative or zero), 11 text-formatted Price values, and 2 rows with incorrect Revenue (not equal to Quantity * Price). I fixed these by: normalizing Region labels to standard values, removing duplicate rows, excluding 6 rows with invalid Quantity, converting Price to numeric, and recomputing Revenue. After these fixes, the analysis shows the total units sold per region: East (997), North (896), Northeast (1006), South (1160), Southeast (876), and West (932).",
+    "changes": [
+      {
+        "version": 1,
+        "tool": "normalize_labels",
+        "args": {
+          "column": "Region",
+          "mapping": {
+            "  Northeast ": "Northeast",
+            " North": "North",
+            " Northeast": "Northeast",
+            " South": "South",
+            " West": "West",
+            "NORTH": "North",
+            "SOUTH": "South",
+            "west": "West",
+            "Eaast": "East",
+            "Eastt": "East",
+            "Eats": "East",
+            "SSouth": "South",
+            "oSuth": "South"
+          },
+          "reason": "merge case and space variants and known misspellings into allowed labels"
+        },
+        "reason": "merge case and space variants and known misspellings into allowed labels",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 13,
+        "summary": "Region: merged 13 label variant(s), 13 cells",
+        "code": "df['Region'] = df['Region'].replace({'  Northeast ': 'Northeast', ' North': 'North', ' Northeast': 'Northeast', ' South': 'South', ' West': 'West', 'NORTH': 'North', 'SOUTH': 'South', 'west': 'West', 'Eaast': 'East', 'Eastt': 'East', 'Eats': 'East', 'SSouth': 'South', 'oSuth': 'South'})"
+      },
+      {
+        "version": 2,
+        "tool": "drop_duplicates",
+        "args": {
+          "reason": "exact duplicate rows found; keep only the first occurrence"
+        },
+        "reason": "exact duplicate rows found; keep only the first occurrence",
+        "risk": "medium",
+        "approval": "approved",
+        "rows_removed": [
+          848,
+          1235
+        ],
+        "cells_changed": 0,
+        "summary": "removed 2 exact duplicate row(s)",
+        "code": "df = df.drop_duplicates(keep='first')"
+      },
+      {
+        "version": 3,
+        "tool": "exclude_rows",
+        "args": {
+          "rows": [
+            802,
+            846,
+            920,
+            964,
+            1003,
+            1050
+          ],
+          "reason": "Quantity is negative or zero, which violates the rule that Quantity must be at least 1"
+        },
+        "reason": "Quantity is negative or zero, which violates the rule that Quantity must be at least 1",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [
+          802,
+          846,
+          920,
+          964,
+          1003,
+          1050
+        ],
+        "cells_changed": 0,
+        "summary": "excluded 6 row(s): [802, 846, 920, 964, 1003, 1050]",
+        "code": "df = df.drop(index=[802, 846, 920, 964, 1003, 1050])"
+      },
+      {
+        "version": 4,
+        "tool": "cast_numeric",
+        "args": {
+          "column": "Price",
+          "reason": "convert text numbers like '$1,450.00' to numeric values"
+        },
+        "reason": "convert text numbers like '$1,450.00' to numeric values",
+        "risk": "low",
+        "approval": "auto",
+        "rows_removed": [],
+        "cells_changed": 0,
+        "summary": "Price: converted to numbers (1321 text values, 0 became missing)",
+        "code": "df['Price'] = pd.to_numeric(df['Price'].astype(str).str.replace(r'[$, ]', '', regex=True), errors='coerce')"
+      },
+      {
+        "version": 5,
+        "tool": "recompute_column",
+        "args": {
+          "column": "Revenue",
+          "expression": "Quantity * Price",
+          "rows": [
+            654,
+            1210
+          ],
+          "reason": "Revenue does not match Quantity * Price; fix the incorrect values"
+        },
+        "reason": "Revenue does not match Quantity * Price; fix the incorrect values",
+        "risk": "high",
+        "approval": "approved",
+        "rows_removed": [],
+        "cells_changed": 2,
+        "summary": "Revenue: recomputed as Quantity * Price on 2 row(s)",
+        "code": "df.loc[[654, 1210], 'Revenue'] = pd.Series([12.0, 40.0], index=[654, 1210])  # Revenue = Quantity * Price"
+      }
+    ],
+    "rejected": [],
+    "oracle_decisions": [
+      {
+        "tool": "normalize_labels",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "drop_duplicates",
+        "risk": "medium",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "exclude_rows",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      },
+      {
+        "tool": "recompute_column",
+        "risk": "high",
+        "approved": true,
+        "why": "moves data toward the reference"
+      }
+    ],
+    "coverage_refusals": 0,
+    "model_turns": 16
+  },
+  "corrections": 37,
+  "planted": 61,
+  "damaged_rows": 0,
+  "damaged_cells": 0,
+  "cleaned_available": true,
+  "system": "datasage-m3",
+  "dataset": "sales-hard",
+  "question": "How many units were sold in each region?",
+  "reference_answer": {
+    "East": 997.0,
+    "North": 896.0,
+    "Northeast": 1006.0,
+    "South": 1160.0,
+    "Southeast": 876.0,
+    "West": 932.0
+  },
+  "issues_reported": [
+    [
+      "cross_column",
+      "Revenue"
+    ],
+    [
+      "duplicates",
+      "*"
+    ],
+    [
+      "label_variant",
+      "Region"
+    ],
+    [
+      "missing",
+      "Region"
+    ],
+    [
+      "negative",
+      "Quantity"
+    ],
+    [
+      "out_of_range",
+      "Quantity"
+    ],
+    [
+      "text_number",
+      "Price"
+    ]
+  ]
+}
