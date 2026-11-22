@@ -1,12 +1,34 @@
 # Team handoff: final stretch
 
-For: Arsha, Ritik, Maulik and Vatsal. Last updated November 16, 2026 (final check against `main` after PR #28).
+For: Arsha, Ritik, Maulik and Vatsal. Last updated November 22, 2026.
 
 Milestone 2 is submitted, items 1 and 2 of Section 6 are merged (PR #7), and the browser app for the demo
 (item 7's page) is done (PRs #10 to #19). All four research studies have landed (PRs #21 to #26). The rest of the work is split below. Individual grades draw on commit
 and PR authorship, so **each task should end in its own merged PR** under your own GitHub account.
 
-**New since the last version of this doc (please skim before starting):**
+**Task status on November 22** (from what is merged on `main`):
+
+| Task | Status |
+|---|---|
+| V1 repeated hard runs (Vatsal) | Done, PR #35: 40/40 in all three runs with the grouping fix (`docs/final/repeated_runs.md`) |
+| V2 real messy files (Vatsal) | Done, PR #36: Chicago and NYC inspection extracts, 3 of 6 answers right (`docs/final/real_files.md`) |
+| A3 poster check (Arsha) | Open: check the redesigned poster and sign off to Shrey by Nov 22; Shrey submits Nov 23, 2 PM |
+| A1 ratings, A2 acceptance test (Arsha) | Not on `main` yet (`docs/final/ratings.md`, `docs/final/acceptance_test.md`) |
+| R1 recipe replay, R2 Nov 20 review notes (Ritik) | Not on `main` yet (`tests/test_recipes.py` replay test, `docs/meetings/2026-11-20-review.md`) |
+| M1 dates, M2 refund rule, M3 regression run (Maulik) | Not on `main` yet. M1 now also covers timestamps, see below |
+
+**What V2 found, for M1 and the final report:**
+
+- **Timestamps are read as unreadable dates.** DataSage only accepts `2024-06-03`; `2024-06-03T00:00:00.000`
+  or `2024-06-03 14:05` count as invalid, so on both city files the date fix blanked every date (and on
+  Chicago two Fail rows were then dropped). This is part of **M1**: treat an ISO timestamp as a clear date
+  and convert it to `YYYY-MM-DD` automatically. The parser is `iso_date` in `datasage/values.py`; the
+  Chicago file in `eval/real/chicago_inspections/` is a ready test case.
+- **One inspection, several rows.** On the NYC file one inspection is one row per violation, and the agent
+  counted rows, not inspections (mean scores too high). This is a known limitation for the final report,
+  not a task: DataSage has no "count distinct" step.
+
+**New since the November 16 version of this doc (please skim before starting):**
 
 - **Browser app** (`python -m app.web.server`, then http://127.0.0.1:8501): pick *Ask me* or *Auto* on the
   start screen, drop one file or several with the same columns (CSV or Excel, any common separator or
@@ -107,7 +129,7 @@ Every task ends in a PR into `main`. Put a short note of what you did in `docs/t
 
 | # | Task | Done when | Due |
 |---|---|---|---|
-| M1 | **Dates (item 3).** Blank unreadable dates and convert clear formats automatically as low risk, logged. Ask only for ambiguous dates such as 03/04/2026. | Tests cover all three cases; the change log shows each conversion. | Nov 24 |
+| M1 | **Dates (item 3).** Blank unreadable dates and convert clear formats automatically as low risk, logged. Clear formats include ISO timestamps (`2024-06-03T00:00:00.000`, `2024-06-03 14:05`), which are rejected today (found in V2). Ask only for ambiguous dates such as 03/04/2026. | Tests cover all three cases; the change log shows each conversion. | Nov 24 |
 | M2 | **Refund rule (item 3).** Add an `allow_negative_quantities` rules key. When it is set, negative quantities are kept as refunds without asking. Note the coverage check (`required_checks` in `datasage/tools.py`) and the new `exclude_where` fix both treat a `min` rule as a reason to drop rows, so the key has to stop both from flagging or dropping negative quantities. | Tests for both settings; the README's rules section mentions the key. | Nov 24 |
 | M3 | **No-regression run.** After M1 and M2 merge, re-run `datasage-m3` on held-out and test into a new results folder and compare with the current numbers (the baseline to beat: 74/80 on Nov 16, 0 damaged cells, 0 tool errors). Also run `python scripts/smoke_e2e.py`. | A short write-up in `docs/final/regression_check.md`; any drop explained from the traces. | Nov 27 |
 
