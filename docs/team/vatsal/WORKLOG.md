@@ -13,7 +13,7 @@ fix is already in `datasage/analyze.py`). Results are in `eval/results/hard_rep3
 `eval/results/hard_rep4/`. Together with the stored run in `eval/results/fix_groupby/`, all three
 runs scored 40/40. The write-up, including the commands, is `docs/final/repeated_runs.md`.
 
-That work is pull request #35. It is not in this branch.
+No code changes. The result files come from `eval/run_eval.py`.
 
 ### 2026-11-21: two real inspection files (V2)
 
